@@ -112,7 +112,7 @@
 /* Un-defines:  `#undef` means off; `// #undef` means on. */
 #undef  EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
 #undef  EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
-// #undef  EXTERN_BOOT_NUS_CIC_6105 // HLE hack but currently needed :(
+#undef  EXTERN_BOOT_NUS_CIC_6105 // HLE hack but currently needed :(
 #undef  EXTERN_SIMULATE_ALL // Only needed for debugging task types.
 #undef  FP_CORRECTIONS // Slower than the unimplemented lookup method
 #undef  SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
