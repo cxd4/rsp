@@ -20,7 +20,7 @@
 #define BYTE8_XOR_BE(a) ((a)^7)
 /* исправляет JFG, Ocarina of Time */
 
-static void sp_dma(int direction)
+void SP_DMA_WRITE(void)
 {
 // новейшая версия от Ville Linde
     int i, j;
@@ -28,62 +28,72 @@ static void sp_dma(int direction)
     int count;
     int skip;
 // мой код
-    UINT8 *src, *dst;
-    unsigned int l = direction ? *RSP.SP_WR_LEN_REG : *RSP.SP_RD_LEN_REG;
+    unsigned char *src, *dst;
+    unsigned int l = *RSP.SP_WR_LEN_REG;
 
-    length = ((l & 0xFFF) | 7) + 1;
+    length = (l & 0xFFF) + 1;
     skip   = (l >> 20) + length;
     count  = ((l >> 12) & 0xFF) + 1;
 
-    if (direction == 0) // RDRAM -> I/DMEM
+    // 2 строки от Вилле Линде
+    // UINT32 dst_address = DMA_DRAM & 0xFFFFFF;
+    // UINT32 src_address = (DMA_CACHE & 0x1000) ? 0x4001000 : 0x4000000;
+// мой код
+    dst = (UINT8*)&rdram[(DMA_DRAM & 0xFFFFFF) / 4];
+    src = (DMA_CACHE & 0x1000)
+        ? (UINT8*)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
+        : (UINT8*)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
+    // cpuintrf_push_context(0); // потупим
+    for (j = 0; j < count; j++)
     {
+        for (i = 0; i < length; i++)
+        {
+// UINT8 b = program_read_byte_64be(src_address + ((DMA_CACHE + i + (j*length)) & 0xFFF));
+            // program_write_byte_64be(dst_address + i + (j*skip), b);
+            dst[BYTE8_XOR_BE(i + j*skip)] = src[BYTE8_XOR_BE((i + j*length) & 0xFFF)];
+        }
+    }
+    // cpuintrf_pop_context(); // потупим
+    *RSP.SP_DMA_BUSY_REG = 0;
+    *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
+}
+
+void SP_DMA_READ(void)
+{
+// новейшая версия от Ville Linde
+    int i, j;
+    int length;
+    int count;
+    int skip;
+// мой код
+    unsigned char *src, *dst;
+    unsigned int l = *RSP.SP_RD_LEN_REG;
+
+    length = (l & 0xFFF) + 1;
+    skip   = (l >> 20) + length;
+    count  = ((l >> 12) & 0xFF) + 1;
+
 // 2 строки от Вилле Линде
 // UINT32 src_address = DMA_DRAM & 0xFFFFFF;
 // UINT32 dst_address = (DMA_CACHE & 0x1000) ? 0x4001000 : 0x4000000;
 // мой код
-        src = (UINT8*)&rdram[(DMA_DRAM & 0xFFFFFF) / 4];
-        dst = (DMA_CACHE & 0x1000)
-            ? (UINT8*)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
-            : (UINT8*)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
-        // cpuintrf_push_context(0); // потупим
-        for (j = 0; j < count; j++)
-        {
-            for (i = 0; i < length; i++)
-            {
-                // UINT8 b = program_read_byte_64be(src_address + i + (j*skip));
-// program_write_byte_64be(dst_address + ((DMA_CACHE + i + (j*length)) & 0xFFF), b);
-                dst[BYTE8_XOR_BE((i + j*length)&0xfff)] = src[BYTE8_XOR_BE(i + j*skip)];
-            }
-        }
-        // cpuintrf_pop_context(); // потупим
-        *RSP.SP_DMA_BUSY_REG = 0;
-        *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
-    }
-    else // I/DMEM -> RDRAM
+    src = (unsigned char *)&rdram[(DMA_DRAM & 0xFFFFFF) / 4];
+    dst = (DMA_CACHE & 0x1000)
+        ? (unsigned char *)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
+        : (unsigned char *)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
+    // cpuintrf_push_context(0); // потупим
+    for (j = 0; j < count; j++)
     {
-        // 2 строки от Вилле Линде
-        // UINT32 dst_address = DMA_DRAM & 0xFFFFFF;
-        // UINT32 src_address = (DMA_CACHE & 0x1000) ? 0x4001000 : 0x4000000;
-// мой код
-        dst = (UINT8*)&rdram[(DMA_DRAM & 0xFFFFFF) / 4];
-        src = (DMA_CACHE & 0x1000)
-            ? (UINT8*)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
-            : (UINT8*)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
-        // cpuintrf_push_context(0); // потупим
-        for (j = 0; j < count; j++)
+        for (i = 0; i < length; i++)
         {
-            for (i = 0; i < length; i++)
-            {
-                // UINT8 b = program_read_byte_64be(src_address + ((DMA_CACHE + i + (j*length)) & 0xfff));
-                // program_write_byte_64be(dst_address + i + (j*skip), b);
-                dst[BYTE8_XOR_BE(i + j*skip)]
-              = src[BYTE8_XOR_BE((i + j*length)&0xfff)];
-            }
+            // UINT8 b = program_read_byte_64be(src_address + i + (j*skip));
+// program_write_byte_64be(dst_address + ((DMA_CACHE + i + (j*length)) & 0xFFF), b);
+            dst[BYTE8_XOR_BE((i + j*length)&0xFFF)] = src[BYTE8_XOR_BE(i + j*skip)];
         }
-        // cpuintrf_pop_context(); // потупим
-        *RSP.SP_DMA_BUSY_REG = 0;
-        *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
     }
+    // cpuintrf_pop_context(); // потупим
+    *RSP.SP_DMA_BUSY_REG = 0;
+    *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
 }
 
 void MTC0(int rt, int rd)
@@ -111,12 +121,12 @@ void MTC0(int rt, int rd)
             } /* If extra bits (SR[rt]&0xFF000000) are used, DMA R/W adapts. */
             return;
         case 0x2:
-            *RSP.SP_RD_LEN_REG = SR[rt]; /* length |= 07; // immed or on DMA? */
-            sp_dma(0);
+            *RSP.SP_RD_LEN_REG = SR[rt] | 07;
+            SP_DMA_READ();
             return;
         case 0x3:
-            *RSP.SP_WR_LEN_REG = SR[rt]; /* length |= 07; // immed or on DMA? */
-            sp_dma(1);
+            *RSP.SP_WR_LEN_REG = SR[rt] | 07;
+            SP_DMA_WRITE();
             return;
         case 0x4:
 /* To-do:  It is possible to use a switch statement here to massively speed
