@@ -38,16 +38,6 @@
  * Enabling both of these does not guarantee that the RSP will never execute.
  */
 
-#define EXTERN_BOOT_NUS_CIC_6105
-/* Many of the ROM images running off of a NUS-CIC-6105 boot chip will have
- * sent an RSP boot microcode.  I don't think simulating this is a brilliant
- * idea since LLE is naturally better especially since this code is almost
- * never executed (just during boot?) and has no real speed gain to this,
- * but until I figure out what zilmar did to fix it on LLE I have no choice.
- *
- * Credit goes to Hacktarux for the original code; I just simplified it.
- */
-
 #define EXTERN_SIMULATE_ALL
 /* This will forcefully enable all of the macros enlisted above.  In
  * addition, any SP task type that does not fall under any of those will
@@ -112,7 +102,6 @@
 /* Un-defines:  `#undef` means off; `// #undef` means on. */
 #undef  EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
 #undef  EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
-#undef  EXTERN_BOOT_NUS_CIC_6105 // HLE hack but currently needed :(
 #undef  EXTERN_SIMULATE_ALL // Only needed for debugging task types.
 #undef  FP_CORRECTIONS // Slower than the unimplemented lookup method
 #undef  SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.

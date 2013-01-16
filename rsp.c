@@ -106,25 +106,6 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
             }
             return 0;
 #endif
-#ifdef EXTERN_BOOT_NUS_CIC_6105
-        case 0x8BC43B5D: {
-            register unsigned int pRDRAM;
-            register unsigned int pIMEM;
-            register int i = 0;
-
-            memcpy(RSP.IMEM + 0x120, RSP.RDRAM + 0x0001E8, 0x0001E8);
-            pRDRAM = (unsigned int)RSP.RDRAM + 0x2FB1F0;
-            pIMEM  = (unsigned int)RSP.IMEM + 0x120;
-            do
-            {
-                *(long long *)pRDRAM = *(long long *)pIMEM;
-                pRDRAM += 0x000FF0;
-                pIMEM  += 0x008;
-                ++i;
-            } while (i < 0x00FC); /* (IMEM_offset < 0x900); */
-            return 0;
-        }
-#endif
 #ifdef EXTERN_SIMULATE_ALL
         default:
             message("DoRspCycles", 3);
