@@ -17,7 +17,8 @@
 //extern UINT32 *rsp_dmem;
 //extern void dp_full_sync(void);
 
-static int sp_dma_length;
+#define BYTE8_XOR_BE(a) ((a)^7)
+/* исправляет JFG, Ocarina of Time */
 
 static void sp_dma(int direction)
 {
@@ -28,7 +29,7 @@ static void sp_dma(int direction)
     int skip;
 // мой код
     UINT8 *src, *dst;
-    INT32 l = sp_dma_length;
+    INT32 l = direction ? *RSP.SP_WR_LEN_REG : *RSP.SP_RD_LEN_REG;
 
     length = ((l & 0xFFF) | 7) + 1;
     skip   = (l >> 20) + length;
@@ -45,7 +46,6 @@ static void sp_dma(int direction)
             ? (UINT8*)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
             : (UINT8*)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
         // cpuintrf_push_context(0); // потупим
-#define BYTE8_XOR_BE(a) ((a)^7) // исправляет JFG, Ocarina of Time
         for (j = 0; j < count; j++)
         {
             for (i = 0; i < length; i++)
@@ -111,11 +111,11 @@ void MTC0(int rt, int rd)
             } /* If extra bits (SR[rt]&0xFF000000) are used, DMA R/W adapts. */
             return;
         case 0x2:
-            sp_dma_length = SR[rt] | 07;
+            *RSP.SP_RD_LEN_REG = SR[rt]; /* length |= 07; // immed or on DMA? */
             sp_dma(0);
             return;
         case 0x3:
-            sp_dma_length = SR[rt] | 07;
+            *RSP.SP_WR_LEN_REG = SR[rt]; /* length |= 07; // immed or on DMA? */
             sp_dma(1);
             return;
         case 0x4:
