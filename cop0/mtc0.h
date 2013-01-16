@@ -30,27 +30,20 @@ static void sp_dma(int direction)
     UINT8 *src, *dst;
     INT32 l = sp_dma_length;
 
-    if (direction)
-    {
-        length = ((l & 0xFFF) | 3) + 1;
-    }
-    else
-    {
-        length = ((l & 0xFFF) | 7) + 1;
-    }
-    skip  = (l >> 20) + length;
-    count = ((l >> 12) & 0xFF) + 1;
+    length = ((l & 0xFFF) | 7) + 1;
+    skip   = (l >> 20) + length;
+    count  = ((l >> 12) & 0xFF) + 1;
 
     if (direction == 0) // RDRAM -> I/DMEM
     {
 // 2 строки от Вилле Линде
-// UINT32 src_address = DMA_DRAM & ~7;
+// UINT32 src_address = DMA_DRAM & 0xFFFFFF;
 // UINT32 dst_address = (DMA_CACHE & 0x1000) ? 0x4001000 : 0x4000000;
 // мой код
-        src = (UINT8*)&rdram[(DMA_DRAM&~7) / 4];
+        src = (UINT8*)&rdram[(DMA_DRAM & 0xFFFFFF) / 4];
         dst = (DMA_CACHE & 0x1000)
-            ? (UINT8*)&rsp_imem[(DMA_CACHE & ~7 & 0xFFF) / 4]
-            : (UINT8*)&rsp_dmem[(DMA_CACHE & ~7 & 0xFFF) / 4];
+            ? (UINT8*)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
+            : (UINT8*)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
         // cpuintrf_push_context(0); // потупим
 #define BYTE8_XOR_BE(a) ((a)^7) // исправляет JFG, Ocarina of Time
         for (j = 0; j < count; j++)
@@ -58,33 +51,33 @@ static void sp_dma(int direction)
             for (i = 0; i < length; i++)
             {
                 // UINT8 b = program_read_byte_64be(src_address + i + (j*skip));
-// program_write_byte_64be(dst_address + (((DMA_CACHE & ~7) + i + (j*length)) & 0xFFF), b);
+// program_write_byte_64be(dst_address + ((DMA_CACHE + i + (j*length)) & 0xFFF), b);
                 dst[BYTE8_XOR_BE((i + j*length)&0xfff)] = src[BYTE8_XOR_BE(i + j*skip)];
             }
         }
-            // cpuintrf_pop_context(); // потупим
-            *RSP.SP_DMA_BUSY_REG = 0;
-            *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
-        }
-        else // I/DMEM -> RDRAM
-        {
+        // cpuintrf_pop_context(); // потупим
+        *RSP.SP_DMA_BUSY_REG = 0;
+        *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
+    }
+    else // I/DMEM -> RDRAM
+    {
         // 2 строки от Вилле Линде
-        // UINT32 dst_address = DMA_DRAM & ~7;
+        // UINT32 dst_address = DMA_DRAM & 0xFFFFFF;
         // UINT32 src_address = (DMA_CACHE & 0x1000) ? 0x4001000 : 0x4000000;
 // мой код
-        dst = (UINT8*)&rdram[(DMA_DRAM & ~7) / 4];
+        dst = (UINT8*)&rdram[(DMA_DRAM & 0xFFFFFF) / 4];
         src = (DMA_CACHE & 0x1000)
-            ? (UINT8*)&rsp_imem[(DMA_CACHE & ~7 & 0xFFF) / 4]
-            : (UINT8*)&rsp_dmem[(DMA_CACHE & ~7 & 0xFFF) / 4];
+            ? (UINT8*)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
+            : (UINT8*)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
         // cpuintrf_push_context(0); // потупим
         for (j = 0; j < count; j++)
         {
             for (i = 0; i < length; i++)
             {
-                // UINT8 b = program_read_byte_64be(src_address + (((DMA_CACHE & ~7) + i + (j*length)) & 0xfff));
+                // UINT8 b = program_read_byte_64be(src_address + ((DMA_CACHE + i + (j*length)) & 0xfff));
                 // program_write_byte_64be(dst_address + i + (j*skip), b);
                 dst[BYTE8_XOR_BE(i + j*skip)]
-              = src[BYTE8_XOR_BE((+i + j*length)&0xfff)];
+              = src[BYTE8_XOR_BE((i + j*length)&0xfff)];
             }
         }
         // cpuintrf_pop_context(); // потупим
@@ -103,16 +96,19 @@ void MTC0(int rt, int rd)
     {
         case 0x0:
             *RSP.SP_MEM_ADDR_REG = SR[rt];
-            if (SR[rt] & 07) /* Ogre Battle 64 */
+            if (SR[rt] & 07)
             { /* All DMA transfers must be 64-bit-aligned. */
-                message("MTC0\nDMA_CACHE", 2);
+                message("MTC0\nDMA_CACHE", 1);
                 *RSP.SP_MEM_ADDR_REG &= 0xFFFFFFF8;
-            }
+            } /* Do NOT worry about the extra bits 0xFFFFE000 until DMA R/W. */
             return;
         case 0x1:
-            if (SR[rt] & 07) /* Ogre Battle 64, Factor 5 ucodes */
-                message("MTC0\nDMA_DRAM", 2);
-            *RSP.SP_DRAM_ADDR_REG = SR[rt] & 0xFFFFFF; /* 24-bit RDRAM pt */
+            *RSP.SP_DRAM_ADDR_REG = SR[rt]; /* 24-bit RDRAM pt */
+            if (SR[rt] & 07)
+            { /* We don't really care about the reserved bits, just & 07. */
+                message("MTC0\nDMA_DRAM", 1);
+                *RSP.SP_DRAM_ADDR_REG &= 0xFFFFFFF8;
+            } /* If extra bits (SR[rt]&0xFF000000) are used, DMA R/W adapts. */
             return;
         case 0x2:
             sp_dma_length = SR[rt] | 07;
