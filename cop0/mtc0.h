@@ -116,7 +116,7 @@ void MTC0(int rt, int rd)
             *RSP.SP_DRAM_ADDR_REG = SR[rt]; /* 24-bit RDRAM pt */
             if (SR[rt] & 07)
             { /* We don't really care about the reserved bits, just & 07. */
-                message("MTC0\nDMA_DRAM", 1);
+                message("MTC0\nDMA_DRAM", 0); /* Factor 5 ucodes do this? */
                 *RSP.SP_DRAM_ADDR_REG &= 0xFFFFFFF8;
             } /* If extra bits (SR[rt]&0xFF000000) are used, DMA R/W adapts. */
             return;
