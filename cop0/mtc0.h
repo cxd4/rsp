@@ -29,7 +29,7 @@ static void sp_dma(int direction)
     int skip;
 // мой код
     UINT8 *src, *dst;
-    INT32 l = direction ? *RSP.SP_WR_LEN_REG : *RSP.SP_RD_LEN_REG;
+    unsigned int l = direction ? *RSP.SP_WR_LEN_REG : *RSP.SP_RD_LEN_REG;
 
     length = ((l & 0xFFF) | 7) + 1;
     skip   = (l >> 20) + length;
