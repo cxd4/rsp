@@ -108,7 +108,7 @@
 // #undef  SLL_NOP_AS_SEMICYCLE // Who cares.  Maybe faster, maybe slower
 #undef  VU_EMULATE_FRACTION_SATURATE_UNDERFLOW // For speed, keep it off.
 // #undef  VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
-#undef  SP_HACK_CYCLES_BOSS_GAME_STUDIOS // Disable this for a speed-up.
+// #undef  SP_HACK_CYCLES_BOSS_GAME_STUDIOS // Disable this for a speed-up.
 
 #ifdef  EXTERN_SIMULATE_ALL
 #define EXTERN_COMMAND_LIST_GBI
