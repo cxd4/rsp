@@ -10,7 +10,7 @@ In the engineering makeup of the Nintendo 64 (original codename:  Project Realit
 
 Here, the entire MIPS R4000 instruction set was modified for very fast, exception-free processing flow, and operation definitions for each instruction do not fall within the scope of this section.  Presented instead are layouts of the new instructions added to the scalar unit (those under `LWC2` and `SWC2`, even though they do interface with the vector unit) and the vector unit (essentially, any instruction under `COP2` whose mnemonic starts with a 'V').  Information of how pre-existing MIPS R4000 instructions were modified or which ones were removed is the adventure of the MIPS programmer to research.
 
-V*&#8;_vd_, _vs_, _vt_[_element_] `/* exceptions:  scalar divide reads */
+V*&#8;_vd_, _vs_, _vt_[_element_] `/* exceptions:  scalar divide reads */`
 <table border="1">
 <tr align="center"><td>COP2</td><td>element</td><td>vs1</td><td>vs2</td><td>vt</td><td>func</td></tr>
 <tr align="right"><td>010010</td><td>1----</td><td>-----</td><td>-----</td><td>-----</td><td>??????</td></tr>
