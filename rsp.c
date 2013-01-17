@@ -129,14 +129,18 @@ strcpy(/* Not meant to be a CRT dependency--should optimize to QWORD moves. */
 }
 __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCount)
 {
+    *CycleCount = 0; // число циклов,перед тем,как вернуть к-ль эмулятору.
     RSP = Rsp_Info;
     *RSP.SP_PC_REG = 0x00000000; // 0x4001000;
     delay_clock = -1;
     rsp.step_count = 0x00000000;
-/* memset((z64_rspinfo.DMEM), 0, 0x2000); // очищаем dmem и imem */
-/* This breaks compatibility on Project64 >= 1.7.x .. accurate?
+    memset((RSP.DMEM), 0, 0x2000); /* Warning:  Breaks PJ64 1.7. */
+    while (RSP.IMEM != RSP.DMEM + 4096)
+        message("This EXE sucks.\nPick another one.", 3);
+/* The real N64 RCP memory map has DMEM and IMEM mapped side-by-side.
+ * While an emulator's failure to comply to this layout could be tolerated,
+ * assuming an emulator's idiocy slows down (one example) DMA transactions.
  */
-    *CycleCount = 0; // число циклов,перед тем,как вернуть к-ль эмулятору.
     return;
 }
 __declspec(dllexport) void InitiateRSPDebugger(DEBUG_INFO DebugInfo)

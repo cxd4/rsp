@@ -1,7 +1,7 @@
 /******************************************************************************\
-* Project:  SP CP0 Scalar Emulation Table:  System Control Coprocessor (COP0)  *
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2013.01.10                                                         *
+* Project:  MSP Emulation Table for System Control Coprocessor Operations      *
+* Creator:  Iconoclast                                                         *
+* Release:  2013.01.17                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -10,7 +10,7 @@
 
 void res_020(int rt, int rd)
 {
-    message("COP0", 2);
+    message("COP0", 3);
     SR[rt] = 0x00000000;
     /* CPR[rd] = 0x00000000; // CPR file embedded in zilmar plugin specs */
     rd = 0; /* Besides, some CP0 regs are read-only, so, be lazy. */

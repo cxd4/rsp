@@ -1,10 +1,3 @@
-/******************************************************************************\
-* Project:  SP SU Emulation Table:  Move to System Control Coprocessor (MTC0)  *
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2013.01.10                                                         *
-* License:  none (public domain)                                               *
-\******************************************************************************/
-
 #define DMA_CACHE   (*RSP.SP_MEM_ADDR_REG)
 #define DMA_DRAM    (*RSP.SP_DRAM_ADDR_REG)
 
@@ -22,77 +15,71 @@
 
 void SP_DMA_WRITE(void)
 {
-// новейшая версия от Ville Linde
-    int i, j;
-    int length;
-    int count;
-    int skip;
-// мой код
+    register unsigned int length;
+    register unsigned int count;
+    register unsigned int skip;
     unsigned char *src, *dst;
-    unsigned int l = *RSP.SP_WR_LEN_REG;
 
-    length = (l & 0xFFF) + 1;
-    skip   = (l >> 20) + length;
-    count  = ((l >> 12) & 0xFF) + 1;
+    skip   = *RSP.SP_WR_LEN_REG;
+    length  = skip;
+    length &= 0x00000FFF;
+    skip >>= 12;
+    count = (unsigned char)skip;
+    ++count;
+    skip >>= 8;
+    ++length;
+    skip  += length;
 
-    // 2 строки от Вилле Линде
-    // UINT32 dst_address = DMA_DRAM & 0xFFFFFF;
-    // UINT32 src_address = (DMA_CACHE & 0x1000) ? 0x4001000 : 0x4000000;
-// мой код
-    dst = (UINT8*)&rdram[(DMA_DRAM & 0xFFFFFF) / 4];
-    src = (DMA_CACHE & 0x1000)
-        ? (UINT8*)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
-        : (UINT8*)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
-    // cpuintrf_push_context(0); // потупим
-    for (j = 0; j < count; j++)
+    dst = RSP.RDRAM + (*RSP.SP_DRAM_ADDR_REG & 0x00FFFFF8);
+    src = RSP.DMEM  + (*RSP.SP_MEM_ADDR_REG  & 0x00001FF8);
+/* Note:  Emu idiocy with DMEM-IMEM contiguity is NOT an issue.  (See rsp.c). */
+    while (count)
     {
-        for (i = 0; i < length; i++)
+        register unsigned int i = 0;
+
+        --count;
+        while (i < length)
         {
-// UINT8 b = program_read_byte_64be(src_address + ((DMA_CACHE + i + (j*length)) & 0xFFF));
-            // program_write_byte_64be(dst_address + i + (j*skip), b);
-            dst[BYTE8_XOR_BE(i + j*skip)] = src[BYTE8_XOR_BE((i + j*length) & 0xFFF)];
+            dst[(count*skip + i) ^ 07] = src[((count*length + i) & 0xFFF) ^ 07];
+            ++i;
         }
     }
-    // cpuintrf_pop_context(); // потупим
-    *RSP.SP_DMA_BUSY_REG = 0;
+    *RSP.SP_DMA_BUSY_REG = 0x00000000;
     *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
 }
 
 void SP_DMA_READ(void)
 {
-// новейшая версия от Ville Linde
-    int i, j;
-    int length;
-    int count;
-    int skip;
-// мой код
+    register unsigned int length;
+    register unsigned int count;
+    register unsigned int skip;
     unsigned char *src, *dst;
-    unsigned int l = *RSP.SP_RD_LEN_REG;
 
-    length = (l & 0xFFF) + 1;
-    skip   = (l >> 20) + length;
-    count  = ((l >> 12) & 0xFF) + 1;
+    skip   = *RSP.SP_RD_LEN_REG;
+    length  = skip;
+    length &= 0x00000FFF;
+    skip >>= 12;
+    count = (unsigned char)skip;
+    ++count;
+    skip >>= 8;
+    ++length;
+    skip  += length;
 
-// 2 строки от Вилле Линде
-// UINT32 src_address = DMA_DRAM & 0xFFFFFF;
-// UINT32 dst_address = (DMA_CACHE & 0x1000) ? 0x4001000 : 0x4000000;
-// мой код
-    src = (unsigned char *)&rdram[(DMA_DRAM & 0xFFFFFF) / 4];
-    dst = (DMA_CACHE & 0x1000)
-        ? (unsigned char *)&rsp_imem[(DMA_CACHE & 0xFFF) / 4]
-        : (unsigned char *)&rsp_dmem[(DMA_CACHE & 0xFFF) / 4];
-    // cpuintrf_push_context(0); // потупим
-    for (j = 0; j < count; j++)
+    src = RSP.RDRAM + (*RSP.SP_DRAM_ADDR_REG & 0x00FFFFF8);
+    dst = RSP.DMEM  + (*RSP.SP_MEM_ADDR_REG  & 0x00001FF8);
+/* Note:  Emu idiocy with DMEM-IMEM contiguity is NOT an issue.  (See rsp.c). */
+    while (count)
     {
-        for (i = 0; i < length; i++)
+        register unsigned int i = 0;
+
+        --count;
+        while (i < length)
         {
-            // UINT8 b = program_read_byte_64be(src_address + i + (j*skip));
-// program_write_byte_64be(dst_address + ((DMA_CACHE + i + (j*length)) & 0xFFF), b);
-            dst[BYTE8_XOR_BE((i + j*length)&0xFFF)] = src[BYTE8_XOR_BE(i + j*skip)];
+            dst[((count*length + i) & 0xFFF) ^ 07] = src[(count*skip + i) ^ 07];
+            ++i;
         }
     }
-    // cpuintrf_pop_context(); // потупим
-    *RSP.SP_DMA_BUSY_REG = 0;
+    *RSP.SP_DMA_BUSY_REG = 0x00000000;
     *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
 }
 

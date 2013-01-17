@@ -1,10 +1,3 @@
-/******************************************************************************\
-* Project:  SP SU Emulation Table:  Move from System Control Coprocessor (MFC0)*
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2013.01.10                                                         *
-* License:  none (public domain)                                               *
-\******************************************************************************/
-
 void MFC0(int rt, int rd)
 {
     if (rt == 0)
