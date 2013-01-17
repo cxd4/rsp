@@ -13,7 +13,7 @@
  * It's basically Microsoft's way of saying they're better than everyone.
  */
 
-#define MINIMUM_MESSAGE_PRIORITY    1
+#undef  MINIMUM_MESSAGE_PRIORITY
 /* Many people will have different uses for an RSP emulator.
  * Some people only want to see message boxes for definite RSP LLE errors.
  * Other people are interested in being notified of technical RSP oddities.
@@ -29,16 +29,16 @@
  * See the `void message()` for details on this centralized API invocation.
  */
 
-#define EXTERN_COMMAND_LIST_GBI
+#undef  EXTERN_COMMAND_LIST_GBI
 /* If this is defined, the RSP never executes graphics tasks.
  * Those will all be sent to the video plugin for simulation processing.
  */
-#define EXTERN_COMMAND_LIST_ABI
+#undef  EXTERN_COMMAND_LIST_ABI
 /* If this is defined, the RSP never executes audio tasks; use audio plugin.
  * Enabling both of these does not guarantee that the RSP will never execute.
  */
 
-#define EXTERN_SIMULATE_ALL
+#undef  EXTERN_SIMULATE_ALL
 /* This will forcefully enable all of the macros enlisted above.  In
  * addition, any SP task type that does not fall under any of those will
  * have unpredictable results, due to relying on external modules or plugins.
@@ -48,7 +48,7 @@
  * accurate, real emulators that need that directness for speed.
  */
 
-#define FP_CORRECTIONS
+#undef  FP_CORRECTIONS
 /* This control applies zilmar's floating-point control strategy.
  * The FP precision used by the RCP is pretty imprecise, more-so even than
  * what the Microsoft code generation settings will allow us to specify.
@@ -56,19 +56,19 @@
  * This will only affect the operation of the VU computational divides.
  */
 
-#define SP_EXECUTE_LOG
+#undef  SP_EXECUTE_LOG
 /* This is my mechanism to use file output of 32 bits per each SP operation.
  * I use this in conjunction with my EXE to handle debug, but still checking
  * every single frame even with file output turned off is ~1-2 VI/s slower.
  */
 
-#define SLL_NOP_AS_SEMICYCLE
+#undef  SLL_NOP_AS_SEMICYCLE
 /* This is mostly experimental.  It has nothing to do with cycle counts, just
  * prioritizing the check whether the memory instruction word from IMEM is
  * equal to 00000000 [hex] (NOP) before doing a SPECIAL function jump table.
  */
 
-#define VU_EMULATE_FRACTION_SATURATE_UNDERFLOW
+#undef  VU_EMULATE_FRACTION_SATURATE_UNDERFLOW
 /* Since Microsoft's compiler cannot generate the correctly optimized code
  * for this at the moment, I invented this macro control to disable the
  * VMULF security check if both multipliers happen to be equal to -32768.
@@ -81,7 +81,7 @@
  * latency of VMULF to multiply greatly for over 99% of ABI command lists.
  */
 
-#define VU_EMULATE_SCALAR_ACCUMULATOR_READ
+#undef  VU_EMULATE_SCALAR_ACCUMULATOR_READ
 /* VSAW is the only RSP instruction that can access the vector accumulator
  * elements directly.  In the original RSP for Ultra64 this was supposed to
  * be called `VSAR` "Vector Accumulator Read (and Write)".  (The 'S' probably
@@ -92,26 +92,20 @@
  * got renamed to "VSAW", however, the acknowledgement of this ceased to be.
  */
 
-#define SP_HACK_CYCLES_BOSS_GAME_STUDIOS
+#undef  SP_HACK_CYCLES_BOSS_GAME_STUDIOS
 /* The games "Stunt Racer 64" and "World Driver Championship" use a custom
  * SP graphics media microcode designed by Boss Game Studios.  Timing is
  * quite literally of the essence in these cases, and since we have yet to
  * figure out exactly what that means, this macro is for hacking the timing.
  */
 
-/* Un-defines:  `#undef` means off; `// #undef` means on. */
-#undef  EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
-#undef  EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
-#undef  EXTERN_SIMULATE_ALL // Only needed for debugging task types.
-#undef  FP_CORRECTIONS // Slower than the unimplemented lookup method
-#undef  SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
-// #undef  SLL_NOP_AS_SEMICYCLE // Who cares.  Maybe faster, maybe slower
-#undef  VU_EMULATE_FRACTION_SATURATE_UNDERFLOW // For speed, keep it off.
-// #undef  VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
-// #undef  SP_HACK_CYCLES_BOSS_GAME_STUDIOS // Disable this for a speed-up.
-
-#ifdef  EXTERN_SIMULATE_ALL
-#define EXTERN_COMMAND_LIST_GBI
-#define EXTERN_COMMAND_LIST_ABI
-#define EXTERN_BOOT_NUS_CIC_6105
-#endif
+/* Choose whether to define, or keep undefined, the above macros. */
+#define MINIMUM_MESSAGE_PRIORITY    1 // show most messages of RSP weirdness
+// #define EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
+// #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
+// #define FP_CORRECTIONS // Slower than the unimplemented lookup method
+// #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
+#define SLL_NOP_AS_SEMICYCLE // Who cares.  Maybe faster, maybe slower
+#define VU_EMULATE_FRACTION_SATURATE_UNDERFLOW // For speed, keep it off.
+#define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
+#define SP_HACK_CYCLES_BOSS_GAME_STUDIOS // Disable this for a speed-up.
