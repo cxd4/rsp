@@ -108,7 +108,7 @@ void MTC0(int rt, int rd)
             *RSP.SP_MEM_ADDR_REG = SR[rt];
             if (SR[rt] & 07)
             { /* All DMA transfers must be 64-bit-aligned. */
-                message("MTC0\nDMA_CACHE", 1);
+                message("MTC0\nDMA_CACHE", 0); /* Boss Game Studios ucodes */
                 *RSP.SP_MEM_ADDR_REG &= 0xFFFFFFF8;
             } /* Do NOT worry about the extra bits 0xFFFFE000 until DMA R/W. */
             return;
@@ -143,8 +143,10 @@ void MTC0(int rt, int rd)
                 *RSP.SP_STATUS_REG &= ~SP_STATUS_BROKE;
             if (SR[rt] & 0x00000008) /* clear SP interrupt */
                 message("MTC0\nSP INTR:CLR", 3);
-            if (SR[rt] & 0x00000010) /* set SP interrupt */
-                message("MTC0\nSP INTR:SET", 3);
+            if (SR[rt] & 0x00000010) { /* set SP interrupt */
+                *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
+                RSP.CheckInterrupts();
+            }
             if (SR[rt] & 0x00000020) /* clear single step */
                 *RSP.SP_STATUS_REG &= ~SP_STATUS_SSTEP;
             if (SR[rt] & 0x00000040) /* set single step */
