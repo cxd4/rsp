@@ -120,7 +120,7 @@ int rspcounts[512];
 #endif
 
 RSP_REGS rsp;
-static unsigned long int rsp_icount;
+static int halt;
 
 int rsp_execute(int cycles)
 {
@@ -129,16 +129,16 @@ int rsp_execute(int cycles)
     UINT32 WDCHackFlag1 = 0;
     UINT32 WDCHackFlag2 = 0;
 #endif
-    rsp_icount = cycles;
-    rsp_icount = 1;
+    // rsp_icount = cycles;
 
     if (*RSP.SP_STATUS_REG & 0x00000003)
     {
         message("SP HALT/BROKE on start!", 3);
-        rsp_icount = 0;
+        halt = 0;
     }
     *RSP.SP_PC_REG &= 0x00000FFF;
-    while (rsp_icount)
+    halt = 0;
+    while (halt == 0)
     {
         register unsigned int inst;
 
@@ -184,136 +184,15 @@ int rsp_execute(int cycles)
         {
             case 0x00: /* SPECIAL */
             {
-                unsigned func;
-                unsigned rd;
-                unsigned short rt; /* needed if and only if (rd) */
-
+                const unsigned rs = inst >> 21; /* don't have to mask cause op == 000000 */
+                const unsigned rt = (inst & 0x001F0000) >> 16; /* try to load upper HW ? */
+                const unsigned rd = (unsigned short)inst >> 11;
+                const unsigned sa = (inst >> 6) & 31;
 #ifdef SLL_NOP_AS_SEMICYCLE
                 if (inst == 0x00000000) continue;
 #endif
-                rt  = (unsigned short)(inst >> 16);
-                rt &= 0x0000001F;
-                rd  = (unsigned short)(inst) >> 11;
-                func = inst & 0x0000003F;
-                switch (func)
-                {
-                    case 0x00: /* SLL */
-                        if (rd == 0) continue;
-                        inst >>= 06;
-                        inst  &= 0x0000001F; /* sa specifier */
-                        SR[rd]   = SR[rt];
-                        SR[rd] <<= inst;
-                        break;
-                    case 0x02: /* SRL */
-                        if (rd == 0) continue;
-                        inst >>= 06;
-                        inst  &= 0x0000001F; /* sa specifier */
-                        SR[rd]   = SR[rt];
-                        SR[rd] >>= inst;
-                        break;
-                    case 0x03: /* SRA */
-                        if (rd == 0) continue;
-                        inst >>= 06;
-                        inst  &= 0x0000001F; /* sa specifier */
-                        SR[rd] = (signed)SR[rt] >> inst;
-                        break;
-                    case 0x04: /* SLLV */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd]   = SR[rt];
-                        SR[rd] <<= (SR[inst] & 0x0000001F);
-                        break;
-                    case 0x06: /* SRLV */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd]   = SR[rt];
-                        SR[rd] >>= (SR[inst] & 0x0000001F);
-                        break;
-                    case 0x07: /* SRAV */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = (signed)SR[rt] >> (SR[inst] & 31);
-                        break;
-                    case 0x08: /* JR */
-                        inst >>= 21; /* rs specifier */
-                        temp_PC = SR[inst];
-                        delay_clock = 1;
-                        break;
-                    case 0x09: /* JALR */
-                        inst >>= 21; /* rs specifier */
-                        temp_PC = SR[inst];
-                        delay_clock = 1;
-                        if (rd == 0) continue;
-                        SR[rd]  = *RSP.SP_PC_REG;
-                        SR[rd] += 0x00000004; /* should be 8! :mad: */
-                        SR[rd] &= 0x00000FFC;
-                        break;
-                    case 0x0D: /* BREAK */
-                        *RSP.SP_STATUS_REG |= 0x00000003;
-                        if (*RSP.SP_STATUS_REG & 0x00000040) /* BREAK */
-                        {
-                            *RSP.MI_INTR_REG |= 0x00000001; /* SP int */
-                            RSP.CheckInterrupts();
-                        }
-                        return (ExecutedCycles);
-                    case 0x20: /* ADD */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = (signed)(SR[inst] + SR[rt]);
-                        break;
-                    case 0x21: /* ADDU */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = (signed)(SR[inst] + SR[rt]);
-                        break;
-                    case 0x22: /* SUB */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = (signed)(SR[inst] - SR[rt]);
-                        break;
-                    case 0x23: /* SUBU */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = (signed)(SR[inst] - SR[rt]);
-                        break;
-                    case 0x24: /* AND */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = SR[inst] & SR[rt];
-                        break;
-                    case 0x25: /* OR */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = SR[inst] | SR[rt];
-                        break;
-                    case 0x26: /* XOR */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = SR[inst] ^ SR[rt];
-                        break;
-                    case 0x27: /* NOR */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = ~(SR[inst] | SR[rt]);
-                        break;
-                    case 0x2A: /* SLT */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = (signed)(SR[inst]) < (signed)(SR[rt]);
-                        break;
-                    case 0x2B: /* SLTU */
-                        if (rd == 0) continue;
-                        inst >>= 21; /* rs specifier */
-                        SR[rd] = (SR[inst]) < (SR[rt]);
-                        break;
-                    default: {
-                        char opcode_specifier[12] = "SPECIAL\n000";
-                        opcode_specifier[0x9] |= func & 07;
-                        opcode_specifier[0xA] |= func >> 3;
-                        message(opcode_specifier, 3);
-                        break;
-                    }
-                }
+                inst &= 0x0000003F;
+                SP_SPECIAL[inst](rs, rt, rd, sa);
                 break;
             }
             case 0x01: /* REGIMM */
@@ -697,7 +576,7 @@ int rsp_execute(int cycles)
         }
         if (*RSP.SP_STATUS_REG & (SP_STATUS_HALT | SP_STATUS_BROKE))
         {
-            rsp_icount = 0;
+            halt = 0;
 /* What the fuck is this?
  *          if (BreakMarker == 0)
  *              printf("Quit due to SP halt/broke set by MTC0\n");
@@ -712,7 +591,7 @@ int rsp_execute(int cycles)
         if (WDCHackFlag1&&((ExecutedCycles-WDCHackFlag1)>=0x20)&&(rsp.ppc>0x137)&&(rsp.ppc<0x14D))
         {
             // printf("WDC hack quit 1\n");
-            rsp_icount=0; // 32 cycles should be enough
+            halt = 0; // 32 cycles should be enough
         }
         if((WDCHackFlag2 == 0) && (rsp.ppc > 0xFCB) && (rsp.ppc < 0xFD5))
             WDCHackFlag2 = ExecutedCycles;
@@ -721,7 +600,7 @@ int rsp_execute(int cycles)
         if (WDCHackFlag2&&((ExecutedCycles-WDCHackFlag2)>=0x20)&&(rsp.ppc>0xFCB)&&(rsp.ppc<0xFD5))
         {
             // printf("WDC hack quit 2\n"); // чтоб не повредило др.игры
-            rsp_icount = 0; /* 32 cycles should be enough */
+            halt = 0; /* 32 cycles should be enough */
         }
 #endif
     }
