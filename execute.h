@@ -81,6 +81,7 @@ const int element_source_transpose[16][8] = {
     { 00, 01, 02, 03, 04, 05, 06, 07 }
 };
 
+#include "special/special.h"
 #include "regimm/regimm.h"
 #include "cop0/cop0.h"
 #include "cop2/cop2.h"
