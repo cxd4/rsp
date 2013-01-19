@@ -78,6 +78,7 @@
       <StringPooling>true</StringPooling>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <CompileAs>CompileAsC</CompileAs>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
