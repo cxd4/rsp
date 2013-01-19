@@ -92,13 +92,6 @@
  * got renamed to "VSAW", however, the acknowledgement of this ceased to be.
  */
 
-#undef  SP_HACK_CYCLES_BOSS_GAME_STUDIOS
-/* The games "Stunt Racer 64" and "World Driver Championship" use a custom
- * SP graphics media microcode designed by Boss Game Studios.  Timing is
- * quite literally of the essence in these cases, and since we have yet to
- * figure out exactly what that means, this macro is for hacking the timing.
- */
-
 /* Choose whether to define, or keep undefined, the above macros. */
 #define MINIMUM_MESSAGE_PRIORITY    1 // show most messages of RSP weirdness
 // #define EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
@@ -108,4 +101,13 @@
 #define SLL_NOP_AS_SEMICYCLE // Who cares.  Maybe faster, maybe slower
 #define VU_EMULATE_FRACTION_SATURATE_UNDERFLOW // For speed, keep it off.
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
-#define SP_HACK_CYCLES_BOSS_GAME_STUDIOS // Disable this for a speed-up.
+
+#ifdef EXTERN_SIMULATE_ALL
+#define L_TITLE "Basic RSP Simulator"
+#elif defined EXTERN_COMMAND_LIST_GBI || defined EXTERN_COMMAND_LIST_ABI
+#define L_TITLE "Iconoclast's MLE Test"
+#else
+#define L_TITLE "RSP Interpreter"
+#endif
+#define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, Gonetz\n"\
+                "SP thread examples:  bpoint, zilmar, Ville Linde"
