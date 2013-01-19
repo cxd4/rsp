@@ -7,7 +7,7 @@
 
 /* Note that falling under the "SPECIAL" primary operation code is not the
  * only way that an instruction can be R-type.  Usually the only other way
- * is via use of the coprocessor operation code matrices (COP0:COP3).
+ * is via use of the coprocessor operations (COPz, LWCz, SWCz).
  */
 
 #include "add.h"
