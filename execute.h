@@ -121,25 +121,19 @@ int rspcounts[512];
 #endif
 
 RSP_REGS rsp;
-static int halt;
+static int rsp_icount;
 
-int rsp_execute(int cycles)
+int rsp_execute(unsigned long cycles)
 {
-    UINT32 ExecutedCycles = 0;
-#ifdef SP_HACK_CYCLES_BOSS_GAME_STUDIOS
-    UINT32 WDCHackFlag1 = 0;
-    UINT32 WDCHackFlag2 = 0;
-#endif
-    // rsp_icount = cycles;
+    const unsigned long cycles_start = cycles; /* preserve original */
 
-    if (*RSP.SP_STATUS_REG & 0x00000003)
+    if (*RSP.SP_STATUS_REG & 0x00000001)
     {
         message("SP HALT/BROKE on start!", 3);
-        halt = 0;
+        return 0;
     }
     *RSP.SP_PC_REG &= 0x00000FFF;
-    halt = 0;
-    while (halt == 0)
+    do
     {
         register unsigned int inst;
 
@@ -156,7 +150,6 @@ int rsp_execute(int cycles)
             fwrite(endian_swap, 4, 1, output_log);
         }
 #endif
-        rsp.ppc = *RSP.SP_PC_REG;
         if (delay_clock >= 0)
         { /* most likely that this condition does NOT take the branch */
             if (delay_clock == 0)
@@ -185,14 +178,17 @@ int rsp_execute(int cycles)
         {
             case 0x00: /* SPECIAL */
             {
-                const unsigned rs = inst >> 21; /* don't have to mask cause op == 000000 */
-                const unsigned rt = (inst & 0x001F0000) >> 16; /* try to load upper HW ? */
-                const unsigned rd = (unsigned short)inst >> 11;
+                unsigned int rs = inst;
+                unsigned int rt = inst >> 16; /* Try to mov upper HW? */
+                unsigned short rd = (unsigned short)inst; /* mov LO HW */
                 const unsigned sa = (inst >> 6) & 31;
 #ifdef SLL_NOP_AS_SEMICYCLE
                 if (inst == 0x00000000) continue;
 #endif
-                inst &= 0x0000003F;
+                rs >>= 21; /* no need to mask, cuz op == zero */
+                rt  &= 31; /* LO five bits of upper HW */
+                rd >>= 11; /* HI five bits of lower HW */
+                inst &= 0x0000003F; /* "function" specifier */
                 SP_SPECIAL[inst](rs, rt, rd, sa);
                 break;
             }
@@ -561,51 +557,24 @@ int rsp_execute(int cycles)
                 break;
             } /* Not a RSP exception, but an emu error cause IDK what to do. */
         }
-//      --rsp_icount;
-        ExecutedCycles++;
-        if(*RSP.SP_STATUS_REG & SP_STATUS_SSTEP)
-        { // реализация из 0.122u7
-            if(rsp.step_count)
-            {
+        --cycles;
+        if (*RSP.SP_STATUS_REG & 0x00000020) /* SP_STATUS_SSTEP by debugger. */
+        { /* реализация из 0.122u7 */
+            message("Single-stepping support unconfirmed.", 2);
+            if (rsp.step_count)
                 --rsp.step_count;
-            }
             else
             {
-                *RSP.SP_STATUS_REG |= SP_STATUS_BROKE;
+                *RSP.SP_STATUS_REG |= 0x00000002;
                 message("SP_STATUS_BROKE", 3);
             }
         }
-        if (*RSP.SP_STATUS_REG & (SP_STATUS_HALT | SP_STATUS_BROKE))
-        {
-            halt = 0;
-/* What the fuck is this?
- *          if (BreakMarker == 0)
- *              printf("Quit due to SP halt/broke set by MTC0\n");
- * What the fuck was that... */
-        }
-#ifdef SP_HACK_CYCLES_BOSS_GAME_STUDIOS
-        ///WDC&SR64 hack:VERSION3:1.8x -2x FASTER & safer
-        if((WDCHackFlag1 == 0) && (rsp.ppc > 0x137) && (rsp.ppc < 0x14D))
-            WDCHackFlag1 = ExecutedCycles; // если раньше отсюда не выходили
-        if ((WDCHackFlag1) && ((rsp.ppc <= 0x137) || (rsp.ppc >= 0x14D)))
-            WDCHackFlag1 = 0; // вышли из бескон.цикла
-        if (WDCHackFlag1&&((ExecutedCycles-WDCHackFlag1)>=0x20)&&(rsp.ppc>0x137)&&(rsp.ppc<0x14D))
-        {
-            // printf("WDC hack quit 1\n");
-            halt = 0; // 32 cycles should be enough
-        }
-        if((WDCHackFlag2 == 0) && (rsp.ppc > 0xFCB) && (rsp.ppc < 0xFD5))
-            WDCHackFlag2 = ExecutedCycles;
-        if (WDCHackFlag2 && ((rsp.ppc <= 0xFCB) || (rsp.ppc >= 0xFD5)))
-            WDCHackFlag2 = 0; // вышли из бескон.цикла
-        if (WDCHackFlag2&&((ExecutedCycles-WDCHackFlag2)>=0x20)&&(rsp.ppc>0xFCB)&&(rsp.ppc<0xFD5))
-        {
-            // printf("WDC hack quit 2\n"); // чтоб не повредило др.игры
-            halt = 0; /* 32 cycles should be enough */
-        }
-#endif
-    }
-    return (ExecutedCycles);
+    } while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000);
+    if (!(*RSP.SP_STATUS_REG & 0x00000002)) /* BROKE was not set. */
+        message("Halted RSP CPU loop by means of MTC0.", 2);
+    if (cycles == 0)
+        message("w00t!11!  cycles_start - executed was 0 !!", 0);
+    return (cycles_start - cycles); /* meant to be executed, minus remainder */
 }
 
 /*****************************************************************************/

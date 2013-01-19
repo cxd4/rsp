@@ -39,21 +39,16 @@ static int delay_clock;
 
 typedef struct
 {  
-	// UINT32 pc;
-	UINT32 step_count;//новое в 0.122u7
-
-	INT32 square_root_res;
-	INT32 square_root_high;
-	INT32 reciprocal_res;
-	INT32 reciprocal_high;
-
-	UINT32 ppc;///previous program counter?
-//  int inval_gen; // что-то связанное с рекомпилятором
+    unsigned int step_count; /* новое в 0.122u7 */
+    int square_root_res;
+    int square_root_high;
+    int reciprocal_res;
+    int reciprocal_high;
 } RSP_REGS;
 
 RSP_INFO RSP;
 
-int rsp_execute(int cycles);
+int rsp_execute(unsigned long cycles);
 offs_t rsp_dasm_one(char *buffer, offs_t pc, UINT32 op);
 
 extern RSP_REGS rsp; // __attribute__((aligned(16)));

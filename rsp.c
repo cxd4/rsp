@@ -48,17 +48,6 @@ __declspec(dllexport) void CloseDLL(void)
 {
     return;
 }
-
-#ifdef EXTERN_SIMULATE_ALL
-#define L_TITLE "Basic RSP Simulator"
-#elif defined EXTERN_COMMAND_LIST_GBI || defined EXTERN_COMMAND_LIST_ABI
-#define L_TITLE "Iconoclast's MLE Test"
-#else
-#define L_TITLE "RSP Interpreter"
-#endif
-#define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, Gonetz\n"\
-                "SP thread examples:  bpoint, zilmar, angrylion"
-
 __declspec(dllexport) void DllAbout(HWND hParent)
 {
     MessageBoxA(hParent, L_ABOUT, L_TITLE, 0x00000040);
@@ -112,10 +101,8 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
             return (cycles);
 #endif
     }
-#ifndef EXTERN_SIMULATE_ALL
-    cycles = 0x00100000;
+    /* cycles = 0x00100000; // wtf was this for? */
     return rsp_execute(cycles);
-#endif
 }
 __declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
