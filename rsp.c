@@ -95,12 +95,26 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
             }
             return 0;
 #endif
-#ifdef EXTERN_SIMULATE_ALL
-        default:
-            message("DoRspCycles", 3);
-            return (cycles);
-#endif
     }
+#if (defined EXTERN_COMMAND_LIST_GBI && defined EXTERN_COMMAND_LIST_ABI)
+    {
+        const char digits[16] = {
+            '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+        };
+        const unsigned int task = *(unsigned int *)(RSP.DMEM + 0xFC0);
+        char task_hex[9] = "";
+
+        task_hex[00] = digits[(task & 0xF0000000) >> 28];
+        task_hex[01] = digits[(task & 0x0F000000) >> 24];
+        task_hex[02] = digits[(task & 0x00F00000) >> 20];
+        task_hex[03] = digits[(task & 0x000F0000) >> 16];
+        task_hex[04] = digits[(task & 0x0000F000) >> 12];
+        task_hex[05] = digits[(task & 0x00000F00) >>  8];
+        task_hex[06] = digits[(task & 0x000000F0) >>  4];
+        task_hex[07] = digits[(task & 0x0000000F) >>  0];
+        MessageBoxA(NULL, task_hex, "OSTask.type", 0x00000000);
+    }
+#endif
     /* cycles = 0x00100000; // wtf was this for? */
     return rsp_execute(cycles);
 }

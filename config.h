@@ -38,16 +38,6 @@
  * Enabling both of these does not guarantee that the RSP will never execute.
  */
 
-#undef  EXTERN_SIMULATE_ALL
-/* This will forcefully enable all of the macros enlisted above.  In
- * addition, any SP task type that does not fall under any of those will
- * have unpredictable results, due to relying on external modules or plugins.
- * Mathematically speaking, the most likely possibility is that you will
- * kneel before a flurry of error messages.  All simulation must be external,
- * not internal.  Direct emulation from inside the plugin is reserved for
- * accurate, real emulators that need that directness for speed.
- */
-
 #undef  FP_CORRECTIONS
 /* This control applies zilmar's floating-point control strategy.
  * The FP precision used by the RCP is pretty imprecise, more-so even than
@@ -102,7 +92,7 @@
 #define VU_EMULATE_FRACTION_SATURATE_UNDERFLOW // For speed, keep it off.
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
-#ifdef EXTERN_SIMULATE_ALL
+#if defined EXTERN_COMMAND_LIST_GBI && defined EXTERN_COMMAND_LIST_ABI
 #define L_TITLE "Basic RSP Simulator"
 #elif defined EXTERN_COMMAND_LIST_GBI || defined EXTERN_COMMAND_LIST_ABI
 #define L_TITLE "Iconoclast's MLE Test"
