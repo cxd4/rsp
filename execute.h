@@ -202,9 +202,7 @@ int rsp_execute(unsigned long cycles)
                 unsigned int rt = inst >> 16; /* Try to mov upper HW? */
                 unsigned short rd = (unsigned short)inst; /* mov LO HW */
                 const unsigned sa = (inst >> 6) & 31;
-#ifdef SLL_NOP_AS_SEMICYCLE
-                if (inst == 0x00000000) continue;
-#endif
+
                 rs >>= 21; /* no need to mask, cuz op == zero */
                 rt  &= 31; /* LO five bits of upper HW */
                 rd >>= 11; /* HI five bits of lower HW */

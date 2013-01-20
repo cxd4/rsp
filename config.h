@@ -52,12 +52,6 @@
  * every single frame even with file output turned off is ~1-2 VI/s slower.
  */
 
-#undef  SLL_NOP_AS_SEMICYCLE
-/* This is mostly experimental.  It has nothing to do with cycle counts, just
- * prioritizing the check whether the memory instruction word from IMEM is
- * equal to 00000000 [hex] (NOP) before doing a SPECIAL function jump table.
- */
-
 #undef  VU_EMULATE_FRACTION_SATURATE_UNDERFLOW
 /* Since Microsoft's compiler cannot generate the correctly optimized code
  * for this at the moment, I invented this macro control to disable the
@@ -88,7 +82,6 @@
 // #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
 // #define FP_CORRECTIONS // Slower than the unimplemented lookup method
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
-#define SLL_NOP_AS_SEMICYCLE // Who cares.  Maybe faster, maybe slower
 #define VU_EMULATE_FRACTION_SATURATE_UNDERFLOW // For speed, keep it off.
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
