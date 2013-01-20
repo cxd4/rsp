@@ -91,9 +91,6 @@ const int element_source_transpose[16][8] = {
 #include "vu/vu.h" /* All the includes above are SU; this is the VU. */
 
 extern offs_t rsp_dasm_one(char *buffer, offs_t pc, UINT32 op);
-#if LOG_INSTRUCTION_EXECUTION
-static FILE *exec_output;
-#endif
 
 // INLINE void sp_set_status(UINT32 status)
 // {
@@ -138,18 +135,6 @@ int rsp_execute(unsigned long cycles)
         register unsigned int inst;
 
         inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
-#ifdef SP_EXECUTE_LOG
-        if (output_log)
-        {
-            unsigned char endian_swap[4];
-
-            endian_swap[00] = (unsigned char)(inst >> 24);
-            endian_swap[01] = (unsigned char)(inst >> 16);
-            endian_swap[02] = (unsigned char)(inst >>  8);
-            endian_swap[03] = (unsigned char)inst;
-            fwrite(endian_swap, 4, 1, output_log);
-        }
-#endif
         if (delay_clock >= 0)
         { /* most likely that this condition does NOT take the branch */
             if (delay_clock == 0)
@@ -161,6 +146,41 @@ int rsp_execute(unsigned long cycles)
             }
             --delay_clock;
         }
+#ifdef SP_EXECUTE_LOG
+        if (output_log)
+        {
+            const char digits[16] = {
+                '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+            };
+            char text[256];
+            char offset[4] = "";
+            char code[9] = "";
+            unsigned char endian_swap[4];
+
+            endian_swap[00] = (unsigned char)(inst >> 24);
+            endian_swap[01] = (unsigned char)(inst >> 16);
+            endian_swap[02] = (unsigned char)(inst >>  8);
+            endian_swap[03] = (unsigned char)inst;
+            offset[00] = digits[(*RSP.SP_PC_REG & 0xF00) >> 8];
+            offset[01] = digits[(*RSP.SP_PC_REG & 0x0F0) >> 4];
+            offset[02] = digits[(*RSP.SP_PC_REG & 0x00F) >> 0];
+            code[00] = digits[(inst & 0xF0000000) >> 28];
+            code[01] = digits[(inst & 0x0F000000) >> 24];
+            code[02] = digits[(inst & 0x00F00000) >> 20];
+            code[03] = digits[(inst & 0x000F0000) >> 16];
+            code[04] = digits[(inst & 0x0000F000) >> 12];
+            code[05] = digits[(inst & 0x00000F00) >>  8];
+            code[06] = digits[(inst & 0x000000F0) >>  4];
+            code[07] = digits[(inst & 0x0000000F) >>  0];
+            strcpy(text, offset);
+            strcat(text, "\n");
+            strcat(text, code);
+            sprintf(text, "%s\ncR:%i\ncS:%u", text, cycles, cycles_start);
+            message(text, 0); /* PC offset, MIPS hex, ratio cyclesRem:base. */
+            if (output_log == NULL) {} else /* Global pointer not updated?? */
+                fwrite(endian_swap, 4, 1, output_log);
+        }
+#endif
         *RSP.SP_PC_REG += 0x00000004;
         *RSP.SP_PC_REG &= 0x00000FFC;
         if (inst >> 25 == 0x25) /* is a VU instruction? */

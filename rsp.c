@@ -11,7 +11,7 @@
 #endif
 
 #ifdef SP_EXECUTE_LOG
-FILE *output_log;
+static FILE *output_log;
 #endif
 
 __declspec(dllimport) int __stdcall MessageBoxA(
@@ -142,6 +142,9 @@ __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCo
  * While an emulator's failure to comply to this layout could be tolerated,
  * assuming an emulator's idiocy slows down (one example) DMA transactions.
  */
+#ifdef SP_EXECUTE_LOG
+    output_log = fopen("simd_log.bin", "ab");
+#endif
     return;
 }
 __declspec(dllexport) void InitiateRSPDebugger(DEBUG_INFO DebugInfo)
