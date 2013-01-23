@@ -195,7 +195,6 @@ void MTC0(int rt, int rd)
                 return; /* lock hazards not implemented */
             }
             *RSP.DPC_START_REG   = SR[rt];
-            message("MTC0\nCMD_START", 0);
             *RSP.DPC_CURRENT_REG = SR[rt]; /* Dunno for sure about this. */
             *RSP.DPC_END_REG     = SR[rt]; /* NEW, not in PJ64/MAME */
             if (SR[rt] & 07) /* All DMA transfers must be 64-bit-aligned. */
