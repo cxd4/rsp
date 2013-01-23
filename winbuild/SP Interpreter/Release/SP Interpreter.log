@@ -1,7 +1,7 @@
-﻿Build started 1/19/2013 12:58:30 PM.
+﻿Build started 1/23/2013 2:56:15 PM.
      1>Project "F:\rsp\winbuild\SP Interpreter\SP Interpreter.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
-         Creating "Release\SP Interpreter.unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "Release\SP Interpreter.unsuccessfulbuild".
        ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /O2 /Ob2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D SPINTERPRETER_EXPORTS /D _WINDLL /GF /Gm- /MD /Zp16 /GS- /Gy- /arch:SSE2 /fp:fast /fp:except- /Zc:wchar_t- /Zc:forScope /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TC /analyze- /errorReport:prompt ..\..\rsp.c
          rsp.c
@@ -18,4 +18,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:05.24
+Time Elapsed 00:00:08.19
