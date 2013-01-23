@@ -1,12 +1,56 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.01.15                                                         *
+* Release:  2013.01.23                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
-
 #ifndef _VU_H
 #define _VU_H
+
+const int element_index[16][8] = {
+    { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none */
+    { 00, 01, 02, 03, 04, 05, 06, 07 },
+    { 00, 00, 02, 02, 04, 04, 06, 06 }, /* 0Q */
+    { 01, 01, 03, 03, 05, 05, 07, 07 }, /* 1Q */
+    { 00, 00, 00, 00, 04, 04, 04, 04 }, /* 0H */
+    { 01, 01, 01, 01, 05, 05, 05, 05 }, /* 1H */
+    { 02, 02, 02, 02, 06, 06, 06, 06 }, /* 2H */
+    { 03, 03, 03, 03, 07, 07, 07, 07 }, /* 3H */
+    { 00, 00, 00, 00, 00, 00, 00, 00 }, /* 0 */
+    { 01, 01, 01, 01, 01, 01, 01, 01 }, /* 1 */
+    { 02, 02, 02, 02, 02, 02, 02, 02 }, /* 2 */
+    { 03, 03, 03, 03, 03, 03, 03, 03 }, /* 3 */
+    { 04, 04, 04, 04, 04, 04, 04, 04 }, /* 4 */
+    { 05, 05, 05, 05, 05, 05, 05, 05 }, /* 5 */
+    { 06, 06, 06, 06, 06, 06, 06, 06 }, /* 6 */
+    { 07, 07, 07, 07, 07, 07, 07, 07 }  /* 7 */
+};
+
+/* This is zilmar's method of transposing the source element read order,
+ * based on the loop iteration count and destination element, to avoid
+ * premature vector element overwrites.  The more modern method however
+ * is to just not transpose the read orders and write to a prebuffer,
+ * temporary vector register, then do one single hit to move the result
+ * over to the destination vector register.  So this probably has no use.
+ */
+const int element_source_transpose[16][8] = {
+    { 00, 01, 02, 03, 04, 05, 06, 07 },
+    { 00, 01, 02, 03, 04, 05, 06, 07 },
+    { 01, 03, 05, 07, 00, 02, 04, 06 },
+    { 00, 02, 04, 06, 01, 03, 05, 07 },
+    { 01, 02, 03, 05, 06, 07, 00, 04 },
+    { 00, 02, 03, 04, 06, 07, 01, 05 },
+    { 00, 01, 03, 04, 05, 07, 02, 06 },
+    { 00, 01, 02, 04, 05, 06, 03, 07 },
+    { 01, 02, 03, 04, 05, 06, 07, 00 },
+    { 00, 02, 03, 04, 05, 06, 07, 01 },
+    { 00, 01, 03, 04, 05, 06, 07, 02 },
+    { 00, 01, 02, 04, 05, 06, 07, 03 },
+    { 00, 01, 02, 03, 05, 06, 07, 04 },
+    { 00, 01, 02, 03, 04, 06, 07, 05 },
+    { 00, 01, 02, 03, 04, 05, 07, 06 },
+    { 00, 01, 02, 03, 04, 05, 06, 07 }
+};
 
 unsigned short int UNSIGNED_CLAMP(signed int accum)
 {
@@ -68,48 +112,6 @@ unsigned short int UNSIGNED_CLAMP_HI(signed long element) {
 #include "vrsql.h"
 #include "vrsqh.h"
 #include "vnop.h"
-
-extern void VMULF(int vd, int vs, int vt, int element);
-extern void VMULU(int vd, int vs, int vt, int element);
-extern void VMUDL(int vd, int vs, int vt, int element);
-extern void VMUDM(int vd, int vs, int vt, int element);
-extern void VMUDN(int vd, int vs, int vt, int element);
-extern void VMUDH(int vd, int vs, int vt, int element);
-extern void VMACF(int vd, int vs, int vt, int element);
-extern void VMACU(int vd, int vs, int vt, int element);
-extern void VMACQ(int vd, int vs, int vt, int element);
-extern void VMADL(int vd, int vs, int vt, int element);
-extern void VMADM(int vd, int vs, int vt, int element);
-extern void VMADN(int vd, int vs, int vt, int element);
-extern void VMADH(int vd, int vs, int vt, int element);
-extern void VADD(int vd, int vs, int vt, int element);
-extern void VSUB(int vd, int vs, int vt, int element);
-extern void VABS(int vd, int vs, int vt, int element);
-extern void VADDC(int vd, int vs, int vt, int element);
-extern void VSUBC(int vd, int vs, int vt, int element);
-extern void VSAW(int vd, int unused_rd, int unused_rt, int element);
-extern void VLT(int vd, int vs, int vt, int element);
-extern void VEQ(int vd, int vs, int vt, int element);
-extern void VNE(int vd, int vs, int vt, int element);
-extern void VGE(int vd, int vs, int vt, int element);
-extern void VCL(int vd, int vs, int vt, int element);
-extern void VCH(int vd, int vs, int vt, int element);
-extern void VCR(int vd, int vs, int vt, int element);
-extern void VMRG(int vd, int vs, int vt, int element);
-extern void VAND(int vd, int vs, int vt, int element);
-extern void VNAND(int vd, int vs, int vt, int element);
-extern void VOR(int vd, int vs, int vt, int element);
-extern void VNOR(int vd, int vs, int vt, int element);
-extern void VXOR(int vd, int vs, int vt, int element);
-extern void VNXOR(int vd, int vs, int vt, int element);
-extern void VRCP(int vd, int del, int vt, int element);
-extern void VRCPL(int vd, int del, int vt, int element);
-extern void VRCPH(int vd, int del, int vt, int element);
-extern void VMOV(int vd, int del, int vt, int element);
-extern void VRSQ(int vd, int del, int vt, int element);
-extern void VRSQL(int vd, int del, int vt, int element);
-extern void VRSQH(int vd, int del, int vt, int element);
-extern void VNOP(int unused_sa, int unused_rd, int unused_rt, int unused);
 
 void res_VU(int vd, int rd, int rt, int element)
 {

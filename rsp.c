@@ -6,6 +6,8 @@
 #include "Rsp_#1.1.h"
 #include "rsp.h"
 
+RSP_REGS rsp;
+
 #ifdef FP_CORRECTIONS
 #include <float.h>
 #endif
@@ -42,7 +44,8 @@ void message(char *body, int priority)
     return;
 }
 
-#include "execute.h"
+#include "su/su.h"
+#include "vu/vu.h"
 
 __declspec(dllexport) void CloseDLL(void)
 {
@@ -69,6 +72,13 @@ __declspec(dllexport) void DllConfig(HWND hParent)
 #endif
 __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
 {
+    const unsigned long cycles_start = cycles; /* preserve original */
+
+    if (*RSP.SP_STATUS_REG & 0x00000003)
+    {
+        message("SP HALT/BROKE on start!", 3);
+        return 0;
+    }
     switch (*(unsigned int *)(RSP.DMEM + 0xFC0))
     { /* Simulation barrier to redirect processing externally. */
 #ifdef EXTERN_COMMAND_LIST_GBI
@@ -115,8 +125,98 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
         MessageBoxA(NULL, task_hex, "OSTask.type", 0x00000000);
     }
 #endif
-    /* cycles = 0x00100000; // wtf was this for? */
-    return rsp_execute(cycles);
+    *RSP.SP_PC_REG &= 0x00000FFF;
+    do
+    {
+        register unsigned int inst;
+
+        inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
+        if (delay_clock >= 0)
+        { /* most likely that this condition does NOT take the branch */
+            if (delay_clock == 0)
+            {
+                *RSP.SP_PC_REG  = temp_PC;
+                *RSP.SP_PC_REG &= 0x00000FFC;
+                --delay_clock; /* maybe more optimizable: `delay_clock = -1` */
+                continue;
+            }
+            --delay_clock;
+        }
+#ifdef SP_EXECUTE_LOG
+        if (output_log)
+        {
+            const char digits[16] = {
+                '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+            };
+            char text[256];
+            char offset[4] = "";
+            char code[9] = "";
+            unsigned char endian_swap[4];
+
+            endian_swap[00] = (unsigned char)(inst >> 24);
+            endian_swap[01] = (unsigned char)(inst >> 16);
+            endian_swap[02] = (unsigned char)(inst >>  8);
+            endian_swap[03] = (unsigned char)inst;
+            offset[00] = digits[(*RSP.SP_PC_REG & 0xF00) >> 8];
+            offset[01] = digits[(*RSP.SP_PC_REG & 0x0F0) >> 4];
+            offset[02] = digits[(*RSP.SP_PC_REG & 0x00F) >> 0];
+            code[00] = digits[(inst & 0xF0000000) >> 28];
+            code[01] = digits[(inst & 0x0F000000) >> 24];
+            code[02] = digits[(inst & 0x00F00000) >> 20];
+            code[03] = digits[(inst & 0x000F0000) >> 16];
+            code[04] = digits[(inst & 0x0000F000) >> 12];
+            code[05] = digits[(inst & 0x00000F00) >>  8];
+            code[06] = digits[(inst & 0x000000F0) >>  4];
+            code[07] = digits[(inst & 0x0000000F) >>  0];
+            strcpy(text, offset);
+            strcat(text, "\n");
+            strcat(text, code);
+            sprintf(text, "%s\ncR:%i\ncS:%u", text, cycles, cycles_start);
+            message(text, 0); /* PC offset, MIPS hex, ratio cyclesRem:base. */
+            if (output_log == NULL) {} else /* Global pointer not updated?? */
+                fwrite(endian_swap, 4, 1, output_log);
+        }
+#endif
+        *RSP.SP_PC_REG += 0x00000004;
+        *RSP.SP_PC_REG &= 0x00000FFC;
+        if (inst >> 25 != 0x25) /* is a SU instruction */
+        {
+            const int rs = (inst & 0x03E00000) >> 21;
+            const int rt = (inst >> 16) & 0x0000001F; /* Try to mov upper HW. */
+            const short imm = (short)inst; /* (un)signed is sub-op-defined. */
+
+            inst >>= 26;
+            SP_PRIMARY[inst](rs, rt, imm);
+        }
+        else /* is a VU instruction */
+        {
+            const unsigned vd = (inst >>  6) & 0x0000001F;
+            const unsigned vs = (unsigned short)(inst) >> 11;
+            const unsigned vt = (inst >> 16) & 0x001F;
+            const unsigned e  = (inst >> 21) & 0x0000000F;
+
+            inst &= 0x0000003F;
+            SP_COP2_VECTOP[inst](vd, vs, vt, e);
+            continue;
+        }
+        --cycles;
+        if (*RSP.SP_STATUS_REG & 0x00000020) /* SP_STATUS_SSTEP by debugger. */
+        { /* реализация из 0.122u7 */
+            message("Single-stepping support unconfirmed.", 2);
+            if (rsp.step_count)
+                --rsp.step_count;
+            else
+            {
+                *RSP.SP_STATUS_REG |= 0x00000002;
+                message("SP_STATUS_BROKE", 3);
+            }
+        }
+    } while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000);
+    if (!(*RSP.SP_STATUS_REG & 0x00000002)) /* BROKE was not set. */
+        message("Halted RSP CPU loop by means of MTC0.", 2);
+    if (cycles == 0)
+        message("w00t!11!  cycles_start - executed was 0 !!", 0);
+    return (cycles_start - cycles); /* meant to be executed, minus remainder */
 }
 __declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
