@@ -190,11 +190,18 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
         }
         else /* is a VU instruction */
         {
-            const unsigned vd = (inst >>  6) & 0x0000001F;
-            const unsigned vs = (unsigned short)(inst) >> 11;
-            const unsigned vt = (inst >> 16) & 0x001F;
-            const unsigned e  = (inst >> 21) & 0x0000000F;
+            const int vd = (inst >>  6) & 0x0000001F;
+            const int vs = (unsigned short)inst >> 11;
+            const int vt = (inst >> 16) & 0x0000001F;
+            int e  = (inst >> 21) & 0x0000000F;
 
+#ifdef VU_OVERRIDE_WEIRD_ELEMENT
+            if (e == 1)
+            { /* Illegal assembly instruction, but valid RSP machine code. */
+                message("Weird vector element specifier.", 1);
+                e = 0;
+            }
+#endif
             inst &= 0x0000003F;
             SP_COP2_VECTOP[inst](vd, vs, vt, e);
             continue;
