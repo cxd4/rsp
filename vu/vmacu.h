@@ -19,29 +19,20 @@ void VMACU(int vd, int vs, int vt, int element)
         VACC[i].w[LO]  = (short)r2;
         VACC[i].w[MD]  = (short)r3;
         VACC[i].w[HI] += (short)(r3 >> 16) + (short)(r1 >> 31);
-
-        if (VACC[i].w[03] < 0)
+    }
+    for (i = 0; i < 8; i++)
+    {
+        if (VACC[i].q < 0)
         {
-            VR[vd].s[i] = 0;
+            VR[vd].s[i] = 0x0000;
+            continue;
         }
-        else
-        {
-            if (VACC[i].w[03] != 0)
-            {
-                VR[vd].s[i] = 0xFFFF;
-            }
-            else
-            {
-                if (VACC[i].w[02] < 0)
-                {
-                    VR[vd].s[i] = 0xFFFF;
-                }
-                else
-                {
-                    VR[vd].s[i] = VACC[i].w[02];
-                }
-            }
+        if (VACC[i].q & ~0x7FFFFFFFFFFF)
+        { /* Actually & ~0x7FFFFFFF, but we have shifted accumulators. */
+            VR[vd].s[i] = 0xFFFF;
+            continue;
         }
+        VR[vd].s[i] = VACC[i].w[MD];
     }
     return;
 }
