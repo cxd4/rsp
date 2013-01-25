@@ -65,12 +65,6 @@ signed short int SIGNED_CLAMP(signed long element) {
     return ((signed short)element);
 } /* At first glance I didn't like doing this either; good luck doing better! */
 
-unsigned short int UNSIGNED_CLAMP_HI(signed long element) {
-    if (element < -32768) return 0x0000;
-    if (element > +32767) return 0xFFFF;
-    return ((unsigned short)element);
-}
-
 #include "vmulf.h"
 #include "vmulu.h"
 #include "vmudl.h"

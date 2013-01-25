@@ -2,26 +2,42 @@
 
 void VMACU(int vd, int vs, int vt, int element)
 {
-    register int i;
+    register int i = 0;
 
-    for (i = 0; i < 8; i++)
+    if (element == 00) /* if (element >> 1 == 00) */
+        for (i = 0; i < 8; i++)
+			VACC[i].q += (long long)(VR[vs].s[i] * VR[vt].s[i]) << 17;
+    else if ((element & 0xE) == 02) /* scalar quarter */
     {
-        int sel = element_index[element][i];
-        INT32 r1 = (signed short)VR[vs].s[i] * (signed short)VR[vt].s[sel];
-        UINT32 r2 = (UINT16)ACCUM_L(i) + ((UINT16)(r1) * 2);
-        UINT32 r3 = (UINT16)ACCUM_M(i) + (UINT16)((r1 >> 16) * 2) + (UINT16)(r2 >> 16);
+        VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[element - 2]) << 17;
+        VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[element - 2]) << 17;
+        VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[element | 0]) << 17;
+        VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[element | 0]) << 17;
+        VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[element + 2]) << 17;
+        VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[element + 2]) << 17;
+        VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[element + 4]) << 17;
+        VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[element + 4]) << 17;
+    }
+    else if ((element & 0xC) == 04) /* scalar half */
+    {
+        VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[element - 4]) << 17;
+        VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[element - 4]) << 17;
+        VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[element - 4]) << 17;
+        VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[element - 4]) << 17;
+        VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[element | 0]) << 17;
+        VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[element | 0]) << 17;
+        VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[element | 0]) << 17;
+        VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[element | 0]) << 17;
+    }
+    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
+    {
+        const register int j = element % 7;
 
-        // VACC[i].q += (long long)r1 << 16;
-/* VMACU is much more complicated than the others.
- * Both the clamping procedures and additive accumulations seem unique.
- * It will take me a while to figure out how to optimize and simplify.
- */
-        VACC[i].w[LO]  = (short)r2;
-        VACC[i].w[MD]  = (short)r3;
-        VACC[i].w[HI] += (short)(r3 >> 16) + (short)(r1 >> 31);
+        for (i = 0; i < 8; i++)
+            VACC[i].q += (long long)(VR[vs].s[i] * VR[vt].s[j]) << 17;
     }
     for (i = 0; i < 8; i++)
-    {
+    { /* Clamp bits 31..16 of each accumulator element to the VR file. */
         if (VACC[i].q < 0)
         {
             VR[vd].s[i] = 0x0000;
