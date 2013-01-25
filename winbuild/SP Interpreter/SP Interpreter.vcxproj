@@ -79,6 +79,9 @@
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <CompileAs>CompileAsC</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>F:\lolnut.asm</AssemblerListingLocation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -95,9 +98,86 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\config.h" />
-    <ClInclude Include="..\..\execute.h" />
     <ClInclude Include="..\..\rsp.h" />
     <ClInclude Include="..\..\rsp_#1.1.h" />
+    <ClInclude Include="..\..\su\cop0\cop0.h" />
+    <ClInclude Include="..\..\su\cop0\mfc0.h" />
+    <ClInclude Include="..\..\su\cop0\mtc0.h" />
+    <ClInclude Include="..\..\su\cop2\cfc2.h" />
+    <ClInclude Include="..\..\su\cop2\cop2.h" />
+    <ClInclude Include="..\..\su\cop2\ctc2.h" />
+    <ClInclude Include="..\..\su\cop2\mfc2.h" />
+    <ClInclude Include="..\..\su\cop2\mtc2.h" />
+    <ClInclude Include="..\..\su\lwc2\lbv.h" />
+    <ClInclude Include="..\..\su\lwc2\ldv.h" />
+    <ClInclude Include="..\..\su\lwc2\lhv.h" />
+    <ClInclude Include="..\..\su\lwc2\llv.h" />
+    <ClInclude Include="..\..\su\lwc2\lpv.h" />
+    <ClInclude Include="..\..\su\lwc2\lqv.h" />
+    <ClInclude Include="..\..\su\lwc2\lrv.h" />
+    <ClInclude Include="..\..\su\lwc2\lsv.h" />
+    <ClInclude Include="..\..\su\lwc2\ltv.h" />
+    <ClInclude Include="..\..\su\lwc2\luv.h" />
+    <ClInclude Include="..\..\su\lwc2\lwc2.h" />
+    <ClInclude Include="..\..\su\regimm\bgez.h" />
+    <ClInclude Include="..\..\su\regimm\bgezal.h" />
+    <ClInclude Include="..\..\su\regimm\bltz.h" />
+    <ClInclude Include="..\..\su\regimm\bltzal.h" />
+    <ClInclude Include="..\..\su\regimm\regimm.h" />
+    <ClInclude Include="..\..\su\swc2\sbv.h" />
+    <ClInclude Include="..\..\su\swc2\sdv.h" />
+    <ClInclude Include="..\..\su\swc2\sfv.h" />
+    <ClInclude Include="..\..\su\swc2\shv.h" />
+    <ClInclude Include="..\..\su\swc2\slv.h" />
+    <ClInclude Include="..\..\su\swc2\spv.h" />
+    <ClInclude Include="..\..\su\swc2\sqv.h" />
+    <ClInclude Include="..\..\su\swc2\srv.h" />
+    <ClInclude Include="..\..\su\swc2\ssv.h" />
+    <ClInclude Include="..\..\su\swc2\stv.h" />
+    <ClInclude Include="..\..\su\swc2\suv.h" />
+    <ClInclude Include="..\..\su\swc2\swc2.h" />
+    <ClInclude Include="..\..\vu\vabs.h" />
+    <ClInclude Include="..\..\vu\vadd.h" />
+    <ClInclude Include="..\..\vu\vaddc.h" />
+    <ClInclude Include="..\..\vu\vand.h" />
+    <ClInclude Include="..\..\vu\vch.h" />
+    <ClInclude Include="..\..\vu\vcl.h" />
+    <ClInclude Include="..\..\vu\vcr.h" />
+    <ClInclude Include="..\..\vu\veq.h" />
+    <ClInclude Include="..\..\vu\vge.h" />
+    <ClInclude Include="..\..\vu\vlt.h" />
+    <ClInclude Include="..\..\vu\vmacf.h" />
+    <ClInclude Include="..\..\vu\vmacq.h" />
+    <ClInclude Include="..\..\vu\vmacu.h" />
+    <ClInclude Include="..\..\vu\vmadh.h" />
+    <ClInclude Include="..\..\vu\vmadl.h" />
+    <ClInclude Include="..\..\vu\vmadm.h" />
+    <ClInclude Include="..\..\vu\vmadn.h" />
+    <ClInclude Include="..\..\vu\vmov.h" />
+    <ClInclude Include="..\..\vu\vmrg.h" />
+    <ClInclude Include="..\..\vu\vmudh.h" />
+    <ClInclude Include="..\..\vu\vmudl.h" />
+    <ClInclude Include="..\..\vu\vmudm.h" />
+    <ClInclude Include="..\..\vu\vmudn.h" />
+    <ClInclude Include="..\..\vu\vmulf.h" />
+    <ClInclude Include="..\..\vu\vmulu.h" />
+    <ClInclude Include="..\..\vu\vnand.h" />
+    <ClInclude Include="..\..\vu\vne.h" />
+    <ClInclude Include="..\..\vu\vnop.h" />
+    <ClInclude Include="..\..\vu\vnor.h" />
+    <ClInclude Include="..\..\vu\vnxor.h" />
+    <ClInclude Include="..\..\vu\vor.h" />
+    <ClInclude Include="..\..\vu\vrcp.h" />
+    <ClInclude Include="..\..\vu\vrcph.h" />
+    <ClInclude Include="..\..\vu\vrcpl.h" />
+    <ClInclude Include="..\..\vu\vrsq.h" />
+    <ClInclude Include="..\..\vu\vrsqh.h" />
+    <ClInclude Include="..\..\vu\vrsql.h" />
+    <ClInclude Include="..\..\vu\vsaw.h" />
+    <ClInclude Include="..\..\vu\vsub.h" />
+    <ClInclude Include="..\..\vu\vsubc.h" />
+    <ClInclude Include="..\..\vu\vu.h" />
+    <ClInclude Include="..\..\vu\vxor.h" />
     <ClInclude Include="..\..\z64.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
