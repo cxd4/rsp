@@ -9,19 +9,26 @@ void LH(int rs, int rt, short imm)
     }
     addr  = SR[rs] + (signed short)imm;
     addr &= 0xFFF;
-    if ((addr & 0x001) != 0x000) /* For speed, try tests using 0, not 1. */
-    { /* `if (addr & 1)` is not explicit because compiler might try == 1. */
-        register signed short halfword;
-
-        halfword   = RSP.DMEM[addr ^ 03];
-        halfword <<= 8;
-        ++addr;
-        addr &= 0x00000FFF;
-        halfword  |= RSP.DMEM[addr ^ 03];
-        SR[rt] = halfword;
-        return;
+    switch (addr & 0x003)
+    {
+        case 00:
+        DEFAULT:
+            addr ^= 02; /* halfword endian swap */
+        case 01:
+            SR[rt] = *(signed short *)(RSP.DMEM + addr);
+            return;
+        case 02:  goto DEFAULT;
+        case 03:
+            if (addr == 0xFFF) /* LOL */
+            {
+                message("LH\nCrossed DMEM allocation barrier.", 1);
+                SR[rt] = (RSP.DMEM[0xFFF ^ 03] << 8) | RSP.DMEM[0x000 ^ 03];
+                SR[rt] = (signed short)SR[rt];
+                return;
+            }
+            message("LH\nCrossed word endian boundary.", 0);
+            SR[rt] = (RSP.DMEM[addr - 03] << 8) | RSP.DMEM[addr + 04];
+            SR[rt] = (signed short)SR[rt];
+            return;
     }
-    addr ^= 02; /* halfword endian swap */
-    SR[rt] = *(signed short *)(RSP.DMEM + addr);
-    return;
 }

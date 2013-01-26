@@ -1,6 +1,7 @@
 void LW(int rs, int rt, short imm)
 {
     register unsigned int addr;
+    register int word;
 
     if (rt == 0)
     {
@@ -9,10 +10,14 @@ void LW(int rs, int rt, short imm)
     }
     addr  = SR[rs] + (signed short)imm;
     addr &= 0xFFF;
-    if (addr & 0x003)
+    if ((addr & 0x003) == 0x000)
     {
-        register int word;
-
+        SR[rt] = *(int *)(RSP.DMEM + addr);
+        return;
+    }
+    if (addr > 0xFFC)
+    {
+        message("LW\nCrossed DMEM allocation barrier.", 1);
         word   = RSP.DMEM[addr ^ 03];
         word <<= 8;
         ++addr;
@@ -29,6 +34,16 @@ void LW(int rs, int rt, short imm)
         SR[rt] = word;
         return;
     }
-    SR[rt] = *(int *)(RSP.DMEM + addr);
+    word   = RSP.DMEM[addr ^ 03];
+    word <<= 8;
+    ++addr;
+    word  |= RSP.DMEM[addr ^ 03];
+    word <<= 8;
+    ++addr;
+    word  |= RSP.DMEM[addr ^ 03];
+    word <<= 8;
+    ++addr;
+    word  |= RSP.DMEM[addr ^ 03];
+    SR[rt] = word;
     return;
 }
