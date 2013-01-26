@@ -5,8 +5,7 @@ void SLTIU(int rs, int rt, short imm)
         message("SLTI\nTried to overwrite $zero.", 1);
         return;
     }
-message("need to get back to this", 3);
-    SR[rt] = (unsigned)SR[rs] < (unsigned short)imm;
+    SR[rt] = (unsigned)SR[rs] < (unsigned long)(short)imm;
     return;
 }
 
