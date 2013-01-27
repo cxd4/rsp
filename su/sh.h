@@ -21,7 +21,8 @@ void SH(int rs, int rt, short imm)
                 RSP.DMEM[0x000 ^ 03] = (unsigned char)SR[rt];
                 return; /* No, MSVC didn't employ swaps/rotates. :( */
             }
-            message("SH\nUntested, unoptimized.", 2);
+            message("SH\nUntested, unoptimized.", 3);
+/*
             *(int *)(RSP.DMEM + addr - 3)
           = _byteswap_ulong(*(int *)(RSP.DMEM + addr - 3));
             *(int *)(RSP.DMEM + addr + 1)
@@ -31,6 +32,7 @@ void SH(int rs, int rt, short imm)
           = _byteswap_ulong(*(int *)(RSP.DMEM + addr - 3));
             *(int *)(RSP.DMEM + addr + 1)
           = _byteswap_ulong(*(int *)(RSP.DMEM + addr + 1));
+*/
             return;
         }
     }

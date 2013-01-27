@@ -107,7 +107,7 @@ signed short int SIGNED_CLAMP(signed long element) {
 #include "vrsqh.h"
 #include "vnop.h"
 
-void res_VU(int vd, int rd, int rt, int element)
+void res_V(int vd, int rd, int rt, int element)
 {
     element = rt = rd = vd = 0;
     message("VU reserved instruction", 3);
@@ -115,14 +115,14 @@ void res_VU(int vd, int rd, int rt, int element)
 }
 
 static void (*SP_COP2_VECTOP[64])(int, int, int, int) = {
-    VMULF  ,VMULU  ,res_VU ,res_VU ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
-    VMACF  ,VMACU  ,res_VU ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
-    VADD   ,VSUB   ,res_VU ,VABS   ,VADDC  ,VSUBC  ,res_VU ,res_VU , /* 010 */
-    res_VU ,res_VU ,res_VU ,res_VU ,res_VU ,VSAW   ,res_VU ,res_VU , /* 011 */
+    VMULF  ,VMULU  ,res_V  ,res_V  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
+    VMACF  ,VMACU  ,res_V  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
+    VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */
+    res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,VSAW   ,res_V  ,res_V  , /* 011 */
     VLT    ,VEQ    ,VNE    ,VGE    ,VCL    ,VCH    ,VCR    ,VMRG   , /* 100 */
-    VAND   ,VNAND  ,VOR    ,VNOR   ,VXOR   ,VNXOR  ,res_VU ,res_VU , /* 101 */
+    VAND   ,VNAND  ,VOR    ,VNOR   ,VXOR   ,VNXOR  ,res_V  ,res_V  , /* 101 */
     VRCP   ,VRCPL  ,VRCPH  ,VMOV   ,VRSQ   ,VRSQL  ,VRSQH  ,VNOP   , /* 110 */
-    res_VU ,res_VU ,res_VU ,res_VU ,res_VU ,res_VU ,res_VU ,res_VU   /* 111 */
+    res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V   /* 111 */
 }; /* 000     001     010     011     100     101     110     111 */
 
 /* Some notes about the vector operation codes matrix.

@@ -7,7 +7,7 @@
 #ifndef _SU_H
 #define _SU_H
 
-void res(int rs, int rt, short imm)
+void res_S(int rs, int rt, short imm)
 {
     rt = rs = 0;
     imm = 0x0000;
@@ -47,12 +47,12 @@ void res(int rs, int rt, short imm)
 static void (*SP_PRIMARY[64])(int, int, short) = {
     SPECIAL,REGIMM ,J      ,JAL    ,BEQ    ,BNE    ,BLEZ   ,BGTZ   , /* 000 */
     ADDI   ,ADDIU  ,SLTI   ,SLTIU  ,ANDI   ,ORI    ,XORI   ,LUI    , /* 001 */
-    COP0   ,res    ,COP2   ,res    ,res    ,res    ,res    ,res    , /* 010 */
-    res    ,res    ,res    ,res    ,res    ,res    ,res    ,res    , /* 011 */
-    LB     ,LH     ,res    ,LW     ,LBU    ,LHU    ,res    ,res    , /* 100 */
-    SB     ,SH     ,res    ,SW     ,res    ,res    ,res    ,res    , /* 101 */
-    res    ,res    ,LWC2   ,res    ,res    ,res    ,res    ,res    , /* 110 */
-    res    ,res    ,SWC2   ,res    ,res    ,res    ,res    ,res      /* 111 */
+    COP0   ,res_S  ,COP2   ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  , /* 010 */
+    res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  , /* 011 */
+    LB     ,LH     ,res_S  ,LW     ,LBU    ,LHU    ,res_S  ,res_S  , /* 100 */
+    SB     ,SH     ,res_S  ,SW     ,res_S  ,res_S  ,res_S  ,res_S  , /* 101 */
+    res_S  ,res_S  ,LWC2   ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  , /* 110 */
+    res_S  ,res_S  ,SWC2   ,res_S  ,res_S  ,res_S  ,res_S  ,res_S    /* 111 */
 }; /* 000     001     010     011     100     101     110     111 */
 
 /* The op-code matrix implemented here favors the Nintendo 64 RSP.

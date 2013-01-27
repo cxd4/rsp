@@ -9,6 +9,11 @@ void LQV(int vt, int element, signed offset, int base)
 {
     register unsigned int addr = SR[base] + (offset * 16);
     const unsigned b = addr & 0x00000007;
+/*
+    __m128i vsreg;
+    __m128i bswap_w;
+    __m128i result;
+*/
 
     addr &= 0x00000FFF;
     if (element || (addr & (0x008)) != 0x000)
@@ -27,9 +32,36 @@ void LQV(int vt, int element, signed offset, int base)
         }
         return;
     }
+/*
+    bswap_w.m128i_u8[0x0] = 0x03;
+    bswap_w.m128i_u8[0x1] = 0x02;
+    bswap_w.m128i_u8[0x2] = 0x01;
+    bswap_w.m128i_u8[0x3] = 0x00;
+    bswap_w.m128i_u8[0x4] = 0x07;
+    bswap_w.m128i_u8[0x5] = 0x06;
+    bswap_w.m128i_u8[0x6] = 0x05;
+    bswap_w.m128i_u8[0x7] = 0x04;
+    bswap_w.m128i_u8[0x8] = 0x0B;
+    bswap_w.m128i_u8[0x9] = 0x0A;
+    bswap_w.m128i_u8[0xA] = 0x09;
+    bswap_w.m128i_u8[0xB] = 0x08;
+    bswap_w.m128i_u8[0xC] = 0x0F;
+    bswap_w.m128i_u8[0xD] = 0x0E;
+    bswap_w.m128i_u8[0xE] = 0x0D;
+    bswap_w.m128i_u8[0xF] = 0x0C;
+*/
     switch (b)
     {
         case 00:
+/*
+			message("a", 1);
+            memcpy(&vsreg, RSP.DMEM + (addr & 0xFF0), 16);
+			message("b", 1);
+            result = _mm_shuffle_epi8(vsreg, bswap_w);
+			message("c", 1);
+            memcpy(&VR[vt], &result, 16);
+			message("d", 1);
+*/
             VR[vt].s[00] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
             VR[vt].s[01] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
             VR[vt].s[02] = *(short *)(RSP.DMEM + addr + (0x4 ^ 02));
