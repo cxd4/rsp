@@ -34,6 +34,9 @@
     <Filter Include="Header Files\SU\LWC2">
       <UniqueIdentifier>{5d804912-38d3-4913-a764-6fba9b764ee3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\SU\SPECIAL">
+      <UniqueIdentifier>{432619cb-39b4-45b1-8ddc-ae366cff9818}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\rsp.c">
@@ -286,6 +289,153 @@
     </ClInclude>
     <ClInclude Include="..\..\su\cop2\mtc2.h">
       <Filter>Header Files\SU\COP2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\su.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\addiu.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\xori.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\andi.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\beq.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\bgtz.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\blez.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\bne.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\cop0.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\cop2.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\j.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\jal.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\lb.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\lbu.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\lh.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\lhu.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\lui.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\lw.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\lwc2.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\ori.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\regimm.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\sb.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\sh.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\slti.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\sltiu.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\sw.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\swc2.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\addi.h">
+      <Filter>Header Files\SU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\xor.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\add.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\addu.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\and.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\break.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\jalr.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\jr.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\nor.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\or.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\sll.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\sllv.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\slt.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\sltu.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\special.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\sra.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\srav.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\srl.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\srlv.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\sub.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\su\special\subu.h">
+      <Filter>Header Files\SU\SPECIAL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

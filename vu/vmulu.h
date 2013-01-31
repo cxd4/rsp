@@ -8,9 +8,9 @@ void VMULU(int vd, int vs, int vt, int element)
     for (i = 0; i < 8; i++)
     {
         int sel = element_index[element][i];
-        product = VR[vs].s[i] * VR[vt].s[sel];
+        product   = VR[vs].s[i] * VR[vt].s[sel];
         product <<= 1;
-        product += 0x0000000000008000; /* rounding ? */
+        product  += 32768; /* rounding */
 
         VACC[i].q = product << 16;
         VR[vd].s[i] = UNSIGNED_CLAMP(i); /*
