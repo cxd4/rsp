@@ -1,24 +1,9 @@
-#define DMA_CACHE   (*RSP.SP_MEM_ADDR_REG)
-#define DMA_DRAM    (*RSP.SP_DRAM_ADDR_REG)
-
-/* defined in systems/n64.c */
-#define rdram ((UINT32*)RSP.RDRAM)
-//extern UINT32 *rdram;
-#define rsp_imem ((UINT32*)RSP.IMEM)
-//extern UINT32 *rsp_imem;
-#define rsp_dmem ((UINT32*)RSP.DMEM)
-//extern UINT32 *rsp_dmem;
-//extern void dp_full_sync(void);
-
-#define BYTE8_XOR_BE(a) ((a)^7)
-/* исправляет JFG, Ocarina of Time */
-
 void SP_DMA_WRITE(void)
 {
+    unsigned int offC, offD; /* pointers to DMA cache mem and DMA dynamic RAM */
     register unsigned int length;
     register unsigned int count;
     register unsigned int skip;
-    unsigned char *src, *dst;
 
     skip   = *RSP.SP_WR_LEN_REG;
     length  = skip;
@@ -30,8 +15,8 @@ void SP_DMA_WRITE(void)
     ++length;
     skip  += length;
 
-    dst = RSP.RDRAM + (*RSP.SP_DRAM_ADDR_REG & 0x00FFFFF8);
-    src = RSP.DMEM  + (*RSP.SP_MEM_ADDR_REG  & 0x00001FF8);
+    offC = *RSP.SP_MEM_ADDR_REG;  /* MTC0    rt, $c0 # DMA_CACHE &= ~07; */
+    offD = *RSP.SP_DRAM_ADDR_REG; /* MTC0    rt, $c1 # DMA_DRAM  &= ~07; */
 /* Note:  Emu idiocy with DMEM-IMEM contiguity is NOT an issue.  (See rsp.c). */
     while (count)
     {
@@ -40,9 +25,12 @@ void SP_DMA_WRITE(void)
         --count;
         while (i < length)
         {
-            dst[(count*skip + i) ^ 07] = src[((count*length + i) & 0xFFF) ^ 07];
-            ++i;
+            *(long long *)(RSP.RDRAM + ((offD + i) & 0xFFFFFF))
+          = *(long long *)(RSP.DMEM  + ((offC + i) & 0x1FFF));
+            i += 0x000008;
         }
+        offC += length;
+        offD += skip;
     }
     *RSP.SP_DMA_BUSY_REG = 0x00000000;
     *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
@@ -50,10 +38,10 @@ void SP_DMA_WRITE(void)
 
 void SP_DMA_READ(void)
 {
+    unsigned int offC, offD; /* pointers to DMA cache mem and DMA dynamic RAM */
     register unsigned int length;
     register unsigned int count;
     register unsigned int skip;
-    unsigned char *src, *dst;
 
     skip   = *RSP.SP_RD_LEN_REG;
     length  = skip;
@@ -64,9 +52,9 @@ void SP_DMA_READ(void)
     skip >>= 8;
     ++length;
     skip  += length;
-
-    src = RSP.RDRAM + (*RSP.SP_DRAM_ADDR_REG & 0x00FFFFF8);
-    dst = RSP.DMEM  + (*RSP.SP_MEM_ADDR_REG  & 0x00001FF8);
+	
+    offC = *RSP.SP_MEM_ADDR_REG;  /* MTC0    rt, $c0 # DMA_CACHE &= ~07; */
+    offD = *RSP.SP_DRAM_ADDR_REG; /* MTC0    rt, $c1 # DMA_DRAM  &= ~07; */
 /* Note:  Emu idiocy with DMEM-IMEM contiguity is NOT an issue.  (See rsp.c). */
     while (count)
     {
@@ -75,9 +63,12 @@ void SP_DMA_READ(void)
         --count;
         while (i < length)
         {
-            dst[((count*length + i) & 0xFFF) ^ 07] = src[(count*skip + i) ^ 07];
-            ++i;
+            *(long long *)(RSP.DMEM  + ((offC + i) & 0x1FFF))
+          = *(long long *)(RSP.RDRAM + ((offD + i) & 0xFFFFFF));
+            i += 0x000008;
         }
+        offC += length;
+        offD += skip;
     }
     *RSP.SP_DMA_BUSY_REG = 0x00000000;
     *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
@@ -85,10 +76,6 @@ void SP_DMA_READ(void)
 
 void MTC0(int rt, int rd)
 {
-/* Not yet implemented:  SP interrupt locking.
- * One or two games need to do this with SP_STATUS, but left it out to see.
- * I forgot the games. :( :) :D
- */
     switch (rd)
     {
         case 0x0:
@@ -131,6 +118,7 @@ void MTC0(int rt, int rd)
             if (SR[rt] & 0x00000008) /* clear SP interrupt */
                 message("MTC0\nSP INTR:CLR", 3);
             if (SR[rt] & 0x00000010) { /* set SP interrupt */
+                message("Set SP interrupt.", 1); /* WDC && SR64, other games? */
                 *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
                 RSP.CheckInterrupts();
             }
