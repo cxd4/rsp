@@ -6,7 +6,7 @@ void VMACU(int vd, int vs, int vt, int element)
 
     if (element == 00) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
-			VACC[i].q += (long long)(VR[vs].s[i] * VR[vt].s[i]) << 17;
+            VACC[i].q += (long long)(VR[vs].s[i] * VR[vt].s[i]) << 17;
     else if ((element & 0xE) == 02) /* scalar quarter */
     {
         VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[element - 2]) << 17;
@@ -31,7 +31,7 @@ void VMACU(int vd, int vs, int vt, int element)
     }
     else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
     {
-        const register int j = element % 7;
+        const register int j = element & 07;
 
         for (i = 0; i < 8; i++)
             VACC[i].q += (long long)(VR[vs].s[i] * VR[vt].s[j]) << 17;
