@@ -2,7 +2,7 @@ void ADDIU(int rs, int rt, short imm)
 {
     if (rt == 0)
     {
-        message("ADDIU\nTried to overwrite $zero.", 1);
+     /* message("ADDIU\nTried to overwrite $zero.", 1); // Zelda MM debug GBI */
         return;
     }
     SR[rt] = SR[rs] + (signed short)imm;
