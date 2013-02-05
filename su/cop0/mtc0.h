@@ -1,9 +1,10 @@
 void SP_DMA_WRITE(void)
 {
-    unsigned int offC, offD; /* pointers to DMA cache mem and DMA dynamic RAM */
     register unsigned int length;
     register unsigned int count;
     register unsigned int skip;
+    const unsigned char *MSP_CACHE = ((*RSP.SP_MEM_ADDR_REG & 0x1000) == 0x000)
+                                   ? RSP.DMEM : RSP.IMEM;
 
     skip   = *RSP.SP_WR_LEN_REG;
     length  = skip;
@@ -14,23 +15,19 @@ void SP_DMA_WRITE(void)
     skip >>= 8;
     ++length;
     skip  += length;
-
-    offC = *RSP.SP_MEM_ADDR_REG;  /* MTC0    rt, $c0 # DMA_CACHE &= ~07; */
-    offD = *RSP.SP_DRAM_ADDR_REG; /* MTC0    rt, $c1 # DMA_DRAM  &= ~07; */
-/* Note:  Emu idiocy with DMEM-IMEM contiguity is NOT an issue.  (See rsp.c). */
     while (count)
     {
+        unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
         register unsigned int i = 0;
 
         --count;
         while (i < length)
         {
-            *(long long *)(RSP.RDRAM + ((offD + i) & 0xFFFFFF))
-          = *(long long *)(RSP.DMEM  + ((offC + i) & 0x1FFF));
-            i += 0x000008;
+            offC = (count*length + *RSP.SP_MEM_ADDR_REG + i) & 0x00000FFF;
+            offD = (count*skip + *RSP.SP_DRAM_ADDR_REG + i) & 0x00FFFFFF;
+            memcpy(RSP.RDRAM + offD, MSP_CACHE + offC, 1);
+            i += 0x000001;
         }
-        offC += length;
-        offD += skip;
     }
     *RSP.SP_DMA_BUSY_REG = 0x00000000;
     *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
@@ -38,10 +35,11 @@ void SP_DMA_WRITE(void)
 
 void SP_DMA_READ(void)
 {
-    unsigned int offC, offD; /* pointers to DMA cache mem and DMA dynamic RAM */
     register unsigned int length;
     register unsigned int count;
     register unsigned int skip;
+    unsigned char *MSP_CACHE = ((*RSP.SP_MEM_ADDR_REG & 0x1000) == 0x000)
+                             ? RSP.DMEM : RSP.IMEM;
 
     skip   = *RSP.SP_RD_LEN_REG;
     length  = skip;
@@ -52,23 +50,19 @@ void SP_DMA_READ(void)
     skip >>= 8;
     ++length;
     skip  += length;
-	
-    offC = *RSP.SP_MEM_ADDR_REG;  /* MTC0    rt, $c0 # DMA_CACHE &= ~07; */
-    offD = *RSP.SP_DRAM_ADDR_REG; /* MTC0    rt, $c1 # DMA_DRAM  &= ~07; */
-/* Note:  Emu idiocy with DMEM-IMEM contiguity is NOT an issue.  (See rsp.c). */
     while (count)
     {
+        unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
         register unsigned int i = 0;
 
         --count;
         while (i < length)
         {
-            *(long long *)(RSP.DMEM  + ((offC + i) & 0x1FFF))
-          = *(long long *)(RSP.RDRAM + ((offD + i) & 0xFFFFFF));
-            i += 0x000008;
+            offC = (count*length + *RSP.SP_MEM_ADDR_REG + i) & 0x00000FFF;
+            offD = (count*skip + *RSP.SP_DRAM_ADDR_REG + i) & 0x00FFFFFF;
+            memcpy(MSP_CACHE + offC, RSP.RDRAM + offD, 1);
+            i += 0x001;
         }
-        offC += length;
-        offD += skip;
     }
     *RSP.SP_DMA_BUSY_REG = 0x00000000;
     *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
