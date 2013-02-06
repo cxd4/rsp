@@ -26,32 +26,6 @@ const int element_index[16][8] = {
     { 07, 07, 07, 07, 07, 07, 07, 07 }  /* 7 */
 };
 
-/* This is zilmar's method of transposing the source element read order,
- * based on the loop iteration count and destination element, to avoid
- * premature vector element overwrites.  The more modern method however
- * is to just not transpose the read orders and write to a prebuffer,
- * temporary vector register, then do one single hit to move the result
- * over to the destination vector register.  So this probably has no use.
- */
-const int element_source_transpose[16][8] = {
-    { 00, 01, 02, 03, 04, 05, 06, 07 },
-    { 00, 01, 02, 03, 04, 05, 06, 07 },
-    { 01, 03, 05, 07, 00, 02, 04, 06 },
-    { 00, 02, 04, 06, 01, 03, 05, 07 },
-    { 01, 02, 03, 05, 06, 07, 00, 04 },
-    { 00, 02, 03, 04, 06, 07, 01, 05 },
-    { 00, 01, 03, 04, 05, 07, 02, 06 },
-    { 00, 01, 02, 04, 05, 06, 03, 07 },
-    { 01, 02, 03, 04, 05, 06, 07, 00 },
-    { 00, 02, 03, 04, 05, 06, 07, 01 },
-    { 00, 01, 03, 04, 05, 06, 07, 02 },
-    { 00, 01, 02, 04, 05, 06, 07, 03 },
-    { 00, 01, 02, 03, 05, 06, 07, 04 },
-    { 00, 01, 02, 03, 04, 06, 07, 05 },
-    { 00, 01, 02, 03, 04, 05, 07, 06 },
-    { 00, 01, 02, 03, 04, 05, 06, 07 }
-};
-
 unsigned short int UNSIGNED_CLAMP(signed int accum)
 {
     if (VACC[accum].q < (long long)0xFFFF800000000000) return 0x0000;
@@ -107,6 +81,12 @@ signed short int SIGNED_CLAMP(signed long element) {
 #include "vrsqh.h"
 #include "vnop.h"
 
+void res_M(int vd, int vs, int vt, int element)
+{
+    element = vt = vs = vd = 0;
+    message("VRNDP/VRNDN/VMULQ\nMPEG DCT canceled.", 3);
+    return; /* Ultra64 OS did have these, so one could implement this ext. */
+}
 void res_V(int vd, int rd, int rt, int element)
 {
     element = rt = rd = vd = 0;
@@ -115,8 +95,8 @@ void res_V(int vd, int rd, int rt, int element)
 }
 
 static void (*SP_COP2_VECTOP[64])(int, int, int, int) = {
-    VMULF  ,VMULU  ,res_V  ,res_V  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
-    VMACF  ,VMACU  ,res_V  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
+    VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
+    VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
     VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */
     res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,VSAW   ,res_V  ,res_V  , /* 011 */
     VLT    ,VEQ    ,VNE    ,VGE    ,VCL    ,VCH    ,VCR    ,VMRG   , /* 100 */
