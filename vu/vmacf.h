@@ -2,107 +2,69 @@
 
 void VMACF(int vd, int vs, int vt, int element)
 {
-    switch (element)
+    register int product;
+    register int i, j;
+
+    for (i = 0; i < 8; i++)
+    { /* 48 bits left by 16 to use high DW sign bit */
+        VACC[i].q >>= 16;
+        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
+    }
+    if (element == 0x0) /* if (element >> 1 == 00) */
     {
-        case 0x0: /* none:  { 00, 01, 02, 03, 04, 05, 06, 07 } */
-        case 0x1:
-            VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[00]) << 17;
-            VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[01]) << 17;
-            VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[02]) << 17;
-            VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[03]) << 17;
-            VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[04]) << 17;
-            VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[05]) << 17;
-            VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[06]) << 17;
-            VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[07]) << 17;
-            goto CLAMP_TO_VR_FILE;
-        case 0x2: /* 0Q:  { 00, 00, 02, 02, 04, 04, 06, 06 } */
-            VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[00]) << 17;
-            VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[00]) << 17;
-            VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[02]) << 17;
-            VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[02]) << 17;
-            VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[04]) << 17;
-            VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[04]) << 17;
-            VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[06]) << 17;
-            VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[06]) << 17;
-            goto CLAMP_TO_VR_FILE;
-        case 0x3: /* 1Q:  { 01, 01, 03, 03, 05, 05, 07, 07 } */
-            VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[01]) << 17;
-            VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[01]) << 17;
-            VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[03]) << 17;
-            VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[03]) << 17;
-            VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[05]) << 17;
-            VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[05]) << 17;
-            VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[07]) << 17;
-            VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[07]) << 17;
-            goto CLAMP_TO_VR_FILE;
-        case 0x4: /* 0H:  { 00, 00, 00, 00, 04, 04, 04, 04 } */
-            VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[00]) << 17;
-            VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[00]) << 17;
-            VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[00]) << 17;
-            VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[00]) << 17;
-            VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[04]) << 17;
-            VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[04]) << 17;
-            VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[04]) << 17;
-            VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[04]) << 17;
-            goto CLAMP_TO_VR_FILE;
-        case 0x5: /* 1H:  { 01, 01, 01, 01, 05, 05, 05, 05 } */
-            VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[01]) << 17;
-            VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[01]) << 17;
-            VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[01]) << 17;
-            VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[01]) << 17;
-            VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[05]) << 17;
-            VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[05]) << 17;
-            VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[05]) << 17;
-            VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[05]) << 17;
-            goto CLAMP_TO_VR_FILE;
-        case 0x6: /* 2H:  { 02, 02, 02, 02, 06, 06, 06, 06 } */
-            VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[02]) << 17;
-            VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[02]) << 17;
-            VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[02]) << 17;
-            VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[02]) << 17;
-            VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[06]) << 17;
-            VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[06]) << 17;
-            VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[06]) << 17;
-            VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[06]) << 17;
-            goto CLAMP_TO_VR_FILE;
-		case 0x7: /* 3H:  { 03, 03, 03, 03, 07, 07, 07, 07 } */
-            VACC[00].q += (long long)(VR[vs].s[00] * VR[vt].s[03]) << 17;
-            VACC[01].q += (long long)(VR[vs].s[01] * VR[vt].s[03]) << 17;
-            VACC[02].q += (long long)(VR[vs].s[02] * VR[vt].s[03]) << 17;
-            VACC[03].q += (long long)(VR[vs].s[03] * VR[vt].s[03]) << 17;
-            VACC[04].q += (long long)(VR[vs].s[04] * VR[vt].s[07]) << 17;
-            VACC[05].q += (long long)(VR[vs].s[05] * VR[vt].s[07]) << 17;
-            VACC[06].q += (long long)(VR[vs].s[06] * VR[vt].s[07]) << 17;
-            VACC[07].q += (long long)(VR[vs].s[07] * VR[vt].s[07]) << 17;
-            goto CLAMP_TO_VR_FILE;
-        case 0x8: /* 0:  { 00, 00, 00, 00, 00, 00, 00, 00 } */
-        case 0x9: /* 1:  { 01, 01, 01, 01, 01, 01, 01, 01 } */
-        case 0xA: /* 2:  { 02, 02, 02, 02, 02, 02, 02, 02 } */
-        case 0xB: /* 3:  { 03, 03, 03, 03, 03, 03, 03, 03 } */
-        case 0xC: /* 4:  { 04, 04, 04, 04, 04, 04, 04, 04 } */
-        case 0xD: /* 5:  { 05, 05, 05, 05, 05, 05, 05, 05 } */
-        case 0xE: /* 6:  { 06, 06, 06, 06, 06, 06, 06, 06 } */
-        case 0xF: /* 7:  { 07, 07, 07, 07, 07, 07, 07, 07 } */{
-            register signed short source = VR[vt].s[element & 07];
-            VACC[00].q += (long long)(VR[vs].s[00] * source) << 17;
-            VACC[01].q += (long long)(VR[vs].s[01] * source) << 17;
-            VACC[02].q += (long long)(VR[vs].s[02] * source) << 17;
-            VACC[03].q += (long long)(VR[vs].s[03] * source) << 17;
-            VACC[04].q += (long long)(VR[vs].s[04] * source) << 17;
-            VACC[05].q += (long long)(VR[vs].s[05] * source) << 17;
-            VACC[06].q += (long long)(VR[vs].s[06] * source) << 17;
-            VACC[07].q += (long long)(VR[vs].s[07] * source) << 17;
-            goto CLAMP_TO_VR_FILE;
+        for (i = 0; i < 8; i++)
+        {
+            product = VR[vs].s[i] * VR[vt].s[i];
+            product <<= 1; /* shift of partial product */
+            VACC[i].q += product; /* fraction rounding */
         }
     }
-CLAMP_TO_VR_FILE:
-    VR[vd].s[00] = SIGNED_CLAMP(VACC[00].l[01]);
-    VR[vd].s[01] = SIGNED_CLAMP(VACC[01].l[01]);
-    VR[vd].s[02] = SIGNED_CLAMP(VACC[02].l[01]);
-    VR[vd].s[03] = SIGNED_CLAMP(VACC[03].l[01]);
-    VR[vd].s[04] = SIGNED_CLAMP(VACC[04].l[01]);
-    VR[vd].s[05] = SIGNED_CLAMP(VACC[05].l[01]);
-    VR[vd].s[06] = SIGNED_CLAMP(VACC[06].l[01]);
-    VR[vd].s[07] = SIGNED_CLAMP(VACC[07].l[01]);
+    else if ((element & 0xE) == 02) /* scalar quarter */
+    {
+        for (i = 0; i < 8; i++)
+        {
+            j = (i & 0xE) | (element & 01);
+            product = VR[vs].s[i] * VR[vt].s[j];
+            product <<= 1;
+            VACC[i].q += product;
+        }
+    }
+    else if ((element & 0xC) == 04) /* scalar half */
+    {
+        for (i = 0; i < 8; i++)
+        {
+            j = (i & 0xC) | (element & 03);
+            product = VR[vs].s[i] * VR[vt].s[j];
+            product <<= 1;
+            VACC[i].q += product;
+        }
+    }
+    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
+    {
+        const register short int m = VR[vt].s[element & 07];
+
+        for (i = 0; i < 8; i++)
+        {
+            product = VR[vs].s[i] * m;
+            product <<= 1;
+            VACC[i].q += product;
+        }
+    }
+    for (i = 0; i < 8; i++) /* Signed-clamp bits 31..16 of ACC to dest. VR. */
+        if (VACC[i].q & 0x800000000000) /* acc < 0 */
+            if (~VACC[i].q & ~0x00007FFFFFFF) /* short underflow */
+                VR[vd].s[i] = 0x8000;
+            else
+                VR[vd].s[i] = (short)(VACC[i].q >> 16);
+        else
+            if (VACC[i].q & ~0x00007FFFFFFF) /* short overflow */
+                VR[vd].s[i] = 0x7FFF;
+            else
+                VR[vd].s[i] = (short)(VACC[i].q >> 16);
+    for (i = 0; i < 8; i++)
+    { /* 48 bits left by 16 to use high DW sign bit */
+        VACC[i].q <<= 16;
+        /* VACC[i].q >>= 16; */
+    }
     return;
 }
