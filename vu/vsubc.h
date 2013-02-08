@@ -6,12 +6,17 @@ void VSUBC(int vd, int vs, int vt, int element)
     register int i;
 
     VCF[00] = 0x0000;
+    for (i = 0; i < 8; i++)
+    { /* 48 bits left by 16 to use high DW sign bit */
+        VACC[i].q >>= 16;
+        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
+    }
     if (element == 00) /* if (element >> 1 == 00) */
     {
         for (i = 0; i < 8; i++)
         {
             result = (unsigned short)VR[vs].s[i] - (unsigned short)VR[vt].s[i];
-            VACC[i].w[LO] = (short)result;
+            VACC[i].w[00] = (short)result;
             if (result == 0) continue;
             if (result < 0)
                 VCF[00] |= 0x0101 << i;
@@ -27,7 +32,7 @@ void VSUBC(int vd, int vs, int vt, int element)
         {
             j = (i & 0xE) | (element & 01);
             result = (unsigned short)VR[vs].s[i] - (unsigned short)VR[vt].s[j];
-            VACC[i].w[LO] = (short)result;
+            VACC[i].w[00] = (short)result;
             if (result == 0) continue;
             if (result < 0)
                 VCF[00] |= 0x0101 << i;
@@ -43,7 +48,7 @@ void VSUBC(int vd, int vs, int vt, int element)
         {
             j = (i & 0xC) | (element & 03);
             result = (unsigned short)VR[vs].s[i] - (unsigned short)VR[vt].s[j];
-            VACC[i].w[LO] = (short)result;
+            VACC[i].w[00] = (short)result;
             if (result == 0) continue;
             if (result < 0)
                 VCF[00] |= 0x0101 << i;
@@ -58,7 +63,7 @@ void VSUBC(int vd, int vs, int vt, int element)
         for (i = 0; i < 8; i++)
         {
             result = (unsigned short)VR[vs].s[i] - (unsigned short)VR[vt].s[j];
-            VACC[i].w[LO] = (short)result;
+            VACC[i].w[00] = (short)result;
             if (result == 0) continue;
             if (result < 0)
                 VCF[00] |= 0x0101 << i;
@@ -67,6 +72,11 @@ void VSUBC(int vd, int vs, int vt, int element)
         }
     }
     for (i = 0; i < 8; i++)
-        VR[vd].s[i] = VACC[i].w[LO];
+        VR[vd].s[i] = VACC[i].w[00];
+    for (i = 0; i < 8; i++)
+    { /* 48 bits left by 16 to use high DW sign bit */
+        VACC[i].q <<= 16;
+        /* VACC[i].q >>= 16; */
+    }
     return;
 }

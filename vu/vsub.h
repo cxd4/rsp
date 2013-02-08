@@ -5,6 +5,11 @@ void VSUB(int vd, int vs, int vt, int element)
     signed int result[8];
     register int i;
 
+    for (i = 0; i < 8; i++)
+    { /* 48 bits left by 16 to use high DW sign bit */
+        VACC[i].q >>= 16;
+        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
+    }
     if (element == 00) /* if (element >> 1 == 00) */
     {
         for (i = 0; i < 8; i++)
@@ -51,13 +56,18 @@ void VSUB(int vd, int vs, int vt, int element)
     }
     for (i = 0; i < 8; i++)
     {
-        VACC[i].w[LO] = (short)result[i];
+        VACC[i].w[00] = (short)result[i];
         if (result[i] > +32767)
             VR[vd].s[i] = 0x7FFF;
         else if (result[i] < -32768)
             VR[vd].s[i] = 0x8000;
         else
             VR[vd].s[i] = (short)result[i];
+    }
+    for (i = 0; i < 8; i++)
+    { /* 48 bits left by 16 to use high DW sign bit */
+        VACC[i].q <<= 16;
+        /* VACC[i].q >>= 16; */
     }
     VCF[00] = 0x0000;
     return;
