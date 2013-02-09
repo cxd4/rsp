@@ -2,34 +2,104 @@
 
 void VLT(int vd, int vs, int vt, int element)
 {
-    register int i;
+    register int i, j;
+
     VCF[01] = 0x0000;
+/* We could be accurate and clear these mid-way (e.g. vs > vt then clear the
+ * current bit of VCC), but doing this now is much more simple and direct.
+ */
     for (i = 0; i < 8; i++)
-    {
-        int sel = element_index[element][i];
-        if (VR[vs].s[i] < VR[vt].s[sel])
-        {
-            VACC[i].w[01] = VR[vs].s[i];
-            VCF[01] |= 0x0001 << i;
-            continue;
-        }
-        if (VR[vs].s[i] > VR[vt].s[sel])
-        {
-            VACC[i].w[01] = VR[vt].s[sel];
-            continue;
-        }
-        VACC[i].w[01] = VR[vs].s[i];
-        if ((VCF[00] & (0x0101 << i)) != 0x0101 << i) continue;
-            VCF[01] |= 0x0001 << i;
+    { /* 48 bits left by 16 to use high DW sign bit */
+        VACC[i].q >>= 16;
+        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
     }
-    VR[vd].s[00] = VACC[00].w[01];
-    VR[vd].s[01] = VACC[01].w[01];
-    VR[vd].s[02] = VACC[02].w[01];
-    VR[vd].s[03] = VACC[03].w[01];
-    VR[vd].s[04] = VACC[04].w[01];
-    VR[vd].s[05] = VACC[05].w[01];
-    VR[vd].s[06] = VACC[06].w[01];
-    VR[vd].s[07] = VACC[07].w[01];
+    if (element == 0x0) /* if (element >> 1 == 00) */
+    {
+        for (i = 0; i < 8; i++)
+        {
+            if (VR[vs].s[i] < VR[vt].s[i])
+                VCF[01] |= 0x0001 << i;
+            else if (VR[vs].s[i] == VR[vt].s[i])
+                if ((VCF[00] & (0x0101 << i)) == 0x0101 << i)
+                    VCF[01] |= 0x0001 << i; /*
+                else
+                    VCF[01] &= ~(0x0001 << i);
+            else
+                VCF[01] &= ~(0x0001 << i); */
+            if (VCF[01] & (0x0001 << i)) /* As defined by above if()-else-if. */
+                VACC[i].w[00] = VR[vs].s[i];
+            else
+                VACC[i].w[00] = VR[vt].s[i];
+        }
+    }
+    else if ((element & 0xE) == 02) /* scalar quarter */
+    {
+        for (i = 0; i < 8; i++)
+        {
+            j = (i & 0xE) | (element & 01);
+            if (VR[vs].s[i] < VR[vt].s[j])
+                VCF[01] |= 0x0001 << i;
+            else if (VR[vs].s[i] == VR[vt].s[j])
+                if ((VCF[00] & (0x0101 << i)) == 0x0101 << i)
+                    VCF[01] |= 0x0001 << i; /*
+                else
+                    VCF[01] &= ~(0x0001 << i);
+            else
+                VCF[01] &= ~(0x0001 << i); */
+            if (VCF[01] & (0x0001 << i))
+                VACC[i].w[00] = VR[vs].s[i];
+            else
+                VACC[i].w[00] = VR[vt].s[j];
+        }
+    }
+    else if ((element & 0xC) == 04) /* scalar half */
+    {
+        for (i = 0; i < 8; i++)
+        {
+            j = (i & 0xC) | (element & 03);
+            if (VR[vs].s[i] < VR[vt].s[j])
+                VCF[01] |= 0x0001 << i;
+            else if (VR[vs].s[i] == VR[vt].s[j])
+                if ((VCF[00] & (0x0101 << i)) == 0x0101 << i)
+                    VCF[01] |= 0x0001 << i; /*
+                else
+                    VCF[01] &= ~(0x0001 << i);
+            else
+                VCF[01] &= ~(0x0001 << i); */
+            if (VCF[01] & (0x0001 << i))
+                VACC[i].w[00] = VR[vs].s[i];
+            else
+                VACC[i].w[00] = VR[vt].s[j];
+        }
+    }
+    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
+    {
+        const register short int t = VR[vt].s[element & 07];
+
+        for (i = 0; i < 8; i++)
+        {
+            if (VR[vs].s[i] < t)
+                VCF[01] |= 0x0001 << i;
+            else if (VR[vs].s[i] == t)
+                if ((VCF[00] & (0x0101 << i)) == 0x0101 << i)
+                    VCF[01] |= 0x0001 << i; /*
+                else
+                    VCF[01] &= ~(0x0001 << i);
+            else
+                VCF[01] &= ~(0x0001 << i); */
+            if (VCF[01] & (0x0001 << i))
+                VACC[i].w[00] = VR[vs].s[i];
+            else
+                VACC[i].w[00] = t;
+        }
+    }
+    for (i = 0; i < 8; i++)
+        VR[vd].s[i] = (short)VACC[i].q;
+    for (i = 0; i < 8; i++)
+    { /* 48 bits left by 16 to use high DW sign bit */
+        VACC[i].q <<= 16;
+        /* VACC[i].q >>= 16; */
+    }
     VCF[00] = 0x0000;
     return;
 }
