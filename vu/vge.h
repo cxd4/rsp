@@ -17,7 +17,7 @@ void VGE(int vd, int vs, int vt, int element)
         if (VR[vs].s[i] > VR[vt].s[sel])
             VCF[01] |= 0x0001 << i;
         else if (VR[vs].s[i] == VR[vt].s[sel])
-            if ((VCF[00] & (0x0101 << i)) == 0x0000 << i)
+            if ((VCF[00] & (0x0101 << i)) != 0x0101 << i)
                 VCF[01] |= 0x0001 << i; /*
             else
                 VCF[01] &= ~(0x0001 << i);
