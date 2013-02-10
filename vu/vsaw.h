@@ -17,11 +17,6 @@ void VSAW(int vd, int vs, int vt, int element)
  * as reversing, lots of games seem to specify it as nonzero, possibly to
  * avoid register stalling or other VU hazards.  Not really certain why yet.
  */
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     element ^= 0x8;
 /* Or, for exception overrides, should this be `element &= 0x7;` ?
  * Currently this code is safer because &= is less likely to catch oddities.
@@ -52,10 +47,5 @@ void VSAW(int vd, int vs, int vt, int element)
     for (i = 0; i < 8; i++)
         VACC[i].w[element] = result[i]; /* ... = VR[vs].s[i]; */
 #endif
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
-    }
     return;
 }

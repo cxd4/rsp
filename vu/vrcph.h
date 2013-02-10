@@ -7,11 +7,6 @@ void VRCPH(int vd, int del, int vt, int element)
 
     rsp.reciprocal_high = VR[vt].s[sel];
     del &= 07;
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     switch (element)
     {
         case 0x0:
@@ -104,11 +99,6 @@ void VRCPH(int vd, int del, int vt, int element)
             VACC[07].w[00] = source;
             break;
         }
-    }
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
     }
     VR[vd].s[del] = rsp.reciprocal_res >> 16; /* store high part */
     return;

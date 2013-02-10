@@ -4,11 +4,6 @@ void VMRG(int vd, int vs, int vt, int element)
 {
     register int i;
 
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     switch (element)
     {
         case 0x0: /* none:  { 00, 01, 02, 03, 04, 05, 06, 07 } */
@@ -103,18 +98,7 @@ void VMRG(int vd, int vs, int vt, int element)
         }
     }
 STORE_ACCUMULATOR_RESULTS:
-    VR[vd].s[00] = (short)VACC[00].q;
-    VR[vd].s[01] = (short)VACC[01].q;
-    VR[vd].s[02] = (short)VACC[02].q;
-    VR[vd].s[03] = (short)VACC[03].q;
-    VR[vd].s[04] = (short)VACC[04].q;
-    VR[vd].s[05] = (short)VACC[05].q;
-    VR[vd].s[06] = (short)VACC[06].q;
-    VR[vd].s[07] = (short)VACC[07].q;
     for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
-    }
+        VR[vd].s[i] = (short)VACC[i].q;
     return;
 }

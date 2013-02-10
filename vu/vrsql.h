@@ -44,11 +44,6 @@ void VRSQL(int vd, int del, int vt, int element)
             sqr = ~sqr;
         }
     }
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     switch (element)
     {
         case 0x0:
@@ -141,11 +136,6 @@ void VRSQL(int vd, int del, int vt, int element)
             VACC[07].w[00] = source;
             break;
         }
-    }
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
     }
     rsp.square_root_res = sqr;
     VR[vd].s[del & 07] = (short)rsp.square_root_res; /* store low part */

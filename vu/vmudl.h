@@ -47,10 +47,5 @@ void VMUDL(int vd, int vs, int vt, int element)
     }
     for (i = 0; i < 8; i++) /* Signed-clamp bits 15..0 of ACC to dest. VR. */
         VR[vd].s[i] = (short)VACC[i].q; /* No arithmetic checks needed. */
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
-    }
     return;
 }

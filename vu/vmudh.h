@@ -56,10 +56,5 @@ void VMUDH(int vd, int vs, int vt, int element)
                 VR[vd].s[i] = 0x7FFF;
             else
                 VR[vd].s[i] = (short)(VACC[i].q >> 16);
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
-    }
     return;
 }

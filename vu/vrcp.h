@@ -54,11 +54,6 @@ void VRCP(int vd, int del, int vt, int element)
             rec = ~rec;
         }
     }
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     switch (element)
     {
         case 0x0:
@@ -151,11 +146,6 @@ void VRCP(int vd, int del, int vt, int element)
             VACC[07].w[00] = source;
             break;
         }
-    }
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
     }
     rsp.reciprocal_res = rec;
     VR[vd].s[del & 07] = (short)rsp.reciprocal_res; /* store low part */

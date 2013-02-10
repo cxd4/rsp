@@ -5,11 +5,6 @@ void VCL(int vd, int vs, int vt, int element)
     register int i;
 
     for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
-    for (i = 0; i < 8; i++)
     {
         int sel = element_index[element][i];
         signed short s1 = VR[vs].s[i];
@@ -77,11 +72,6 @@ void VCL(int vd, int vs, int vt, int element)
     }
     for (i = 0; i < 8; i++)
         VR[vd].s[i] = (short)VACC[i].q;
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
-    }
     VCF[00] = 0x0000;
     VCF[02] = 0x0000;
     return;

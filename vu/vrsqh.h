@@ -5,11 +5,6 @@ void VRSQH(int vd, int del, int vt, int element)
     register int i;
     register int sel = element & 07; /* element_index[element][del]; */
 
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     rsp.square_root_high = VR[vt].s[sel];
     switch (element)
     {
@@ -103,11 +98,6 @@ void VRSQH(int vd, int del, int vt, int element)
             VACC[07].w[00] = source;
             break;
         }
-    }
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
     }
     VR[vd].s[del & 07] = rsp.square_root_res >> 16; /* store high part */
     return;

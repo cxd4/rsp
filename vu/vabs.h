@@ -4,11 +4,6 @@ void VABS(int vd, int vs, int vt, int element)
 {
     register int i;
 
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     if (element == 00) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
             if (VR[vs].s[i] < 0)
@@ -58,11 +53,6 @@ void VABS(int vd, int vs, int vt, int element)
         if (VACC[i].w[00] == 0x8000)
             message("VABS element underflow.", 2);
         VR[vd].s[i] = VACC[i].w[00];
-    }
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
     }
     return;
 }

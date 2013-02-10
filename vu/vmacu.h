@@ -5,11 +5,6 @@ void VMACU(int vd, int vs, int vt, int element)
     register int product;
     register int i, j;
 
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     if (element == 0x0) /* if (element >> 1 == 00) */
     {
         for (i = 0; i < 8; i++)
@@ -57,10 +52,5 @@ void VMACU(int vd, int vs, int vt, int element)
             VR[vd].s[i] = 0xFFFF;
         else
             VR[vd].s[i] = (short)(VACC[i].q >> 16);
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
-    }
     return;
 }

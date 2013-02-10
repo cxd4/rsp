@@ -8,11 +8,6 @@ void VLT(int vd, int vs, int vt, int element)
 /* We could be accurate and clear these mid-way (e.g. vs > vt then clear the
  * current bit of VCC), but doing this now is much more simple and direct.
  */
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q >>= 16;
-        /* VACC[i].q <<= 16; // undo zilmar's ACC hack */
-    }
     if (element == 0x0) /* if (element >> 1 == 00) */
     {
         for (i = 0; i < 8; i++)
@@ -95,11 +90,6 @@ void VLT(int vd, int vs, int vt, int element)
     }
     for (i = 0; i < 8; i++)
         VR[vd].s[i] = (short)VACC[i].q;
-    for (i = 0; i < 8; i++)
-    { /* 48 bits left by 16 to use high DW sign bit */
-        VACC[i].q <<= 16;
-        /* VACC[i].q >>= 16; */
-    }
     VCF[00] = 0x0000;
     return;
 }
