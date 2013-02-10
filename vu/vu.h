@@ -7,6 +7,27 @@
 #ifndef _VU_H
 #define _VU_H
 
+/*
+ * accumulator-indexing macros
+ */
+#define LO  00
+#define MD  01
+#define HI  02
+
+static union ACC {
+    short int s[3]; /* Each element has a low, middle, and high 16-bit slice. */
+    signed long long e:  48; /* There are eight elements in the accumulator. */
+/* 64-bit access: */
+    signed char B[8];
+    unsigned char UB[8];
+    short int HW[4];
+    unsigned short UHW[4];
+    int W[2];
+    unsigned int UW[2];
+    long long int DW;
+    unsigned long long UDW;
+} VACC[8];
+
 const int element_index[16][8] = {
     { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none */
     { 00, 01, 02, 03, 04, 05, 06, 07 },
@@ -25,19 +46,6 @@ const int element_index[16][8] = {
     { 06, 06, 06, 06, 06, 06, 06, 06 }, /* 6 */
     { 07, 07, 07, 07, 07, 07, 07, 07 }  /* 7 */
 };
-
-unsigned short int UNSIGNED_CLAMP(signed int accum)
-{
-    if (VACC[accum].q < (long long)0xFFFF800000000000) return 0x0000;
-    if (VACC[accum].q > (long long)0x00007FFFFFFFFFFF) return 0xFFFF;
-    return (VACC[accum].w[LO]);
-}
-
-signed short int SIGNED_CLAMP(signed long element) {
-    if (element < -32768) return 0x8000; /* if (element < (signed)0xFFFF8000) */
-    if (element > +32767) return 0x7FFF; /* if (element & 0xFFFF8000) */
-    return ((signed short)element);
-} /* At first glance I didn't like doing this either; good luck doing better! */
 
 #include "vmulf.h"
 #include "vmulu.h"

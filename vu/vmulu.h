@@ -11,7 +11,7 @@ void VMULU(int vd, int vs, int vt, int element)
         {
             product = VR[vs].s[i] * VR[vt].s[i];
             product <<= 1; /* shift of partial product */
-            VACC[i].q = product + 0x8000; /* fraction rounding */
+            VACC[i].DW = product + 0x8000; /* fraction rounding */
         }
     }
     else if ((element & 0xE) == 02) /* scalar quarter */
@@ -23,7 +23,7 @@ void VMULU(int vd, int vs, int vt, int element)
             j = (i & 0xE) | (element & 01);
             product = VR[vs].s[i] * VR[vt].s[j];
             product <<= 1;
-            VACC[i].q = product + 0x8000;
+            VACC[i].DW = product + 0x8000;
         }
     }
     else if ((element & 0xC) == 04) /* scalar half */
@@ -35,7 +35,7 @@ void VMULU(int vd, int vs, int vt, int element)
             j = (i & 0xC) | (element & 03);
             product = VR[vs].s[i] * VR[vt].s[j];
             product <<= 1;
-            VACC[i].q = product + 0x8000;
+            VACC[i].DW = product + 0x8000;
         }
     }
     else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
@@ -46,15 +46,15 @@ void VMULU(int vd, int vs, int vt, int element)
         {
             product = VR[vs].s[i] * VR[vt].s[j];
             product <<= 1;
-            VACC[i].q = product + 0x8000;
+            VACC[i].DW = product + 0x8000;
         }
     }
     for (i = 0; i < 8; i++) /* Unsigned-clamp bits 31..16 of ACC to dest. VR. */
-        if (VACC[i].q & 0x800000000000) /* acc < 0 */
+        if (VACC[i].DW & 0x800000000000) /* acc < 0 */
             VR[vd].s[i] = 0x0000; /* unsigned underflow */
-        else if (VACC[i].q & ~0x00007FFFFFFF) /* short overflow */
+        else if (VACC[i].DW & ~0x00007FFFFFFF) /* short overflow */
             VR[vd].s[i] = 0xFFFF;
         else
-            VR[vd].s[i] = (short)(VACC[i].q >> 16);
+            VR[vd].s[i] = VACC[i].s[MD];
     return;
 }

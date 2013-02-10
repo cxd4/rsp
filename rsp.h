@@ -12,20 +12,7 @@ typedef union
 	UINT8 b[16];
 } VECTOR_REG;
 
-#define LO  01
-#define MD  02
-#define HI  03
-typedef union
-{
-    long long q;
-    long int l[2];
-    short int w[4];
-    //signed long long int d:  48;
-    //signed short element[3];
-} ACCUMULATOR_REG;
-
 VECTOR_REG VR[32];
-ACCUMULATOR_REG VACC[8];
 unsigned long int SR[32];
 unsigned short int VCF[4];
 

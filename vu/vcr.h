@@ -20,11 +20,11 @@ void VCR(int vd, int vs, int vt, int element)
             }
             if (paired_source_2 < paired_source_1)
             {
-                VACC[i].w[00] = paired_source_2;
+                VACC[i].s[LO] = paired_source_2;
             }
             else
             {
-                VACC[i].w[00] = paired_source_1;
+                VACC[i].s[LO] = paired_source_1;
                 VCF[01] |= 0x0100 << i;
             }
         }
@@ -36,16 +36,16 @@ void VCR(int vd, int vs, int vt, int element)
             }
             if (paired_source_1 + paired_source_2 > 0)
             {
-                VACC[i].w[00] = paired_source_2;
+                VACC[i].s[LO] = paired_source_2;
             }
             else
             {
-                VACC[i].w[00] = ~paired_source_1;
+                VACC[i].s[LO] = ~paired_source_1;
                 VCF[01] |= 0x0001 << i;
             }
         }
     }
     for (i = 0; i < 8; i++)
-        VR[vd].s[i] = (short)VACC[i].q;
+        VR[vd].s[i] = VACC[i].s[LO];
     return;
 }

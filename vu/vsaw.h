@@ -26,15 +26,15 @@ void VSAW(int vd, int vs, int vt, int element)
     {
         case 00:
             for (i = 0; i < 8; i++)
-                VR[vd].s[i] = (short)(VACC[i].q >> 32);
+                VR[vd].s[i] = VACC[i].s[HI];
             break;
         case 01:
             for (i = 0; i < 8; i++)
-                VR[vd].s[i] = (short)(VACC[i].q >> 16);
+                VR[vd].s[i] = VACC[i].s[MD];
             break;
         case 02:
             for (i = 0; i < 8; i++)
-                VR[vd].s[i] = (short)VACC[i].q;
+                VR[vd].s[i] = VACC[i].s[LO];
             break;
         default:
             message("VSAR\nInvalid mask.", 2);
@@ -45,7 +45,7 @@ void VSAW(int vd, int vs, int vt, int element)
     element ^= 03;
     --element;
     for (i = 0; i < 8; i++)
-        VACC[i].w[element] = result[i]; /* ... = VR[vs].s[i]; */
+        VACC[i].s[element] = result[i]; /* ... = VR[vs].s[i]; */
 #endif
     return;
 }

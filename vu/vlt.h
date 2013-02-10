@@ -22,9 +22,9 @@ void VLT(int vd, int vs, int vt, int element)
             else
                 VCF[01] &= ~(0x0001 << i); */
             if (VCF[01] & (0x0001 << i)) /* As defined by above if()-else-if. */
-                VACC[i].w[00] = VR[vs].s[i];
+                VACC[i].s[LO] = VR[vs].s[i];
             else
-                VACC[i].w[00] = VR[vt].s[i];
+                VACC[i].s[LO] = VR[vt].s[i];
         }
     }
     else if ((element & 0xE) == 02) /* scalar quarter */
@@ -42,9 +42,9 @@ void VLT(int vd, int vs, int vt, int element)
             else
                 VCF[01] &= ~(0x0001 << i); */
             if (VCF[01] & (0x0001 << i))
-                VACC[i].w[00] = VR[vs].s[i];
+                VACC[i].s[LO] = VR[vs].s[i];
             else
-                VACC[i].w[00] = VR[vt].s[j];
+                VACC[i].s[LO] = VR[vt].s[j];
         }
     }
     else if ((element & 0xC) == 04) /* scalar half */
@@ -62,9 +62,9 @@ void VLT(int vd, int vs, int vt, int element)
             else
                 VCF[01] &= ~(0x0001 << i); */
             if (VCF[01] & (0x0001 << i))
-                VACC[i].w[00] = VR[vs].s[i];
+                VACC[i].s[LO] = VR[vs].s[i];
             else
-                VACC[i].w[00] = VR[vt].s[j];
+                VACC[i].s[LO] = VR[vt].s[j];
         }
     }
     else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
@@ -83,13 +83,13 @@ void VLT(int vd, int vs, int vt, int element)
             else
                 VCF[01] &= ~(0x0001 << i); */
             if (VCF[01] & (0x0001 << i))
-                VACC[i].w[00] = VR[vs].s[i];
+                VACC[i].s[LO] = VR[vs].s[i];
             else
-                VACC[i].w[00] = t;
+                VACC[i].s[LO] = t;
         }
     }
     for (i = 0; i < 8; i++)
-        VR[vd].s[i] = (short)VACC[i].q;
+        VR[vd].s[i] = VACC[i].s[LO];
     VCF[00] = 0x0000;
     return;
 }

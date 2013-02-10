@@ -51,7 +51,7 @@ void VADD(int vd, int vs, int vt, int element)
     }
     for (i = 0; i < 8; i++)
     {
-        VACC[i].w[00] = (short)result[i];
+        VACC[i].s[LO] = (short)result[i];
         if (result[i] > +32767)
             VR[vd].s[i] = 0x7FFF;
         else if (result[i] < -32768)

@@ -11,7 +11,7 @@ void VSUBC(int vd, int vs, int vt, int element)
         for (i = 0; i < 8; i++)
         {
             result = (unsigned short)VR[vs].s[i] - (unsigned short)VR[vt].s[i];
-            VACC[i].w[00] = (short)result;
+            VACC[i].s[LO] = (short)result;
             if (result == 0) continue;
             if (result < 0)
                 VCF[00] |= 0x0101 << i;
@@ -27,7 +27,7 @@ void VSUBC(int vd, int vs, int vt, int element)
         {
             j = (i & 0xE) | (element & 01);
             result = (unsigned short)VR[vs].s[i] - (unsigned short)VR[vt].s[j];
-            VACC[i].w[00] = (short)result;
+            VACC[i].s[LO] = (short)result;
             if (result == 0) continue;
             if (result < 0)
                 VCF[00] |= 0x0101 << i;
@@ -43,7 +43,7 @@ void VSUBC(int vd, int vs, int vt, int element)
         {
             j = (i & 0xC) | (element & 03);
             result = (unsigned short)VR[vs].s[i] - (unsigned short)VR[vt].s[j];
-            VACC[i].w[00] = (short)result;
+            VACC[i].s[LO] = (short)result;
             if (result == 0) continue;
             if (result < 0)
                 VCF[00] |= 0x0101 << i;
@@ -58,7 +58,7 @@ void VSUBC(int vd, int vs, int vt, int element)
         for (i = 0; i < 8; i++)
         {
             result = (unsigned short)VR[vs].s[i] - (unsigned short)VR[vt].s[j];
-            VACC[i].w[00] = (short)result;
+            VACC[i].s[LO] = (short)result;
             if (result == 0) continue;
             if (result < 0)
                 VCF[00] |= 0x0101 << i;
@@ -67,6 +67,6 @@ void VSUBC(int vd, int vs, int vt, int element)
         }
     }
     for (i = 0; i < 8; i++)
-        VR[vd].s[i] = VACC[i].w[00];
+        VR[vd].s[i] = VACC[i].s[LO];
     return;
 }
