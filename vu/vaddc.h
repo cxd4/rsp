@@ -5,14 +5,14 @@ void VADDC(int vd, int vs, int vt, int element)
     register unsigned int result;
     register int i;
 
-    VCF[00] = 0x0000;
+    VCO = 0x0000;
     if (element == 00) /* if (element >> 1 == 00) */
     {
         for (i = 0; i < 8; i++)
         {
             result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[i];
             VACC[i].s[LO] = (short)result;
-            VCF[00] |= (result > 0x0000FFFF) << i;
+            VCO |= (result > 0x0000FFFF) << i;
         }
     }
     else if ((element & 0xE) == 02) /* scalar quarter */
@@ -24,7 +24,7 @@ void VADDC(int vd, int vs, int vt, int element)
             j = (i & 0xE) | (element & 01);
             result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[j];
             VACC[i].s[LO] = (short)result;
-            VCF[00] |= (result > 0x0000FFFF) << i;
+            VCO |= (result > 0x0000FFFF) << i;
         }
     }
     else if ((element & 0xC) == 04) /* scalar half */
@@ -36,7 +36,7 @@ void VADDC(int vd, int vs, int vt, int element)
             j = (i & 0xC) | (element & 03);
             result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[j];
             VACC[i].s[LO] = (short)result;
-            VCF[00] |= (result > 0x0000FFFF) << i;
+            VCO |= (result > 0x0000FFFF) << i;
         }
     }
     else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
@@ -47,7 +47,7 @@ void VADDC(int vd, int vs, int vt, int element)
         {
             result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[j];
             VACC[i].s[LO] = (short)result;
-            VCF[00] |= (result > 0x0000FFFF) << i;
+            VCO |= (result > 0x0000FFFF) << i;
         }
     }
     for (i = 0; i < 8; i++)

@@ -5,7 +5,7 @@ void VSUBC(int vd, int vs, int vt, int element)
     register signed int result;
     register int i;
 
-    VCF[00] = 0x0000;
+    VCO = 0x0000;
     if (element == 00) /* if (element >> 1 == 00) */
     {
         for (i = 0; i < 8; i++)
@@ -14,9 +14,9 @@ void VSUBC(int vd, int vs, int vt, int element)
             VACC[i].s[LO] = (short)result;
             if (result == 0) continue;
             if (result < 0)
-                VCF[00] |= 0x0101 << i;
+                VCO |= 0x0101 << i;
             else
-                VCF[00] |= 0x0100 << i;
+                VCO |= 0x0100 << i;
         }
     }
     else if ((element & 0xE) == 02) /* scalar quarter */
@@ -30,9 +30,9 @@ void VSUBC(int vd, int vs, int vt, int element)
             VACC[i].s[LO] = (short)result;
             if (result == 0) continue;
             if (result < 0)
-                VCF[00] |= 0x0101 << i;
+                VCO |= 0x0101 << i;
             else
-                VCF[00] |= 0x0100 << i;
+                VCO |= 0x0100 << i;
         }
     }
     else if ((element & 0xC) == 04) /* scalar half */
@@ -46,9 +46,9 @@ void VSUBC(int vd, int vs, int vt, int element)
             VACC[i].s[LO] = (short)result;
             if (result == 0) continue;
             if (result < 0)
-                VCF[00] |= 0x0101 << i;
+                VCO |= 0x0101 << i;
             else
-                VCF[00] |= 0x0100 << i;
+                VCO |= 0x0100 << i;
         }
     }
     else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
@@ -61,9 +61,9 @@ void VSUBC(int vd, int vs, int vt, int element)
             VACC[i].s[LO] = (short)result;
             if (result == 0) continue;
             if (result < 0)
-                VCF[00] |= 0x0101 << i;
+                VCO |= 0x0101 << i;
             else
-                VCF[00] |= 0x0100 << i;
+                VCO |= 0x0100 << i;
         }
     }
     for (i = 0; i < 8; i++)

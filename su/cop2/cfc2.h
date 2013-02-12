@@ -1,33 +1,29 @@
-/******************************************************************************\
-* Project:  SP SU Emulation Table:  Move Control from Vector Unit (CFC2)       *
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2013.01.11                                                         *
-* License:  none (public domain)                                               *
-\******************************************************************************/
+#include "../../vu/vu.h"
 
 void CFC2(int rt, int vcr, int unused)
 {
     if (rt == 0)
     {
         message("CFC2\t$zero, vcr", 1);
-        SR[000] = 0x00000000;
+        /* SR[000] = 0x00000000; /* When writing to $zero, discard source. */
         return;
     }
     unused = 0; /* no element specifier */
     switch (vcr & 03) /* RCP no-exception override */
     {
         case 00:
-            SR[rt] = (signed short)VCF[00];
+            SR[rt] = (signed short)VCO;
             return;
         case 01:
-            SR[rt] = (signed short)VCF[01];
+            SR[rt] = (signed short)VCC;
             return;
         case 02:
-            message("VCE\nMAME RSP says this should be clipped?", 2);
-            SR[rt] = VCF[02];
+            message("CFC2\nVCE", 1);
+            SR[rt] = VCE;
             return;
         case 03:
-            message("CFC2\nInvalid vector control register.", 1);
+            message("CFC2\nInvalid vector control register.", 2);
+            SR[rt] = VCE; /* override behavior (zilmar) */
             return;
     }
 }

@@ -18,7 +18,6 @@ extern void CTC2(int rt, int vd, int unused);
 void res_022(int unused_rt, int unused_rd, int unused)
 {
     SR[unused_rt] = 0x00000000;
-    VCF[unused_rd] = 0x0000;
     VR[unused_rd].b[unused ^ 01] = 0x00;
     ++unused;
     unused &= 0xF;

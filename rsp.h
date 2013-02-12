@@ -14,7 +14,6 @@ typedef union
 
 VECTOR_REG VR[32];
 unsigned long int SR[32];
-unsigned short int VCF[4];
 
 static int SP_CLOCK;
 static int SP_PC;

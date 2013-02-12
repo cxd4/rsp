@@ -1,3 +1,5 @@
+#include "../../vu/vu.h"
+
 /* to-do:  Try to optimize to using accurate, 16-bit single-hit writes. */
 
 void MTC2(int rt, int vd, int element)

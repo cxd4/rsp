@@ -15,11 +15,11 @@
 #define HI  02
 
 static union ACC {
+    signed char SB[6];
     short int s[3]; /* Each element has a low, middle, and high 16-bit slice. */
-    signed long long e:  48; /* There are eight elements in the accumulator. */
+ /* signed long long e:  48; /* There are eight elements in the accumulator. */
 /* 64-bit access: */
-    signed char B[8];
-    unsigned char UB[8];
+    unsigned char B[8];
     short int HW[4];
     unsigned short UHW[4];
     int W[2];
@@ -27,6 +27,11 @@ static union ACC {
     long long int DW;
     unsigned long long UDW;
 } VACC[8];
+
+/* special-purpose vector control registers */
+unsigned short VCO; /* vector carry out register */
+unsigned short VCC; /* vector compare code register */
+unsigned char VCE; /* vector compare extension register */
 
 const int element_index[16][8] = {
     { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none */

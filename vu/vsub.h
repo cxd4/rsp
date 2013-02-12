@@ -10,8 +10,8 @@ void VSUB(int vd, int vs, int vt, int element)
         for (i = 0; i < 8; i++)
         {
             result[i] = VR[vs].s[i] - VR[vt].s[i];
-            if ((VCF[00] & (1 << i)) == 0x0000) continue;
-            --result[i];
+            if (VCO & (0x0001 << i))
+                --result[i];
         }
     }
     else if ((element & 0xE) == 02) /* scalar quarter */
@@ -22,8 +22,8 @@ void VSUB(int vd, int vs, int vt, int element)
         {
             j = (i & 0xE) | (element & 01);
             result[i] = VR[vs].s[i] - VR[vt].s[j];
-            if ((VCF[00] & (1 << i)) == 0x0000) continue;
-            --result[i];
+            if (VCO & (0x0001 << i))
+                --result[i];
         }
     }
     else if ((element & 0xC) == 04) /* scalar half */
@@ -34,8 +34,8 @@ void VSUB(int vd, int vs, int vt, int element)
         {
             j = (i & 0xC) | (element & 03);
             result[i] = VR[vs].s[i] - VR[vt].s[j];
-            if ((VCF[00] & (1 << i)) == 0x0000) continue;
-            --result[i];
+            if (VCO & (0x0001 << i))
+                --result[i];
         }
     }
     else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
@@ -45,8 +45,8 @@ void VSUB(int vd, int vs, int vt, int element)
         for (i = 0; i < 8; i++)
         {
             result[i] = VR[vs].s[i] - VR[vt].s[j];
-            if ((VCF[00] & (1 << i)) == 0x0000) continue;
-            --result[i];
+            if (VCO & (0x0001 << i))
+                --result[i];
         }
     }
     for (i = 0; i < 8; i++)
@@ -59,6 +59,6 @@ void VSUB(int vd, int vs, int vt, int element)
         else
             VR[vd].s[i] = (short)result[i];
     }
-    VCF[00] = 0x0000;
+    VCO = 0x0000;
     return;
 }

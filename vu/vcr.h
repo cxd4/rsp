@@ -4,9 +4,9 @@ void VCR(int vd, int vs, int vt, int element)
 {
     register int i;
 
-    VCF[00] = 0x0000;
-    VCF[01] = 0x0000;
-    VCF[02] = 0x0000;
+    VCO = 0x0000;
+    VCC = 0x0000;
+    VCE = 0x0000;
     for (i = 0; i < 8; i++)
     {
         int sel = element_index[element][i];
@@ -16,7 +16,7 @@ void VCR(int vd, int vs, int vt, int element)
         {
             if (paired_source_1 < 0)
             {
-                VCF[01] |= 0x0001 << i;
+                VCC |= 0x0001 << i;
             }
             if (paired_source_2 < paired_source_1)
             {
@@ -25,14 +25,14 @@ void VCR(int vd, int vs, int vt, int element)
             else
             {
                 VACC[i].s[LO] = paired_source_1;
-                VCF[01] |= 0x0100 << i;
+                VCC |= 0x0100 << i;
             }
         }
         else
         {
             if (paired_source_1 < 0)
             {
-                VCF[01] |= 0x0100 << i;
+                VCC |= 0x0100 << i;
             }
             if (paired_source_1 + paired_source_2 > 0)
             {
@@ -41,7 +41,7 @@ void VCR(int vd, int vs, int vt, int element)
             else
             {
                 VACC[i].s[LO] = ~paired_source_1;
-                VCF[01] |= 0x0001 << i;
+                VCC |= 0x0001 << i;
             }
         }
     }
