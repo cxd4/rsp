@@ -14,7 +14,7 @@ void VGE(int vd, int vs, int vt, int element)
             }
             else if (VR[vs].s[i] == VR[vt].s[i])
             { /* If vs == vt, either CARRY or NOTEQUAL bit must NOT be set. */
-                VCC |= ~(VCO & (0x0101 << i)) ? 0x0001 << i : 0x0000;
+                VCC |= ~VCO & (0x0101 << i) ? 0x0001 << i : 0x0000;
                 VACC[i].s[LO] = VCC & (0x0001 << i) ? VR[vs].s[i] : VR[vt].s[i];
             }
             else
@@ -33,7 +33,7 @@ void VGE(int vd, int vs, int vt, int element)
             }
             else if (VR[vs].s[i] == VR[vt].s[j])
             { /* If vs == vt, either CARRY or NOTEQUAL bit must NOT be set. */
-                VCC |= ~(VCO & (0x0101 << i)) ? 0x0001 << i : 0x0000;
+                VCC |= ~VCO & (0x0101 << i) ? 0x0001 << i : 0x0000;
                 VACC[i].s[LO] = VCC & (0x0001 << i) ? VR[vs].s[i] : VR[vt].s[i];
             }
             else
@@ -53,7 +53,7 @@ void VGE(int vd, int vs, int vt, int element)
             }
             else if (VR[vs].s[i] == VR[vt].s[i])
             { /* If vs == vt, either CARRY or NOTEQUAL bit must NOT be set. */
-                VCC |= ~(VCO & (0x0101 << i)) ? 0x0001 << i : 0x0000;
+                VCC |= ~VCO & (0x0101 << i) ? 0x0001 << i : 0x0000;
                 VACC[i].s[LO] = VCC & (0x0001 << i) ? VR[vs].s[i] : VR[vt].s[i];
             }
             else
@@ -71,7 +71,7 @@ void VGE(int vd, int vs, int vt, int element)
             }
             else if (VR[vs].s[i] == VR[vt].s[j])
             { /* If vs == vt, either CARRY or NOTEQUAL bit must NOT be set. */
-                VCC |= ~(VCO & (0x0101 << i)) ? 0x0001 << i : 0x0000;
+                VCC |= ~VCO & (0x0101 << i) ? 0x0001 << i : 0x0000;
                 VACC[i].s[LO] = VCC & (0x0001 << i) ? VR[vs].s[i] : VR[vt].s[j];
             }
             else
