@@ -11,7 +11,7 @@ void VCR(int vd, int vs, int vt, int element)
             if ((VR[vs].s[i] ^ VR[vt].s[i]) < 0)
             {
                 ge = (VR[vt].s[i] < 0);
-                le = (VR[vs].s[i] + VR[vt].s[i] + 1 <= 0);
+                le = (VR[vs].s[i] + VR[vt].s[i] < 0); /* vs + vt + 1 <= 0 */
                 VACC[i].s[LO] = le ? ~VR[vt].s[i] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
             }
@@ -29,7 +29,7 @@ void VCR(int vd, int vs, int vt, int element)
             if ((VR[vs].s[i] ^ VR[vt].s[j]) < 0)
             {
                 ge = (VR[vt].s[j] < 0);
-                le = (VR[vs].s[i] + VR[vt].s[j] + 1 <= 0);
+                le = (VR[vs].s[i] + VR[vt].s[j] < 0);
                 VACC[i].s[LO] = le ? ~VR[vt].s[i] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
             }
@@ -48,7 +48,7 @@ void VCR(int vd, int vs, int vt, int element)
             if ((VR[vs].s[i] ^ VR[vt].s[j]) < 0)
             {
                 ge = (VR[vt].s[j] < 0);
-                le = (VR[vs].s[i] + VR[vt].s[j] + 1 <= 0);
+                le = (VR[vs].s[i] + VR[vt].s[j] < 0);
                 VACC[i].s[LO] = le ? ~VR[vt].s[i] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
             }
@@ -65,7 +65,7 @@ void VCR(int vd, int vs, int vt, int element)
             if ((VR[vs].s[i] ^ VR[vt].s[j]) < 0)
             {
                 ge = (VR[vt].s[j] < 0);
-                le = (VR[vs].s[i] + VR[vt].s[j] + 1 <= 0);
+                le = (VR[vs].s[i] + VR[vt].s[j] < 0);
                 VACC[i].s[LO] = le ? ~VR[vt].s[i] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
             }
