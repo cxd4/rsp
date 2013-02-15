@@ -16,8 +16,7 @@ void VCH(int vd, int vs, int vt, int element)
                 le = (VR[vs].s[i] + VR[vt].s[i] <= 0);
                 eq = (VR[vs].s[i] + VR[vt].s[i] == -1); /* compare extension */
                 VCE |= eq << i;
-                eq |= (VR[vs].s[i] + VR[vt].s[i] == 0); /* vs == -vt */
-                eq ^= 1; /* Invert Boolean to define NOTEQUAL bit in VCO. */
+                eq ^= !(VR[vs].s[i] + VR[vt].s[i] == 0);
                 VACC[i].s[LO] = le ? -VR[vt].s[i] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
                 VCO |= (eq << (i + 8)) | (0x0001 << i);
@@ -42,8 +41,7 @@ void VCH(int vd, int vs, int vt, int element)
                 le = (VR[vs].s[i] + VR[vt].s[j] <= 0);
                 eq = (VR[vs].s[i] + VR[vt].s[j] == -1); /* compare extension */
                 VCE |= eq << i;
-                eq |= (VR[vs].s[i] + VR[vt].s[j] == 0); /* vs == -vt */
-                eq ^= 1; /* Invert Boolean to define NOTEQUAL bit in VCO. */
+                eq ^= !(VR[vs].s[i] + VR[vt].s[j] == 0);
                 VACC[i].s[LO] = le ? -VR[vt].s[j] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
                 VCO |= (eq << (i + 8)) | (0x0001 << i);
@@ -70,8 +68,7 @@ void VCH(int vd, int vs, int vt, int element)
                 le = (VR[vs].s[i] + VR[vt].s[j] <= 0);
                 eq = (VR[vs].s[i] + VR[vt].s[j] == -1); /* compare extension */
                 VCE |= eq << i;
-                eq |= (VR[vs].s[i] + VR[vt].s[j] == 0); /* vs == -vt */
-                eq ^= 1; /* Invert Boolean to define NOTEQUAL bit in VCO. */
+                eq ^= !(VR[vs].s[i] + VR[vt].s[j] == 0);
                 VACC[i].s[LO] = le ? -VR[vt].s[j] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
                 VCO |= (eq << (i + 8)) | (0x0001 << i);
@@ -96,8 +93,7 @@ void VCH(int vd, int vs, int vt, int element)
                 le = (VR[vs].s[i] + VR[vt].s[j] <= 0);
                 eq = (VR[vs].s[i] + VR[vt].s[j] == -1); /* compare extension */
                 VCE |= eq << i;
-                eq |= (VR[vs].s[i] + VR[vt].s[j] == 0); /* vs == -vt */
-                eq ^= 1; /* Invert Boolean to define NOTEQUAL bit in VCO. */
+                eq ^= !(VR[vs].s[i] + VR[vt].s[j] == 0);
                 VACC[i].s[LO] = le ? -VR[vt].s[j] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
                 VCO |= (eq << (i + 8)) | (0x0001 << i);
