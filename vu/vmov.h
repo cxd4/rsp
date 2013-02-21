@@ -17,6 +17,7 @@ void VMOV(int vd, int de, int vt, int e)
     else /* if (8 <= e <= 15) */
         for (i = 0, j = e & 07; i < 8; i++)
             VACC[i].s[LO] = VR[vt].s[j];
-    VR[vd].s[de & 07] = VACC[de].s[LO];
+    de &= 07;
+    VR[vd].s[de] = VACC[de].s[LO];
     return;
 }
