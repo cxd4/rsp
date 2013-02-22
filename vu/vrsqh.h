@@ -1,29 +1,25 @@
 #include "vu.h"
+#include "divrom.h"
 
-void VRSQH(int vd, int del, int vt, int element)
+void VRSQH(int vd, int del, int vt, int e)
 {
     register int i, j;
-    register int sel = element & 07; /* element_index[element][del]; */
 
-    rsp.square_root_high = VR[vt].s[sel];
-    if (element == 0x0) /* if (element >> 1 == 00) */
+    DivIn = VR[vt].s[e & 07] << 16;
+    if (!e)
         for (i = 0; i < 8; i++)
-            VACC[i].s[LO] = VR[vt].s[i];
-    else if ((element & 0xE) == 02) /* scalar quarter */
-        for (i = 0; i < 8; i++)
-        {
-            j = (i & 0xE) | (element & 01);
+            VACC[i].s[LO] = VR[vt].s[j = i];
+    else if (e < 4) /* e != 1 */
+        for (i = 0, j = e & 01; i < 8; i++)
+            VACC[i].s[LO] = VR[vt].s[j | (i & 0xE)];
+    else if (e < 8)
+        for (i = 0, j = e & 03; i < 8; i++)
+            VACC[i].s[LO] = VR[vt].s[j | (i & 0xC)];
+    else /* if (8 <= e <= 15) */
+        for (i = 0, j = e & 07; i < 8; i++)
             VACC[i].s[LO] = VR[vt].s[j];
-        }
-    else if ((element & 0xC) == 04) /* scalar half */
-        for (i = 0; i < 8; i++)
-        {
-            j = (i & 0xC) | (element & 03);
-            VACC[i].s[LO] = VR[vt].s[j];
-        }
-    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
-        for (i = 0, j = element & 07; i < 8; i++)
-            VACC[i].s[LO] = VR[vt].s[j];
-    VR[vd].s[del & 07] = rsp.square_root_res >> 16; /* store high part */
+    del &= 07;
+    VR[vd].s[del] = DivOut >> 16; /* store high part */
+    DPH = 1;
     return;
 }

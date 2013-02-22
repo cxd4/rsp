@@ -24,12 +24,8 @@ static int delay_clock;
  */
 
 typedef struct
-{  
+{ /* Trying to deprecate this structure in the not-so-distant future.  --cxd4 */
     unsigned int step_count; /* новое в 0.122u7 */
-    int square_root_res;
-    int square_root_high;
-    int reciprocal_res;
-    int reciprocal_high;
 } RSP_REGS;
 
 RSP_INFO RSP;
@@ -42,33 +38,5 @@ extern RSP_REGS rsp; // __attribute__((aligned(16)));
 #define VREG_B(reg, offset) VR[(reg)].b[((offset)^1)]
 #define VREG_S(reg, offset) VR[(reg)].s[((offset))]
 #define VREG_L(reg, offset) VR[(reg)].l[((offset))]
-
-#define ACCUM(x)    VACC[x].q
-#define ACCUM_H(x)  VACC[x].w[HI]
-#define ACCUM_M(x)  VACC[x].w[MD]
-#define ACCUM_L(x)  VACC[x].w[LO]
-
-void ReverseEndian(unsigned char *start, register unsigned short int length)
-{ /* For MIPS-size machine words only:  Invert 32-bit endianness. */
-    register unsigned short int i = 0x0000;
-
-    if (length & 03)
-        length &= ~03;
-    while (i < length)
-    {
-        unsigned char prebuffer[04];
-
-        prebuffer[03] = *(start + (i + 0));
-        prebuffer[02] = *(start + (i + 1));
-        prebuffer[01] = *(start + (i + 2));
-        prebuffer[00] = *(start + (i + 3));
-        *(start + (i + 3)) = prebuffer[03];
-        *(start + (i + 2)) = prebuffer[02];
-        *(start + (i + 1)) = prebuffer[01];
-        *(start + (i + 0)) = prebuffer[00];
-        i += 0x0004;
-    }
-    return;
-}
 
 #endif // ifndef _RSP_H_

@@ -1,30 +1,25 @@
 #include "vu.h"
+#include "divrom.h"
 
-void VRCPH(int vd, int del, int vt, int element)
+void VRCPH(int vd, int del, int vt, int e)
 {
     register int i, j;
-    register int sel = element & 07; // sel  = element_index[element][del];
 
-    rsp.reciprocal_high = VR[vt].s[sel];
+    DivIn = VR[vt].s[e & 07] << 16;
+    if (!e)
+        for (i = 0; i < 8; i++)
+            VACC[i].s[LO] = VR[vt].s[j = i];
+    else if (e < 4) /* e != 1 */
+        for (i = 0, j = e & 01; i < 8; i++)
+            VACC[i].s[LO] = VR[vt].s[j | (i & 0xE)];
+    else if (e < 8)
+        for (i = 0, j = e & 03; i < 8; i++)
+            VACC[i].s[LO] = VR[vt].s[j | (i & 0xC)];
+    else /* if (8 <= e <= 15) */
+        for (i = 0, j = e & 07; i < 8; i++)
+            VACC[i].s[LO] = VR[vt].s[j];
     del &= 07;
-    if (element == 0x0) /* if (element >> 1 == 00) */
-        for (i = 0; i < 8; i++)
-            VACC[i].s[LO] = VR[vt].s[i];
-    else if ((element & 0xE) == 02) /* scalar quarter */
-        for (i = 0; i < 8; i++)
-        {
-            j = (i & 0xE) | (element & 01);
-            VACC[i].s[LO] = VR[vt].s[j];
-        }
-    else if ((element & 0xC) == 04) /* scalar half */
-        for (i = 0; i < 8; i++)
-        {
-            j = (i & 0xC) | (element & 03);
-            VACC[i].s[LO] = VR[vt].s[j];
-        }
-    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
-        for (i = 0, j = element & 07; i < 8; i++)
-            VACC[i].s[LO] = VR[vt].s[j];
-    VR[vd].s[del] = rsp.reciprocal_res >> 16; /* store high part */
+    VR[vd].s[del] = DivOut >> 16; /* store high part */
+    DPH = 1;
     return;
 }
