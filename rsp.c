@@ -180,16 +180,7 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
 #endif
         *RSP.SP_PC_REG += 0x00000004;
         *RSP.SP_PC_REG &= 0x00000FFC;
-        if (inst >> 25 != 0x25) /* is a SU instruction */
-        {
-            const int rs = (inst & 0x03E00000) >> 21;
-            const int rt = (inst >> 16) & 0x0000001F; /* Try to mov upper HW. */
-            const short imm = (short)inst; /* (un)signed is sub-op-defined. */
-
-            inst >>= 26;
-            SP_PRIMARY[inst](rs, rt, imm);
-        }
-        else /* is a VU instruction */
+        if (inst >> 25 == 0x25) /* is a VU instruction */
         {
             const int vd = (inst >>  6) & 0x0000001F;
             const int vs = (unsigned short)inst >> 11;
@@ -199,13 +190,21 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
 #ifdef VU_OVERRIDE_WEIRD_ELEMENT
             if (e == 1)
             { /* Illegal assembly instruction, but valid RSP machine code. */
-                message("Weird vector element specifier.", 1);
-                e = 0;
+                message("Weird vector element specifier.", 2;
             }
 #endif
             inst &= 0x0000003F;
             SP_COP2_VECTOP[inst](vd, vs, vt, e);
             continue;
+        }
+        else
+        {
+            const int rs = (inst & 0x03E00000) >> 21;
+            const int rt = (inst >> 16) & 0x0000001F; /* Try to mov upper HW. */
+            const short imm = (short)inst; /* (un)signed is sub-op-defined. */
+
+            inst >>= 26;
+            SP_PRIMARY[inst](rs, rt, imm);
         }
         --cycles;
         if (*RSP.SP_STATUS_REG & 0x00000020) /* SP_STATUS_SSTEP by debugger. */
