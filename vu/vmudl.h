@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VMUDL(int vd, int vs, int vt, int element)
+static const void VMUDL(int vd, int vs, int vt, int element)
 {
     register unsigned int product;
     register int i, j;

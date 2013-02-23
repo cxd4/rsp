@@ -94,20 +94,20 @@ const int element_index[16][8] = {
 #include "vrsqh.h"
 #include "vnop.h"
 
-void res_M(int vd, int vs, int vt, int element)
+static const void res_M(int vd, int vs, int vt, int element)
 {
     element = vt = vs = vd = 0;
     message("VRNDP/VRNDN/VMULQ\nMPEG DCT canceled.", 3);
     return; /* Ultra64 OS did have these, so one could implement this ext. */
 }
-void res_V(int vd, int rd, int rt, int element)
+static const void res_V(int vd, int rd, int rt, int element)
 {
     element = rt = rd = vd = 0;
     message("VU reserved instruction", 3);
     return;
 }
 
-static const void (*const SP_COP2_VECTOP[64])(int, int, int, int) = {
+static const void (*SP_COP2_VECTOP[64])(int, int, int, int) = {
     VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
     VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
     VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */

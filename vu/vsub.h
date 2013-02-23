@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VSUB(int vd, int vs, int vt, int element)
+static const void VSUB(int vd, int vs, int vt, int element)
 {
     signed int result[8];
     register int i;

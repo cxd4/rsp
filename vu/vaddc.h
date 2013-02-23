@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VADDC(int vd, int vs, int vt, int element)
+static const void VADDC(int vd, int vs, int vt, int element)
 {
     register unsigned int result;
     register int i;

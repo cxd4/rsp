@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VLT(int vd, int vs, int vt, int element)
+static const void VLT(int vd, int vs, int vt, int element)
 {
     register int i, j;
 

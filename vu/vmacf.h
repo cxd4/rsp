@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VMACF(int vd, int vs, int vt, int element)
+static const void VMACF(int vd, int vs, int vt, int element)
 {
     register int product;
     register int i, j;

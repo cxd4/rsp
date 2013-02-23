@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VMUDH(int vd, int vs, int vt, int element)
+static const void VMUDH(int vd, int vs, int vt, int element)
 {
     register int i, j;
 

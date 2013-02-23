@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VCL(int vd, int vs, int vt, int element)
+static const void VCL(int vd, int vs, int vt, int element)
 {
     int ge, le;
     register int i;

@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VABS(int vd, int vs, int vt, int element)
+static const void VABS(int vd, int vs, int vt, int element)
 {
     register int i, j;
 

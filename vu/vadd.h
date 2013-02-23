@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VADD(int vd, int vs, int vt, int element)
+static const void VADD(int vd, int vs, int vt, int element)
 {
     signed int result[8];
     register int i;

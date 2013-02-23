@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VSUBC(int vd, int vs, int vt, int element)
+static const void VSUBC(int vd, int vs, int vt, int element)
 {
     register signed int result;
     register int i;

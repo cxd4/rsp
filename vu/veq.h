@@ -2,7 +2,7 @@
 
 /* to-do:  possible confusion of VCE with VCO & 0xFF00, might need research */
 
-void VEQ(int vd, int vs, int vt, int element)
+static const void VEQ(int vd, int vs, int vt, int element)
 {
     register int i, j;
 

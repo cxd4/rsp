@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VMADH(int vd, int vs, int vt, int element)
+static const void VMADH(int vd, int vs, int vt, int element)
 {
     register signed int product;
     register int i, j;

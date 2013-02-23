@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void VMADM(int vd, int vs, int vt, int element)
+static const void VMADM(int vd, int vs, int vt, int element)
 {
     register int product;
     register int i, j;
