@@ -17,7 +17,9 @@
 static union ACC {
     signed char SB[6];
     short int s[3]; /* Each element has a low, middle, and high 16-bit slice. */
- /* signed long long e:  48; /* There are eight elements in the accumulator. */
+#if __x86_64__
+    signed e:  48; /* There are eight elements in the accumulator. */
+#endif
 /* 64-bit access: */
     unsigned char B[8];
     short int HW[4];
@@ -32,25 +34,6 @@ static union ACC {
 unsigned short VCO; /* vector carry out register */
 unsigned short VCC; /* vector compare code register */
 unsigned char VCE; /* vector compare extension register */
-
-const int element_index[16][8] = {
-    { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none */
-    { 00, 01, 02, 03, 04, 05, 06, 07 },
-    { 00, 00, 02, 02, 04, 04, 06, 06 }, /* 0Q */
-    { 01, 01, 03, 03, 05, 05, 07, 07 }, /* 1Q */
-    { 00, 00, 00, 00, 04, 04, 04, 04 }, /* 0H */
-    { 01, 01, 01, 01, 05, 05, 05, 05 }, /* 1H */
-    { 02, 02, 02, 02, 06, 06, 06, 06 }, /* 2H */
-    { 03, 03, 03, 03, 07, 07, 07, 07 }, /* 3H */
-    { 00, 00, 00, 00, 00, 00, 00, 00 }, /* 0 */
-    { 01, 01, 01, 01, 01, 01, 01, 01 }, /* 1 */
-    { 02, 02, 02, 02, 02, 02, 02, 02 }, /* 2 */
-    { 03, 03, 03, 03, 03, 03, 03, 03 }, /* 3 */
-    { 04, 04, 04, 04, 04, 04, 04, 04 }, /* 4 */
-    { 05, 05, 05, 05, 05, 05, 05, 05 }, /* 5 */
-    { 06, 06, 06, 06, 06, 06, 06, 06 }, /* 6 */
-    { 07, 07, 07, 07, 07, 07, 07, 07 }  /* 7 */
-};
 
 #include "vmulf.h"
 #include "vmulu.h"
