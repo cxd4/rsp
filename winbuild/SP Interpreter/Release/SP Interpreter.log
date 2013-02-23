@@ -1,4 +1,4 @@
-﻿Build started 2/10/2013 10:59:11 AM.
+﻿Build started 2/22/2013 11:54:36 PM.
      1>Project "F:\rsp\winbuild\SP Interpreter\SP Interpreter.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Release\SP Interpreter.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -18,4 +18,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:30.58
+Time Elapsed 00:00:23.69
