@@ -94,8 +94,8 @@
 // #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
 // #define FP_CORRECTIONS // Slower than the unimplemented lookup method
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
-#define VU_OVERRIDE_WEIRD_ELEMENT // Keep it off for more speed.
-#define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
+// #define VU_OVERRIDE_WEIRD_ELEMENT // Keep it off for more speed.
+// #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
 #if defined EXTERN_COMMAND_LIST_GBI && defined EXTERN_COMMAND_LIST_ABI
 #define L_TITLE "Basic RSP Simulator"
