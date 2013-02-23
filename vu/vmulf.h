@@ -16,7 +16,7 @@ static const void VMULF(int vd, int vs, int vt, int element)
     else /* if (element & 0b1000) */
         for (i = 0, j = element & 07; i < 8; i++)
             VACC[i].DW = (VR[vs].s[i]*VR[vt].s[j] << 1) + 0x8000;
-    for (i = 0; i < 8; i++) /* Partial but SUFFICIENT VMULF sign-clamping! */
-        VR[vd].s[i] = (VACC[i].DW == 0x000080008000) ? 0x7FFF : VACC[i].s[MD];
+    for (i = 0; i < 8; i++) /* Only one reachable value can expose overflow. */
+        VR[vd].s[i] = (VACC[i].W[0] == 0x80008000) ? 0x7FFF : VACC[i].s[MD];
     return;
 }

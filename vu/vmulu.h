@@ -19,7 +19,7 @@ static const void VMULU(int vd, int vs, int vt, int element)
     for (i = 0; i < 8; i++) /* Unsigned-clamp bits 31..16 of ACC to dest. VR. */
         if (VACC[i].DW < 0)
             VR[vd].s[i] = 0x0000; /* unsigned underflow */
-        else if (VACC[i].DW == 0x000080008000) /* short overflow */
+        else if (VACC[i].W[0] == 0x80008000) /* only reachable overflow value */
             VR[vd].s[i] = 0xFFFF;
         else
             VR[vd].s[i] = VACC[i].s[MD];
