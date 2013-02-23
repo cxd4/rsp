@@ -2,45 +2,20 @@
 
 void VMUDM(int vd, int vs, int vt, int element)
 {
-    register int product;
     register int i, j;
 
-    if (element == 0x0) /* if (element >> 1 == 00) */
-    {
+    if (!element) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
-        {
-            product = (signed short)VR[vs].s[i] * (unsigned short)VR[vt].s[i];
-            VACC[i].DW = product;
-        }
-    }
-    else if ((element & 0xE) == 02) /* scalar quarter */
-    {
-        for (i = 0; i < 8; i++)
-        {
-            j = (i & 0xE) | (element & 01);
-            product = (signed short)VR[vs].s[i] * (unsigned short)VR[vt].s[j];
-            VACC[i].DW = product;
-        }
-    }
-    else if ((element & 0xC) == 04) /* scalar half */
-    {
-        for (i = 0; i < 8; i++)
-        {
-            j = (i & 0xC) | (element & 03);
-            product = (signed short)VR[vs].s[i] * (unsigned short)VR[vt].s[j];
-            VACC[i].DW = product;
-        }
-    }
-    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
-    {
-        const register unsigned short m = (unsigned short)VR[vt].s[element % 8];
-
-        for (i = 0; i < 8; i++)
-        {
-            product = (signed short)VR[vs].s[i] * m;
-            VACC[i].DW = product;
-        }
-    }
+            VACC[i].DW = VR[vs].s[i] * (unsigned short)VR[vt].s[j = i];
+    else if (element < 4)
+        for (i = 0, j = element & 01; i < 8; i++)
+            VACC[i].DW = VR[vs].s[i] * (unsigned short)VR[vt].s[j | (i & 0xE)];
+    else if (element < 8)
+        for (i = 0, j = element & 03; i < 8; i++)
+            VACC[i].DW = VR[vs].s[i] * (unsigned short)VR[vt].s[j | (i & 0xC)];
+    else /* if (element & 0b1000) */
+        for (i = 0, j = element & 07; i < 8; i++)
+            VACC[i].DW = VR[vs].s[i] * (unsigned short)VR[vt].s[j];
     for (i = 0; i < 8; i++) /* Sign-clamp bits 31..16 of ACC to dest. VR. */
         VR[vd].s[i] = VACC[i].s[MD]; /* No saturate checks needed. */
     return;
