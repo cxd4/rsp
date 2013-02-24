@@ -1,53 +1,51 @@
 #include "vu.h"
 
-static const void VADDC(int vd, int vs, int vt, int element)
+static void VADDC(int vd, int vs, int vt, int element)
 {
     register unsigned int result;
-    register int i;
+    register int i, j;
 
     VCO = 0x0000;
-    if (element == 00) /* if (element >> 1 == 00) */
+    if (!element) /* if (element >> 1 == 00) */
     {
         for (i = 0; i < 8; i++)
         {
             result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[i];
             VACC[i].s[LO] = (short)result;
-            VCO |= (result > 0x0000FFFF) << i;
+            result >>= 16; /* result = (VS + VT > 0x0000FFFF) ? 1 : 0; */
+            VCO |= result << i;
         }
     }
-    else if ((element & 0xE) == 02) /* scalar quarter */
+    else if (element < 4)
     {
-        register int j;
-
-        for (i = 0; i < 8; i++)
+        for (i = 0, j = element & 01; i < 8; i++)
         {
-            j = (i & 0xE) | (element & 01);
-            result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[j];
+            result = (unsigned short)VR[vs].s[i]
+                   + (unsigned short)VR[vt].s[j | (i & 0xE)];
             VACC[i].s[LO] = (short)result;
-            VCO |= (result > 0x0000FFFF) << i;
+            result >>= 16; /* result = (VS + VT > 0x0000FFFF) ? 1 : 0; */
+            VCO |= result << i;
         }
     }
-    else if ((element & 0xC) == 04) /* scalar half */
+    else if (element < 8)
     {
-        register int j;
-
-        for (i = 0; i < 8; i++)
+        for (i = 0, j = element & 03; i < 8; i++)
         {
-            j = (i & 0xC) | (element & 03);
-            result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[j];
+            result = (unsigned short)VR[vs].s[i]
+                   + (unsigned short)VR[vt].s[j | (i & 0xC)];
             VACC[i].s[LO] = (short)result;
-            VCO |= (result > 0x0000FFFF) << i;
+            result >>= 16; /* result = (VS + VT > 0x0000FFFF) ? 1 : 0; */
+            VCO |= result << i;
         }
     }
-    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
+    else /* if (element & 0b1000) */
     {
-        const register int j = element & 07;
-
-        for (i = 0; i < 8; i++)
+        for (i = 0, j = element & 07; i < 8; i++)
         {
             result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[j];
             VACC[i].s[LO] = (short)result;
-            VCO |= (result > 0x0000FFFF) << i;
+            result >>= 16; /* result = (VS + VT > 0x0000FFFF) ? 1 : 0; */
+            VCO |= result << i;
         }
     }
     for (i = 0; i < 8; i++)
