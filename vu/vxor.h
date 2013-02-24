@@ -1,6 +1,6 @@
 #include "vu.h"
 
-static const void VXOR(int vd, int vs, int vt, int element)
+static void VXOR(int vd, int vs, int vt, int element)
 {
     register int i, j;
 

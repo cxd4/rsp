@@ -1,6 +1,6 @@
 #include "vu.h"
 
-static const void VAND(int vd, int vs, int vt, int element)
+static void VAND(int vd, int vs, int vt, int element)
 {
     register int i, j;
 

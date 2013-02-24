@@ -1,7 +1,7 @@
 #include "vu.h"
 #include "divrom.h"
 
-static const void VRCPL(int vd, int del, int vt, int e)
+static void VRCPL(int vd, int del, int vt, int e)
 {
     register int rec;
     register int i, j;

@@ -1,6 +1,6 @@
 #include "vu.h"
 
-static const void VCH(int vd, int vs, int vt, int element)
+static void VCH(int vd, int vs, int vt, int element)
 {
     int eq, ge, le;
     register int i, j;

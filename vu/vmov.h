@@ -1,6 +1,6 @@
 #include "vu.h"
 
-static const void VMOV(int vd, int de, int vt, int e)
+static void VMOV(int vd, int de, int vt, int e)
 {
     register int i, j;
 

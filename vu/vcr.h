@@ -1,6 +1,6 @@
 #include "vu.h"
 
-static const void VCR(int vd, int vs, int vt, int element)
+static void VCR(int vd, int vs, int vt, int element)
 {
     int ge, le;
     register int i, j;

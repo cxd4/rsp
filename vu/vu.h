@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.02.22                                                         *
+* Release:  2013.02.23                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -14,12 +14,17 @@
 #define MD  01
 #define HI  02
 
+#define MAX_LONG (~0)
+#if !(MAX_LONG < 0xFFFFFFFFFFFF)
+#define MACHINE_SIZE_48_MIN
+#endif
+
 static union ACC {
-    signed char SB[6];
-    short int s[3]; /* Each element has a low, middle, and high 16-bit slice. */
-#if __x86_64__
+#ifdef MACHINE_SIZE_48_MIN
     signed e:  48; /* There are eight elements in the accumulator. */
 #endif
+    short int s[3]; /* Each element has a low, middle, and high 16-bit slice. */
+    signed char SB[6];
 /* 64-bit access: */
     unsigned char B[8];
     short int HW[4];
@@ -77,20 +82,20 @@ unsigned char VCE; /* vector compare extension register */
 #include "vsubc.h"
 #include "vxor.h"
 
-static const void res_M(int vd, int vs, int vt, int element)
+static void res_M(int vd, int vs, int vt, int element)
 {
     element = vt = vs = vd = 0;
     message("VRNDP/VRNDN/VMULQ\nMPEG DCT canceled.", 3);
     return; /* Ultra64 OS did have these, so one could implement this ext. */
 }
-static const void res_V(int vd, int rd, int rt, int element)
+static void res_V(int vd, int rd, int rt, int element)
 {
     element = rt = rd = vd = 0;
     message("VU reserved instruction", 3);
     return;
 }
 
-static const void (*SP_COP2_VECTOP[64])(int, int, int, int) = {
+static void (*SP_COP2_VECTOP[64])(int, int, int, int) = {
     VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
     VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
     VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */

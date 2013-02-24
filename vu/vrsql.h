@@ -1,7 +1,7 @@
 #include "vu.h"
 #include "divrom.h"
 
-static const void VRSQL(int vd, int del, int vt, int e)
+static void VRSQL(int vd, int del, int vt, int e)
 {
     register int sqr;
     register int i, j;

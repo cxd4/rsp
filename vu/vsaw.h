@@ -1,6 +1,6 @@
 #include "vu.h"
 
-static const void VSAW(int vd, int vs, int vt, int element)
+static void VSAW(int vd, int vs, int vt, int element)
 {
     register int i;
 

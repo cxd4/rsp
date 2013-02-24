@@ -1,7 +1,7 @@
 #include "vu.h"
 #include "divrom.h"
 
-static const void VRCP(int vd, int del, int vt, int e)
+static void VRCP(int vd, int del, int vt, int e)
 {
     register int i, j;
 #ifdef FP_CORRECTIONS

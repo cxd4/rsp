@@ -1,6 +1,6 @@
 #include "vu.h"
 
-static const void VNOR(int vd, int vs, int vt, int element)
+static void VNOR(int vd, int vs, int vt, int element)
 {
     register int i, j;
 

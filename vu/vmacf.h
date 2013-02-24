@@ -1,6 +1,6 @@
 #include "vu.h"
 
-static const void VMACF(int vd, int vs, int vt, int element)
+static void VMACF(int vd, int vs, int vt, int element)
 {
     register int i, j;
 
