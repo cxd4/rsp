@@ -3,14 +3,13 @@
 static void VCL(int vd, int vs, int vt, int element)
 {
     int ge, le;
-    register int i;
+    register int i, j;
 	
-    if (element == 0x0) /* if (element >> 1 == 00) */
+    if (!element) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
         {
-            const int j = i;
             const unsigned short VS = (unsigned short)VR[vs].s[i];
-            const unsigned short VT = (unsigned short)VR[vt].s[j];
+            const unsigned short VT = (unsigned short)VR[vt].s[j = i];
             const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
 
             if ((VCO >> i) & 1)
@@ -32,21 +31,17 @@ static void VCL(int vd, int vs, int vt, int element)
             else
             {
                 le = (VCC >> i) & 1;
-                if (eq)
-                    ge = (VS - VT >= 0);
-                else
-                    ge = (VCC >> (i + 8)) & 1;
+                ge = eq ? (VS - VT >= 0) : (VCC >> (i + 8)) & 1;
                 VACC[i].s[LO] = ge ? VT : VS;
             }
             VCC &= ~(0x0101 << i);
             VCC |= (ge << (i + 8)) | (le << (i + 0));
         }
-    else if ((element & 0xE) == 02) /* scalar quarter */
-        for (i = 0; i < 8; i++)
+    else if (element < 4)
+        for (i = 0, j = element & 01; i < 8; i++)
         {
-            const int j = (i & 0xE) | (element & 01);
             const unsigned short VS = (unsigned short)VR[vs].s[i];
-            const unsigned short VT = (unsigned short)VR[vt].s[j];
+            const unsigned short VT = (unsigned short)VR[vt].s[j | (i & 0xE)];
             const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
 
             if ((VCO >> i) & 1)
@@ -68,21 +63,17 @@ static void VCL(int vd, int vs, int vt, int element)
             else
             {
                 le = (VCC >> i) & 1;
-                if (eq)
-                    ge = (VS - VT >= 0);
-                else
-                    ge = (VCC >> (i + 8)) & 1;
+                ge = eq ? (VS - VT >= 0) : (VCC >> (i + 8)) & 1;
                 VACC[i].s[LO] = ge ? VT : VS;
             }
             VCC &= ~(0x0101 << i);
             VCC |= (ge << (i + 8)) | (le << (i + 0));
         }
-    else if ((element & 0xC) == 04) /* scalar half */
-        for (i = 0; i < 8; i++)
+    else if (element < 8)
+        for (i = 0, j = element & 03; i < 8; i++)
         {
-            const int j = (i & 0xC) | (element & 03);
             const unsigned short VS = (unsigned short)VR[vs].s[i];
-            const unsigned short VT = (unsigned short)VR[vt].s[j];
+            const unsigned short VT = (unsigned short)VR[vt].s[j | (i & 0xC)];
             const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
 
             if ((VCO >> i) & 1)
@@ -104,19 +95,15 @@ static void VCL(int vd, int vs, int vt, int element)
             else
             {
                 le = (VCC >> i) & 1;
-                if (eq)
-                    ge = (VS - VT >= 0);
-                else
-                    ge = (VCC >> (i + 8)) & 1;
+                ge = eq ? (VS - VT >= 0) : (VCC >> (i + 8)) & 1;
                 VACC[i].s[LO] = ge ? VT : VS;
             }
             VCC &= ~(0x0101 << i);
             VCC |= (ge << (i + 8)) | (le << (i + 0));
         }
-    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
-        for (i = 0; i < 8; i++)
+    else /* if (element & 0b1000) */
+        for (i = 0, j = element & 07; i < 8; i++)
         {
-            const int j = element & 07;
             const unsigned short VS = (unsigned short)VR[vs].s[i];
             const unsigned short VT = (unsigned short)VR[vt].s[j];
             const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
@@ -140,10 +127,7 @@ static void VCL(int vd, int vs, int vt, int element)
             else
             {
                 le = (VCC >> i) & 1;
-                if (eq)
-                    ge = (VS - VT >= 0);
-                else
-                    ge = (VCC >> (i + 8)) & 1;
+                ge = eq ? (VS - VT >= 0) : (VCC >> (i + 8)) & 1;
                 VACC[i].s[LO] = ge ? VT : VS;
             }
             VCC &= ~(0x0101 << i);

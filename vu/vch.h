@@ -8,7 +8,7 @@ static void VCH(int vd, int vs, int vt, int element)
     VCO = 0x0000;
     VCC = 0x0000;
     VCE = 0x00;
-    if (element == 0x0) /* if (element >> 1 == 00) */
+    if (!element) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
             if ((VR[vs].s[i] ^ VR[vt].s[i]) < 0)
             {
@@ -31,7 +31,7 @@ static void VCH(int vd, int vs, int vt, int element)
                 VCO |= (eq << (i + 8)) | (0x0000 << i);
                 VCE |= 0x00 << i;
             }
-    else if ((element & 0xE) == 02) /* scalar quarter */
+    else if (element < 4)
         for (i = 0; i < 8; i++)
         {
             j = (i & 0xE) | (element & 01);
@@ -57,7 +57,7 @@ static void VCH(int vd, int vs, int vt, int element)
                 VCE |= 0x00 << i;
             }
         }
-    else if ((element & 0xC) == 04) /* scalar half */
+    else if (element < 8)
     {
         for (i = 0; i < 8; i++)
         {
@@ -85,7 +85,7 @@ static void VCH(int vd, int vs, int vt, int element)
             }
         }
     }
-    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
+    else /* if (element & 0b1000) */
         for (i = 0, j = element & 07; i < 8; i++)
             if ((VR[vs].s[i] ^ VR[vt].s[j]) < 0)
             {

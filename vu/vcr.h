@@ -6,7 +6,7 @@ static void VCR(int vd, int vs, int vt, int element)
     register int i, j;
 
     VCC = 0x0000;
-    if (element == 0x0) /* if (element >> 1 == 00) */
+    if (!element) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
             if ((VR[vs].s[i] ^ VR[vt].s[i]) < 0)
             {
@@ -22,7 +22,7 @@ static void VCR(int vd, int vs, int vt, int element)
                 VACC[i].s[LO] = le ? VR[vt].s[i] : VR[vs].s[i];
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
             }
-    else if ((element & 0xE) == 02) /* scalar quarter */
+    else if (element < 4)
         for (i = 0; i < 8; i++)
         {
             j = (i & 0xE) | (element & 01);
@@ -41,7 +41,7 @@ static void VCR(int vd, int vs, int vt, int element)
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
             }
         }
-    else if ((element & 0xC) == 04) /* scalar half */
+    else if (element < 8)
         for (i = 0; i < 8; i++)
         {
             j = (i & 0xC) | (element & 03);
@@ -60,7 +60,7 @@ static void VCR(int vd, int vs, int vt, int element)
                 VCC |= (ge << (i + 8)) | (le << (i + 0));
             }
         }
-    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
+    else /* if (element & 0b1000) */
         for (i = 0, j = element & 07; i < 8; i++)
             if ((VR[vs].s[i] ^ VR[vt].s[j]) < 0)
             {
