@@ -2,92 +2,50 @@
 
 static void VLT(int vd, int vs, int vt, int element)
 {
+    int lt; /* less than, or if (CARRY && NOTEQUAL), equal */
     register int i, j;
 
     VCC = 0x0000;
-/* We could be accurate and clear these mid-way (e.g. vs > vt then clear the
- * current bit of VCC), but doing this now is much more simple and direct.
- */
-    if (element == 0x0) /* if (element >> 1 == 00) */
-    {
+    if (!element) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
         {
-            if (VR[vs].s[i] < VR[vt].s[i])
-                VCC |= 0x0001 << i;
-            else if (VR[vs].s[i] == VR[vt].s[i])
-                if ((VCO & (0x0101 << i)) == 0x0101 << i)
-                    VCC |= 0x0001 << i; /*
-                else
-                    VCC &= ~(0x0001 << i);
-            else
-                VCC &= ~(0x0001 << i); */
-            if (VCC & (0x0001 << i)) /* As defined by above if()-else-if. */
-                VACC[i].s[LO] = VR[vs].s[i];
-            else
-                VACC[i].s[LO] = VR[vt].s[i];
+            lt  = (VR[vs].s[i] == VR[vt].s[j = i]);
+            lt &= (VCO & 0x0101) == 0x0101;
+            lt |= (VR[vs].s[i] < VR[vt].s[j = i]);
+            VCC |= lt << i;
+            VACC[i].s[LO] = lt ? VR[vs].s[i] : VR[vt].s[j = i];
+            VCO >>= 1;
         }
-    }
-    else if ((element & 0xE) == 02) /* scalar quarter */
-    {
-        for (i = 0; i < 8; i++)
+    else if (element < 4)
+        for (i = 0, j = element & 01; i < 8; i++)
         {
-            j = (i & 0xE) | (element & 01);
-            if (VR[vs].s[i] < VR[vt].s[j])
-                VCC |= 0x0001 << i;
-            else if (VR[vs].s[i] == VR[vt].s[j])
-                if ((VCO & (0x0101 << i)) == 0x0101 << i)
-                    VCC |= 0x0001 << i; /*
-                else
-                    VCC &= ~(0x0001 << i);
-            else
-                VCC &= ~(0x0001 << i); */
-            if (VCC & (0x0001 << i))
-                VACC[i].s[LO] = VR[vs].s[i];
-            else
-                VACC[i].s[LO] = VR[vt].s[j];
+            lt  = (VR[vs].s[i] == VR[vt].s[j | (i & 0xE)]);
+            lt &= (VCO & 0x0101) == 0x0101;
+            lt |= (VR[vs].s[i] < VR[vt].s[j | (i & 0xE)]);
+            VCC |= lt << i;
+            VACC[i].s[LO] = lt ? VR[vs].s[i] : VR[vt].s[j | (i & 0xE)];
+            VCO >>= 1;
         }
-    }
-    else if ((element & 0xC) == 04) /* scalar half */
-    {
-        for (i = 0; i < 8; i++)
+    else if (element < 8)
+        for (i = 0, j = element & 03; i < 8; i++)
         {
-            j = (i & 0xC) | (element & 03);
-            if (VR[vs].s[i] < VR[vt].s[j])
-                VCC |= 0x0001 << i;
-            else if (VR[vs].s[i] == VR[vt].s[j])
-                if ((VCO & (0x0101 << i)) == 0x0101 << i)
-                    VCC |= 0x0001 << i; /*
-                else
-                    VCC &= ~(0x0001 << i);
-            else
-                VCC &= ~(0x0001 << i); */
-            if (VCC & (0x0001 << i))
-                VACC[i].s[LO] = VR[vs].s[i];
-            else
-                VACC[i].s[LO] = VR[vt].s[j];
+            lt  = (VR[vs].s[i] == VR[vt].s[j | (i & 0xC)]);
+            lt &= (VCO & 0x0101) == 0x0101;
+            lt |= (VR[vs].s[i] < VR[vt].s[j | (i & 0xC)]);
+            VCC |= lt << i;
+            VACC[i].s[LO] = lt ? VR[vs].s[i] : VR[vt].s[j | (i & 0xC)];
+            VCO >>= 1;
         }
-    }
-    else /* if ((element & 0b1000) == 0b1000) /* scalar whole */
-    {
-        const register short int t = VR[vt].s[element & 07];
-
-        for (i = 0; i < 8; i++)
+    else /* if (element & 0b1000) */
+        for (i = 0, j = element & 07; i < 8; i++)
         {
-            if (VR[vs].s[i] < t)
-                VCC |= 0x0001 << i;
-            else if (VR[vs].s[i] == t)
-                if ((VCO & (0x0101 << i)) == 0x0101 << i)
-                    VCC |= 0x0001 << i; /*
-                else
-                    VCC &= ~(0x0001 << i);
-            else
-                VCC &= ~(0x0001 << i); */
-            if (VCC & (0x0001 << i))
-                VACC[i].s[LO] = VR[vs].s[i];
-            else
-                VACC[i].s[LO] = t;
+            lt  = (VR[vs].s[i] == VR[vt].s[j]);
+            lt &= (VCO & 0x0101) == 0x0101;
+            lt |= (VR[vs].s[i] < VR[vt].s[j]);
+            VCC |= lt << i;
+            VACC[i].s[LO] = lt ? VR[vs].s[i] : VR[vt].s[j];
+            VCO >>= 1;
         }
-    }
     for (i = 0; i < 8; i++)
         VR[vd].s[i] = VACC[i].s[LO];
     VCO = 0x0000;
