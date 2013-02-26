@@ -71,6 +71,9 @@ __declspec(dllexport) void DllConfig(HWND hParent)
     return;
 }
 #endif
+#ifdef HYBRID_INTERPRETER_STYLE
+#include "execute.h"
+#else
 __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
 {
     const unsigned long cycles_start = cycles; /* preserve original */
@@ -225,6 +228,7 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
         message("w00t!11!  cycles_start - executed was 0 !!", 0);
     return (cycles_start - cycles); /* meant to be executed, minus remainder */
 }
+#endif
 __declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
     PluginInfo -> Version = 0x0101;
