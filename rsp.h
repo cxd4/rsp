@@ -23,17 +23,10 @@ static int delay_clock;
  * instruction, in conjunction with the maintained clock timing.
  */
 
-typedef struct
-{ /* Trying to deprecate this structure in the not-so-distant future.  --cxd4 */
-    unsigned int step_count; /* новое в 0.122u7 */
-} RSP_REGS;
-
 RSP_INFO RSP;
 
 int rsp_execute(unsigned long cycles);
 offs_t rsp_dasm_one(char *buffer, offs_t pc, UINT32 op);
-
-extern RSP_REGS rsp; // __attribute__((aligned(16)));
 
 #define VREG_B(reg, offset) VR[(reg)].b[((offset)^1)]
 #define VREG_S(reg, offset) VR[(reg)].s[((offset))]

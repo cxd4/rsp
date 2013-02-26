@@ -7,8 +7,6 @@
 #include "Rsp_#1.1.h"
 #include "rsp.h"
 
-RSP_REGS rsp;
-
 #ifdef FP_CORRECTIONS
 #include <float.h>
 #endif
@@ -76,8 +74,6 @@ __declspec(dllexport) void DllConfig(HWND hParent)
 #else
 __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
 {
-    const unsigned long cycles_start = cycles; /* preserve original */
-
     if (*RSP.SP_STATUS_REG & 0x00000003)
     {
         message("SP HALT/BROKE on start!", 3);
@@ -130,7 +126,7 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
     }
 #endif
     *RSP.SP_PC_REG &= 0x00000FFF;
-    do
+    while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000) /* RSP running */
     {
         register unsigned int inst;
 
@@ -209,24 +205,22 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
             inst >>= 26;
             SP_PRIMARY[inst](rs, rt, imm);
         }
-        --cycles;
+        /* --cycles; */
         if (*RSP.SP_STATUS_REG & 0x00000020) /* SP_STATUS_SSTEP by debugger. */
-        { /* реализация из 0.122u7 */
-            message("Single-stepping support unconfirmed.", 2);
+        {
+            message("Omitted SP debug interface.", 0); /*
             if (rsp.step_count)
                 --rsp.step_count;
             else
             {
                 *RSP.SP_STATUS_REG |= 0x00000002;
                 message("SP_STATUS_BROKE", 3);
-            }
+            } */
         }
-    } while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000);
+    }
     if (!(*RSP.SP_STATUS_REG & 0x00000002)) /* BROKE was not set. */
         message("Halted RSP CPU loop by means of MTC0.", 2);
-    if (cycles == 0)
-        message("w00t!11!  cycles_start - executed was 0 !!", 0);
-    return (cycles_start - cycles); /* meant to be executed, minus remainder */
+    return (cycles);
 }
 #endif
 __declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo)
@@ -245,7 +239,6 @@ __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCo
     RSP = Rsp_Info;
     *RSP.SP_PC_REG = 0x00000000; // 0x4001000;
     delay_clock = -1;
-    rsp.step_count = 0x00000000;
     /* memset((RSP.DMEM), 0, 0x2000); // Warning:  Breaks PJ64 1.7. */
     while (RSP.IMEM != RSP.DMEM + 4096)
         message("This EXE sucks.\nPick another one.", 3);
@@ -267,6 +260,5 @@ __declspec(dllexport) void RomClosed(void)
 {
     *RSP.SP_PC_REG = 0x00000000;
     delay_clock = -1;
-    rsp.step_count = 0x00000000;
     return;
 }
