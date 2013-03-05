@@ -17,6 +17,6 @@ static void VMULF(int vd, int vs, int vt, int element)
         for (i = 0, j = element & 07; i < 8; i++)
             VACC[i].DW = (VR[vs].s[i]*VR[vt].s[j] << 1) + 0x8000;
     for (i = 0; i < 8; i++) /* Only one reachable value can expose overflow. */
-        VR[vd].s[i] = (VACC[i].W[0] == 0x80008000) ? 0x7FFF : VACC[i].s[MD];
+        VR[vd].s[i] = VACC[i].s[MD] - (VACC[i].W[0] == 0x80008000);
     return;
 }
