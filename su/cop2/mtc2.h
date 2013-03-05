@@ -1,16 +1,22 @@
 #include "../../vu/vu.h"
 
-/* to-do:  Try to optimize to using accurate, 16-bit single-hit writes. */
-
 void MTC2(int rt, int vd, int element)
 {
-    VR[vd].b[element ^ 01] = (unsigned short)SR[rt] >> 8;
-    ++element;
-    if (element == 16)
+    if ((element & 0x1) != 0x0)
     {
-        message("MTC2\nTried to wrap around VR segment.", 1);
+        message("MTC2\nUnaligned element.", 1);
+        --element; /* element ^= 01; // halfword byte entry swap */
+        VR[vd].b[element] = (unsigned short)SR[rt] >> 8;
+        element += 0x3; /* endian_swap((e + 1) ^ 01) */
+        if (element == (0x0 ^ 01))
+        {
+            message("MTC2\nTried to wrap around VR segment.", 0);
+            return;
+        }
+        VR[vd].b[element] = (unsigned char)SR[rt];
         return;
     }
-    VR[vd].b[element ^ 01] = (unsigned char)SR[rt];
+    element = (unsigned int)(element) >> 1;
+    VR[vd].s[element] = (short)SR[rt];
     return;
 }
