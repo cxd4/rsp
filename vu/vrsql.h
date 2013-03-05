@@ -1,5 +1,6 @@
 #include "vu.h"
 #include "divrom.h"
+#include "math.h" // temp until fixed correct FP precision
 
 static void VRSQL(int vd, int del, int vt, int e)
 {
@@ -36,7 +37,7 @@ static void VRSQL(int vd, int del, int vt, int e)
 #ifdef FP_CORRECTIONS
         old_model = _controlfp(_RC_CHOP, _MCW_RC);
 #endif
-        sqr = (int)(0x7FFFFFFF / sqrt(sqr)); /* `sqrtf` instead of `sqrt`? */
+        sqr = (int)(0x7FFFFFFF / sqrtf(sqr)); /* `sqrtf` instead of `sqrt`? */
 #ifdef FP_CORRECTIONS
         old_model = _controlfp(old_model, _MCW_RC);
 #endif
