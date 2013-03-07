@@ -29,6 +29,12 @@
  * See the `void message()` for details on this centralized API invocation.
  */
 
+#undef  MAX_WAIT
+/* How many times did the new PC match the previous PC?  If that exceeds
+ * `MAX_WAIT`, we assume that the loop is infinite.  We try to exit two types
+ * of loops:  simple and complex.  See `SEARCH_INFINITE_LOOPS` for details.
+ */
+
 #undef  EXTERN_COMMAND_LIST_GBI
 /* If this is defined, the RSP never executes graphics tasks.
  * Those will all be sent to the video plugin for simulation processing.
@@ -36,6 +42,23 @@
 #undef  EXTERN_COMMAND_LIST_ABI
 /* If this is defined, the RSP never executes audio tasks; use audio plugin.
  * Enabling both of these does not guarantee that the RSP will never execute.
+ */
+
+#undef  SEARCH_INFINITE_LOOPS
+/* The most common use for this is to compensate for cycle-accuracy misses by
+ * the master processor (the MIPS R4300 CPU), which go hand-in-hand with this
+ * processor (the slave, the RSP, under the RCP) in managing the SP_STATUS
+ * register's signal flags (SP_STATUS_SIG7..SP_STATUS_SIG0), used for vendor-
+ * defined synchronization between the master and the RSP slave.  As today's
+ * emulators conforming to zilmar's limited plugin specifications have issues
+ * managing RSP cycle timing, the presence of this hack in a zilmar-spec RSP
+ * emulator is somewhat mandatory for success, although it is inaccurate.
+ *
+ * Whatever the cause of the permanent loop, as assumed by the MAX_WAIT test,
+ * the RSP CPU will eventually enter a search loop back-tracking to the most
+ * recent branch instruction that was missed and unconditionally take that
+ * branch in an attempt to recover from the loop.  (The exact behavior of the
+ * search based on what type of jump/branch order is beyond this scope.)
  */
 
 #undef  FP_CORRECTIONS
@@ -64,19 +87,6 @@
  * before even executing the function jump table (not recommended).
  */
 
-#undef  VU_EMULATE_FRACTION_SATURATE_UNDERFLOW
-/* Since Microsoft's compiler cannot generate the correctly optimized code
- * for this at the moment, I invented this macro control to disable the
- * VMULF security check if both multipliers happen to be equal to -32768.
- *
- * Basically the chance of this happening is extremely small--small enough
- * that Microsoft's CL.EXE should be making the branches ON EQUAL instead of
- * on NOT EQUAL (if true instead of false), taking the branch out of the
- * normal code path only if this underflow exception arises.  Sadly however
- * as of Visual Studio 2010 Microsoft didn't understand that, causing the
- * latency of VMULF to multiply greatly for over 99% of ABI command lists.
- */
-
 #undef  VU_EMULATE_SCALAR_ACCUMULATOR_READ
 /* VSAW is the only RSP instruction that can access the vector accumulator
  * elements directly.  In the original RSP for Ultra64 this was supposed to
@@ -90,8 +100,10 @@
 
 /* Choose whether to define, or keep undefined, the above macros. */
 #define MINIMUM_MESSAGE_PRIORITY    1 // show most messages of RSP weirdness
+#define MAX_WAIT                    (0x0001FFFF & 0x1FFFFFFF)
 // #define EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
 // #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
+#define SEARCH_INFINITE_LOOPS // Try with Gauntlet Legends, Stunt Racer 64...
 // #define FP_CORRECTIONS // Slower than the unimplemented lookup method
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 // #define VU_OVERRIDE_WEIRD_ELEMENT // Keep it off for more speed.

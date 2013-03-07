@@ -22,6 +22,13 @@ static int delay_clock;
 /* Intermediary datum for maintaining the correct, real RSP PC after each
  * instruction, in conjunction with the maintained clock timing.
  */
+#ifdef SEARCH_INFINITE_LOOPS
+static int loop_count;
+static int loop_count_small;
+static int old_PC;
+
+int target_count[0xFFF + 1];
+#endif
 
 RSP_INFO RSP;
 
