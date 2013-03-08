@@ -132,25 +132,6 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
         { /* most likely that this condition does NOT take the branch */
             if (delay_clock == 0)
             {
-#ifdef SEARCH_INFINITE_LOOPS
-                temp_PC &= 0x00000FFC;
-                ++target_count[temp_PC];
-                loop_count_small = (old_PC == temp_PC) ? loop_count_small+1 : 0;
-                if (loop_count_small > MAX_WAIT)
-                {
-                    target_count[temp_PC] = loop_count_small = 0;
-                    delay_clock = SearchSimpleBlockEscapes();
-                    continue;
-                }
-                if (target_count[temp_PC] > 4*MAX_WAIT)
-                {
-                    message("Unsupported?", 0);
-                    target_count[temp_PC] = 0;
-                    delay_clock = -1;
-                    continue;
-                }
-                old_PC = temp_PC;
-#endif
                 *RSP.SP_PC_REG  = temp_PC;
                 *RSP.SP_PC_REG &= 0x00000FFC;
                 --delay_clock; /* maybe more optimizable: `delay_clock = -1` */
@@ -187,7 +168,7 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
             strcpy(text, offset);
             strcat(text, "\n");
             strcat(text, code);
-            sprintf(text, "%s\ncR:%i\ncS:%u", text, cycles, cycles_start);
+            sprintf(text, "%s\ncR:%i\ncS:100", text, cycles);
             message(text, 0); /* PC offset, MIPS hex, ratio cyclesRem:base. */
             if (output_log == NULL) {} else /* Global pointer not updated?? */
                 fwrite(endian_swap, 4, 1, output_log);
@@ -235,9 +216,8 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
         }
     }
 #ifdef SEARCH_INFINITE_LOOPS
-    loop_count = 0;
-    loop_count_small = 0;
-    memset(target_count, 0x00000000, 0xFFF + 1);
+    for (cycles = 0; cycles < 32; cycles++)
+        MFC0_count[cycles] ^= MFC0_count[cycles];
 #endif
     if (!(*RSP.SP_STATUS_REG & 0x00000002)) /* BROKE was not set. */
         message("Halted RSP CPU loop by means of MTC0.", 2);

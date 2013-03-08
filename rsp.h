@@ -23,11 +23,14 @@ static int delay_clock;
  * instruction, in conjunction with the maintained clock timing.
  */
 #ifdef SEARCH_INFINITE_LOOPS
-static int loop_count;
-static int loop_count_small;
-static int old_PC;
-
-int target_count[0xFFF + 1];
+static int MFC0_count[32];
+/* There are only 32 possible MIPS MFC0 instruction words reading from
+ * SP_STATUS that a normal assembler would generate, because rt and rd are
+ * the only variable operands to a MFC0 operation, and rd == SP_STATUS.
+ * Due to the possibility of conflicting SP_STATUS reads within the same loop
+ * caused by faulty cycle timing by the host CPU, it is wiser to keep count
+ * over how many times an exact MFC0 was encountered, not the opcode itself.
+ */
 #endif
 
 RSP_INFO RSP;

@@ -1,6 +1,9 @@
 void BGEZ(int rs, signed offset)
 {
-    if ((signed)SR[rs] < 0) return;
+    int BC;
+
+    BC = ((signed)SR[rs] >= 0);
+    if (!BC) return;
     temp_PC  = *RSP.SP_PC_REG;
     temp_PC += offset;
     temp_PC &= 0x00000FFF;
