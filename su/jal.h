@@ -6,8 +6,7 @@ void JAL(int unused_rs, int unused_rt, short target)
     SR[31] += 0x00000004;
     SR[31] &= 0x00000FFC;
     target <<= 2;
-    temp_PC = target & 0xFFC; /* THEN jump (processor manual order). */
-    delay_clock = 1;
+    temp_PC = target & 0x00000FFC; /* THEN jump (processor manual order). */
     return;
 }
 

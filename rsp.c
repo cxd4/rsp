@@ -122,22 +122,20 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
         MessageBoxA(NULL, task_hex, "OSTask.type", 0x00000000);
     }
 #endif
-    *RSP.SP_PC_REG &= 0x00000FFF;
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000) /* RSP running */
     {
         register unsigned int inst;
 
         inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
-        if (delay_clock >= 0)
-        { /* most likely that this condition does NOT take the branch */
-            if (delay_clock == 0)
-            {
-                *RSP.SP_PC_REG  = temp_PC;
-                *RSP.SP_PC_REG &= 0x00000FFC;
-                --delay_clock; /* maybe more optimizable: `delay_clock = -1` */
-                continue;
-            }
-            --delay_clock;
+        if (temp_PC >= 0) /* test temp_PC & 0x80000000 , jns temp_PC */
+        {
+            *RSP.SP_PC_REG = temp_PC; /* have not masked 0x04001000 to PC */
+            temp_PC = 0x00000000 ^ 0xFFFFFFFF;
+        }
+        else
+        {
+            *RSP.SP_PC_REG += 0x004;
+            *RSP.SP_PC_REG &= 0x00000FFC;
         }
 #ifdef SP_EXECUTE_LOG
         if (output_log)
@@ -174,8 +172,6 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
                 fwrite(endian_swap, 4, 1, output_log);
         }
 #endif
-        *RSP.SP_PC_REG += 0x00000004;
-        *RSP.SP_PC_REG &= 0x00000FFC;
         if (inst >> 25 == 0x25) /* is a VU instruction */
         {
             const int vd = (inst >>  6) & 0x0000001F;
@@ -239,7 +235,7 @@ __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCo
     *CycleCount = 0; // число циклов,перед тем,как вернуть к-ль эмулятору.
     RSP = Rsp_Info;
     *RSP.SP_PC_REG = 0x00000000; // 0x4001000;
-    delay_clock = -1;
+    temp_PC = -1;
     /* memset((RSP.DMEM), 0, 0x2000); // Warning:  Breaks PJ64 1.7. */
     while (RSP.IMEM != RSP.DMEM + 4096)
         message("This EXE sucks.\nPick another one.", 3);
@@ -260,7 +256,7 @@ __declspec(dllexport) void InitiateRSPDebugger(DEBUG_INFO DebugInfo)
 __declspec(dllexport) void RomClosed(void)
 {
     *RSP.SP_PC_REG = 0x00000000;
-    delay_clock = -1;
+    temp_PC = -1;
     return;
 }
 

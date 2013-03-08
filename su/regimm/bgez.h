@@ -4,9 +4,6 @@ void BGEZ(int rs, signed offset)
 
     BC = ((signed)SR[rs] >= 0);
     if (!BC) return;
-    temp_PC  = *RSP.SP_PC_REG;
-    temp_PC += offset;
-    temp_PC &= 0x00000FFF;
-    delay_clock = 1;
+    temp_PC = (*RSP.SP_PC_REG + offset) & 0x00000FFC;
     return;
 }
