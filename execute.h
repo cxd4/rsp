@@ -1,134 +1,417 @@
-/******************************************************************************\
-* Project:  Hybrid Interpreter Combining Static and Dynamic Decode             *
-* Authors:  Iconoclast                                                         *
-* Release:  2013.02.25                                                         *
-* License:  none (public domain)                                               *
-\******************************************************************************/
+#include "Rsp_#1.1.h"
+#include "rsp.h"
 
-/* The MSP for the N64 RCP has two parts:  a scalar unit and a vector unit.
- *
- * The SU is basically a 32-bit subset of the design template used for the
- * original MIPS family revision 4000.  This interpreter will maintain the
- * traditional approach for SU instructions.  The function calls to the
- * functional-based interpreter operations I have defined elsewhere are
- * intended to be inline-serviced by the compiler to accelerate the decode
- * phase resultant of interpreting code instead of re-compiling it.  (If
- * this file is not used, interpretation is way slower because of function
- * calls pushing instruction operands as function call stack arguments.)
- *
- * The VU for its time was revolutionary and still comprises many special
- * vector operations not apt to replication on SSE4, AVX, or other recent
- * enhancements to the Intel instruction set.  As such, to match the grace
- * of cycling through SU operations, I have decided to take it upon myself
- * to attempt a "static interpreter" which voids the decode cyclical steps.
- * The RCP essentially splits processor behavior for SU and VU operations,
- * so my attempt at this "static interpreter" is temporarily slopped at the
- * bottom of this file.  --cxd4
- */
+#include "su/su.h"
+#include "vu/vu.h"
 
-__declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
-{
-    if (*RSP.SP_STATUS_REG & 0x00000003)
-    {
-        message("SP HALT/BROKE on start!", 3);
-        return 0;
-    }
-    switch (*(unsigned int *)(RSP.DMEM + 0xFC0))
-    { /* Simulation barrier to redirect processing externally. */
-#ifdef EXTERN_COMMAND_LIST_GBI
-        case 0x00000001:
-            if (RSP.ProcessDList == 0) {} else
-                RSP.ProcessDList();
-            *RSP.SP_STATUS_REG |= 0x00000203;
-            if (*RSP.SP_STATUS_REG & 0x00000040) /* SP_STATUS_INTR_BREAK */
-            {
-                *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
-                RSP.CheckInterrupts();
-            }
-            return 0;
-#endif
-#ifdef EXTERN_COMMAND_LIST_ABI
-        case 0x00000002: /* OSTask.type == M_AUDTASK */
-            if (RSP.ProcessAList == 0) {} else
-                RSP.ProcessAList();
-            *RSP.SP_STATUS_REG |= 0x00000203;
-            if (*RSP.SP_STATUS_REG & 0x00000040) /* SP_STATUS_INTR_BREAK */
-            {
-                *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
-                RSP.CheckInterrupts();
-            }
-            return 0;
-#endif
-    }
-    *RSP.SP_PC_REG &= 0x00000FFF;
-    do
-    {
-        register unsigned int inst;
+void run_microcode(void)
+{ /* Treat the RSP CPU as a permanent loop til MTC0/BREAK set SP_STATUS_HALT. */
+    int BC;
+    int imm, rs, rt, rd;
+    unsigned int addr; /* scalar loads, stores:  LB, LH, LW, LBU, LHU, SH, SW */
+    register unsigned int inst = 0x00000000;
 
+    while ((inst ^ inst) == (inst ^ inst))
+    { /* We assume the host CPU never sets SP_STATUS_HALT during the SP task. */
         inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
-        if (delay_clock >= 0)
-        { /* most likely that this condition does NOT take the branch */
-            if (delay_clock == 0)
+        if (*RSP.SP_STATUS_REG & 0x00000020) // SP_STATUS_SSTEP by debugger.
+        {
+            message("Omitted SP debug interface.", 0); /*
+            if (rsp.step_count) // from MAME / Ville Linde
+                --rsp.step_count;
+            else
             {
-                *RSP.SP_PC_REG  = temp_PC;
-                *RSP.SP_PC_REG &= 0x00000FFC;
-                --delay_clock; /* maybe more optimizable: `delay_clock = -1` */
-                continue;
-            }
-            --delay_clock;
+                *RSP.SP_STATUS_REG |= 0x00000002;
+                message("SP_STATUS_BROKE", 3);
+            } */
         }
-        *RSP.SP_PC_REG += 0x00000004;
+#ifdef SP_EXECUTE_LOG
+        step_SP_commands(inst);
+#endif
+        *RSP.SP_PC_REG += 0x004;
         *RSP.SP_PC_REG &= 0x00000FFC;
+/* This is the fastest method of maintaining the correct PC.
+ * It is not the most accurate because PC slot checks happen after cycle EX.
+ *
+ * Be warned that this modifies the implemented solutions to emulating the
+ * branch and jump operations.  For instance, to emulate BAL or JAL, we
+ * increment the PC only by += 0x004, not by += 0x008 like the doc says.
+ * Ultimately, the PC register and link address stores remain 100% accurate.
+ */
+EX:
         if (inst >> 25 == 0x25) /* is a VU instruction */
-            execute_VU(inst);
-        else
         {
-            const int rs = (inst & 0x03E00000) >> 21;
-            const int rt = (inst >> 16) & 0x0000001F; /* Try to mov upper HW. */
-            const short imm = (short)inst; /* (un)signed is sub-op-defined. */
-
-            inst >>= 26;
-            SP_PRIMARY[inst](rs, rt, imm);
+            const int vd = (inst & 0x000007C0) >>  6;
+            const int vs = (inst & 0x0000FFFF) >> 11;
+            const int vt = (inst & 0x001F0000) >> 16;
+            const int e  = (inst & 0x01E00000) >> 21;
+#ifdef VU_OVERRIDE_WEIRD_ELEMENT
+            if (e == 1)
+            { /* Illegal assembly instruction, but valid RSP machine code. */
+                message("Weird vector element specifier.", 2);
+            }
+#endif
+            SP_COP2_VECTOP[inst % 64](vd, vs, vt, e);
+            continue;
         }
-        --cycles;
-        if (*RSP.SP_STATUS_REG & 0x00000020) /* SP_STATUS_SSTEP by debugger. */
-            message("Single-stepping support unconfirmed.", 2);
-    } while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000);
-    if (!(*RSP.SP_STATUS_REG & 0x00000002)) /* BROKE was not set. */
-        message("Halted RSP CPU loop by means of MTC0.", 2);
-    return (cycles);
-}
+        SR[0] ^= SR[0];
+/* I don't want to essay out an entire list of accurate ways we could emulate
+ * the MIPS `zero` register's permanence, but let's just remember these keys:
+ *
+ * 1.  Ensure that the virtual register is constantly fixed to one value.
+ * 2.  Save code block size in switch block splits with more code space.
+ * 3.  Avoid creating new branch labels and blocks for exiting if rd == 0.
+ * #1 means more stable, #2 means faster, and #3 means more accurate + fast.
+ */
+        imm = inst & 0x0000FFFF;
+        rd = (unsigned short)(imm) >> 11; /* mov ecx, ax; shr ecx, 11 */
+        rs = (unsigned)(inst) >> 21; /* Don't assume that op isn't 0b000000. */
+        rt = (inst >> 16) & 31; /* Do a LUI on `inst`, then ANDI by 31. */
+        switch (inst >> 26)
+        {
+            case 000: /* SPECIAL */
+                switch (imm & 077) /* rs = inst >> 21, w/o having to `&= 31`. */
+                {
+                    int sa;
 
-inline void execute_VU(unsigned int inst)
-{
-    register int i = 0; /* iteration count index for (liably unrolled) loops */
-
-    switch (inst)
+                    case 000: /* SLL */
+                        sa = (imm & 0x07C0) >> 6;
+                        SR[rd] = SR[rt] << sa;
+                        continue;
+                    case 002: /* SRL */
+                        sa = (imm & 0x07C0) >> 6;
+                        SR[rd] = (unsigned)(SR[rt]) >> sa;
+                        continue;
+                    case 003: /* SRA */
+                        sa = (imm & 0x07C0) >> 6;
+                        SR[rd] = (signed)(SR[rt]) >> sa;
+                        continue;
+                    case 004: /* SLLV */
+                        SR[rd] = SR[rt] << (SR[rs] & 31);
+                        continue;
+                    case 006: /* SRLV */
+                        SR[rd] = (unsigned)(SR[rt]) >> (SR[rs] & 31);
+                        continue;
+                    case 007: /* SRAV */
+                        SR[rd] = (signed)(SR[rt]) >> (SR[rs] & 31);
+                        continue;
+                    case 010: /* JR */
+                        temp_PC = SR[rs];
+                        goto BRANCH;
+                    case 011: /* JALR */
+                        SR[rd] = (*RSP.SP_PC_REG + 0x004) & 0x00000FFC;
+                        temp_PC = SR[rs];
+                        goto BRANCH;
+                    case 015: /* BREAK */
+                        *RSP.SP_STATUS_REG |= 0x00000003;
+                        if (*RSP.SP_STATUS_REG & 0x00000040)
+                        { /* SP_STATUS_INTR_BREAK */
+                            *RSP.MI_INTR_REG |= 0x00000001;
+                            RSP.CheckInterrupts();
+                        }
+                        return; /* return (cycles); */
+                    case 040: /* ADD */
+                        SR[rd] = SR[rs] + SR[rt];
+                        continue;
+                    case 041: /* ADDU */
+                        SR[rd] = SR[rs] + SR[rt];
+                        continue;
+                    case 042: /* SUB */
+                        SR[rd] = SR[rs] - SR[rt];
+                        continue;
+                    case 043: /* SUBU */
+                        SR[rd] = SR[rs] - SR[rt];
+                        continue;
+                    case 044: /* AND */
+                        SR[rd] = SR[rs] & SR[rt];
+                        continue;
+                    case 045: /* OR */
+                        SR[rd] = SR[rs] | SR[rt];
+                        continue;
+                    case 046: /* XOR */
+                        SR[rd] = SR[rs] ^ SR[rt];
+                        continue;
+                    case 047: /* NOR */
+                        SR[rd] = ~(SR[rs] | SR[rt]);
+                        continue;
+                    case 052: /* SLT */
+                        SR[rd] = (signed)(SR[rs]) < (signed)(SR[rt]);
+                        continue;
+                    case 053: /* SLTU */
+                        SR[rd] = (unsigned)(SR[rs]) < (unsigned)(SR[rt]);
+                        continue;
+                    default:
+                        message("SPECIAL\nRESERVED", 3);
+                        continue;
+                }
+            case 001: /* REGIMM */
+                rs &= 31;
+                switch (rt)
+                {
+                    default:
+                        message("REGIMM\nRESERVED", 3);
+                        continue;
+                    case 000: /* BLTZ */
+                        BC = ((signed)SR[rs] < 0);
+                        if (!BC) continue;
+                        temp_PC = *RSP.SP_PC_REG + (imm << 2);
+                        goto BRANCH;
+                    case 001: /* BGEZ */
+                        BC = ((signed)SR[rs] >= 0);
+                        if (!BC) continue;
+                        temp_PC = *RSP.SP_PC_REG + (imm << 2);
+                        goto BRANCH;
+                    case 020: /* BLTZAL */
+                        SR[31] = (*RSP.SP_PC_REG + 0x004) & 0x00000FFC;
+                        BC = ((signed)SR[rs] < 0);
+                        if (!BC) continue;
+                        temp_PC = *RSP.SP_PC_REG + (imm << 2);
+                        goto BRANCH;
+                    case 021: /* BGEZAL */
+                        SR[31] = (*RSP.SP_PC_REG + 0x004) & 0x00000FFC;
+                        BC = ((signed)SR[rs] >= 0);
+                        if (!BC) continue;
+                        temp_PC = *RSP.SP_PC_REG + (imm << 2);
+                        goto BRANCH;
+                }
+            case 002: /* J */
+                temp_PC = imm << 2;
+                goto BRANCH;
+            case 003: /* JAL */
+                SR[31] = (*RSP.SP_PC_REG + 0x004) & 0x00000FFC;
+                temp_PC = imm << 2;
+                goto BRANCH;
+            case 004: /* BEQ */
+                BC = (SR[rs &= 31] == SR[rt]);
+                if (!BC) continue;
+                temp_PC = *RSP.SP_PC_REG + (imm << 2);
+                goto BRANCH;
+            case 005: /* BNE */
+                BC = (SR[rs &= 31] != SR[rt]);
+                if (!BC) continue;
+                temp_PC = *RSP.SP_PC_REG + (imm << 2);
+                goto BRANCH;
+            case 006: /* BLEZ */
+                BC = ((signed)SR[rs &= 31] <= 0);
+                if (!BC) continue;
+                temp_PC = *RSP.SP_PC_REG + (imm << 2);
+                goto BRANCH;
+            case 007: /* BGTZ */
+                BC = ((signed)SR[rs &= 31] > 0);
+                if (!BC) continue;
+                temp_PC = *RSP.SP_PC_REG + (imm << 2);
+                goto BRANCH;
+            case 010: /* ADDI */
+                SR[rt] = SR[rs &= 31] + (signed short)imm;
+                continue;
+            case 011: /* ADDIU */
+                SR[rt] = SR[rs &= 31] + (signed short)imm;
+                continue;
+            case 012: /* SLTI */
+                SR[rt] = ((signed)SR[rs &= 31] < (signed short)imm);
+                continue;
+            case 013: /* SLTIU */
+                SR[rt] = ((unsigned)SR[rs &= 31] < (unsigned long)(short)imm);
+                continue;
+            case 014: /* ANDI */
+                SR[rt] = SR[rs &= 31] & (unsigned short)imm;
+                continue;
+            case 015: /* ORI */
+                SR[rt] = SR[rs &= 31] | (unsigned short)imm;
+                continue;
+            case 016: /* XORI */
+                SR[rt] = SR[rs &= 31] ^ (unsigned short)imm;
+                continue;
+            case 017: /* LUI */
+                SR[rt] = imm << 16;
+                continue;
+            case 020: /* COP0 */
+#ifdef SEARCH_INFINITE_LOOPS
+                SP_COP0[rs &= 31](rt, rd);
+                continue; /* Too complex to maintain in this memory space. */
+#else
+                switch (rs &= 31)
+                {
+                    case 000: /* MFC0 */
+                        SR[rt] = **CR[rd];
+                        continue;
+                    case 004: /* MTC0 */
+                        MTC0(rt, rd);
+                        continue;
+                    default:
+                        message("COP0\nRESERVED", 3);
+                        continue;
+                }
+#endif
+            case 022: /* COP2 */
+                SP_COP2[rs &= 31](rt, rd, (imm >> 7) & 0xF);
+                continue;
+            case 040: /* LB */
+                addr = (SR[rs &= 31] + imm) & 0x00000FFF;
+                SR[rt] = *(signed char *)(RSP.DMEM + (addr ^ 03));
+                continue;
+            case 041: /* LH */
+                addr = (SR[rs &= 31] + imm) & 0x00000FFF;
+                switch (addr & 03)
+                {
+                    case 00: /* word-aligned */
+                        SR[rt] = *(signed short *)(RSP.DMEM + (addr + 0x002));
+                        continue;
+                    case 01:
+                        SR[rt] = *(signed short *)(RSP.DMEM + (addr | 0x000));
+                        continue;
+                    case 02:
+                        SR[rt] = *(signed short *)(RSP.DMEM + (addr - 0x002));
+                        continue;
+                    case 03:
+                        SR[rt]  = RSP.DMEM[addr - 0x003] << 8;
+                        SR[rt] |= RSP.DMEM[(addr += 0x004) & 0x00000FFF];
+                        SR[rt]  = (signed short)(SR[rt]);
+                        continue;
+                }
+            case 043: /* LW */
+                addr = (SR[rs &= 31] + imm) & 0x00000FFF;
+                switch (addr & 03)
+                {
+                    case 00: /* word-aligned */
+                        SR[rt] = *(int *)(RSP.DMEM + addr);
+                        continue;
+                    case 01:
+                        SR[rt]   = RSP.DMEM[addr + 0x001];
+                        SR[rt] <<= 8;
+                        SR[rt]  |= RSP.DMEM[addr | 0x000];
+                        SR[rt] <<= 8;
+                        SR[rt]  |= RSP.DMEM[addr - 0x001];
+                        SR[rt] <<= 8;
+                        addr += 0x006;
+                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        continue;
+                    case 02:
+                        SR[rt]   = RSP.DMEM[addr - 0x001];
+                        SR[rt] <<= 8;
+                        SR[rt]  |= RSP.DMEM[addr - 0x002];
+                        SR[rt] <<= 8;
+                        addr += 0x005;
+                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        SR[rt] <<= 8;
+                        --addr;
+                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        continue;
+                    case 03:
+                        SR[rt]   = RSP.DMEM[addr - 0x003];
+                        SR[rt] <<= 8;
+                        addr += 0x004;
+                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        SR[rt] <<= 8;
+                        --addr;
+                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        SR[rt] <<= 8;
+                        --addr;
+                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        continue;
+                }
+            case 044: /* LBU */
+                addr = (SR[rs &= 31] + imm) & 0x00000FFF;
+                SR[rt] = *(unsigned char *)(RSP.DMEM + (addr ^ 03));
+                continue;
+            case 045: /* LHU */
+                addr = (SR[rs &= 31] + imm) & 0x00000FFF;
+                switch (addr & 03)
+                {
+                    case 00: /* word-aligned */
+                        SR[rt] = *(unsigned short *)(RSP.DMEM + (addr + 0x002));
+                        continue;
+                    case 01:
+                        SR[rt] = *(unsigned short *)(RSP.DMEM + (addr | 0x000));
+                        continue;
+                    case 02:
+                        SR[rt] = *(unsigned short *)(RSP.DMEM + (addr - 0x002));
+                        continue;
+                    case 03:
+                        SR[rt]  = RSP.DMEM[addr - 0x003] << 8;
+                        SR[rt] |= RSP.DMEM[(addr += 0x004) & 0x00000FFF];
+                        continue;
+                }
+            case 050: /* SB */
+                addr = (SR[rs &= 31] + imm) & 0x00000FFF;
+                *(RSP.DMEM + (addr ^ 03)) = SR[rt] & 0xFF;
+                continue;
+            case 051: /* SH */
+                addr = (SR[rs &= 31] + imm) & 0x00000FFF;
+                switch (addr & 03)
+                {
+                    case 00: /* word-aligned */
+                        *(short *)(RSP.DMEM + (addr + 0x002)) = SR[rt] & 0xFFFF;
+                        continue;
+                    case 01:
+                        *(short *)(RSP.DMEM + (addr | 0x000)) = SR[rt] & 0xFFFF;
+                        continue;
+                    case 02:
+                        *(short *)(RSP.DMEM + (addr - 0x002)) = SR[rt] & 0xFFFF;
+                        continue;
+                    case 03:
+                        RSP.DMEM[addr - 03] = (SR[rt] >> 8) & 0xFF;
+                        RSP.DMEM[(addr += 04) & 0x00000FFF] = SR[rt] & 0xFF;
+                        continue;
+                }
+            case 053: /* SW */
+                addr = (SR[rs &= 31] + imm) & 0x00000FFF;
+                switch (addr & 03)
+                {
+                    case 00: /* word-aligned */
+                        *(int *)(RSP.DMEM + addr) = SR[rt];
+                        continue;
+                    case 01:
+                        RSP.DMEM[addr + 0x001] = (SR[rt] >> 24) & 0xFF;
+                        RSP.DMEM[addr | 0x000] = (SR[rt] >> 16) & 0xFF;
+                        RSP.DMEM[addr - 0x001] = (SR[rt] >>  8) & 0xFF;
+                        addr += 0x006;
+                        RSP.DMEM[addr & 0x00000FFF] = SR[rt] & 0xFF;
+                        continue;
+                    case 02:
+                        RSP.DMEM[addr - 0x001] = (SR[rt] >> 24) & 0xFF;
+                        RSP.DMEM[addr - 0x002] = (SR[rt] >> 16) & 0xFF;
+                        addr += 0x005;
+                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >> 8) & 0xFF;
+                        --addr;
+                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >> 0) & 0xFF;
+                        continue;
+                    case 03:
+                        RSP.DMEM[addr - 0x003] = (SR[rt] >> 24) & 0xFF;
+                        addr += 0x004;
+                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >> 16) & 0xFF;
+                        --addr;
+                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >>  8) & 0xFF;
+                        --addr;
+                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >>  0) & 0xFF;
+                        continue;
+                }
+            case 062: /* LWC2 */
+                imm  = -1 * !!(inst & 0x00000040);
+                imm &= 0xFF80;
+                imm |= (inst & 0x0000007F);
+                SP_LWC2[rd](rt, (inst >>= 7) & 0xF, imm, rs &= 31);
+                continue; /* Too complex to maintain in this memory space. */
+            case 072: /* SWC2 */
+                imm  = -1 * !!(inst & 0x00000040);
+                imm &= 0xFF80;
+                imm |= (inst & 0x0000007F);
+                SP_SWC2[rd](rt, (inst >>= 7) & 0xF, imm, rs &= 31);
+                continue; /* Too complex to maintain in this memory space. */
+            default:
+                message("RESERVED", 3);
+                continue; /* How are reserved commands conducted on the RCP? */
+        }
+    }
+    while ((inst ^ -1) == (inst ^ +1))
     {
-        case 0x4A000000: // VMULF $v0, $v0, $v0
-            for (i = 0; i < 8; i++)
-                VACC[i].DW = 2*VR[0].s[i]*VR[0].s[i] + 0x8000;
-            for (i = 0; i < 8; i++)
-                VR[0].s[i] = (VR[0].s[i] == 0x8000) ? 0x7FFF : VACC[i].s[MD];
-            return;
-        default:
-        {
-            char debugger[] = "XXXXXXXX\nTreating as reserved.";
-            const char digits[16] = {
-                '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-            };
-            debugger[00] = digits[(inst & 0xF0000000) >> 28];
-            debugger[01] = digits[(inst & 0x0F000000) >> 24];
-            debugger[02] = digits[(inst & 0x00F00000) >> 20];
-            debugger[03] = digits[(inst & 0x000F0000) >> 16];
-            debugger[04] = digits[(inst & 0x0000F000) >> 12];
-            debugger[05] = digits[(inst & 0x00000F00) >>  8];
-            debugger[06] = digits[(inst & 0x000000F0) >>  4];
-            debugger[07] = digits[(inst & 0x0000000F) >>  0];
-            MessageBoxA(NULL, debugger, NULL, 0x00000030);
-            for (i = 0; i < 8; i++)
-                VR[(inst >> 6) % 32].s[i] = 0x0000;
-            return;
-        }
+BRANCH:
+        inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
+#ifdef SP_EXECUTE_LOG
+        step_SP_commands(inst);
+#endif
+        *RSP.SP_PC_REG = temp_PC & 0x00000FFC;
+        /* temp_PC = 0x00000000 ^ 0xFFFFFFFF; */
+        goto EX;
     }
 }

@@ -1,4 +1,4 @@
-void scan_ICACHE_for_cycle_fault(int rt);
+void scan_ICACHE_for_cycle_fault(int cr);
 /* My colossal attempt at covering up for faults in the host CPU emulator
  * (the main MIPS CPU, like Project64.exe) concerning cycle timing and
  * related inaccuracies.  Days of frustration were spent writing this.
@@ -89,7 +89,7 @@ void MFC0(int rt, int rd)
     }
 }
 
-void scan_ICACHE_for_cycle_fault(int rt)
+void scan_ICACHE_for_cycle_fault(int cr)
 {
     char disasm[80]; /* Unused if priority < MIN; also sprintf is unused. */
     int TR[32]; /* limited simulation of the RSP's MIPS GPRs */
@@ -140,14 +140,14 @@ void scan_ICACHE_for_cycle_fault(int rt)
         int BC; /* branch condition */
         const unsigned int inst = *(unsigned int *)(RSP.IMEM + i);
         const int po   = (inst & 0xFFFFFFFF) >> 26; /* primary op-code */
+        short int imm  = (inst & 0x0000FFFF);
         const int MWrs = (inst & 0x03E00000) >> 21;
         const int MWrt = (inst & 0x001F0000) >> 16;
-        short int imm  = (inst & 0x0000FFFF);
         const int MWrd = (inst & 0x0000FFFF) >> 11; // mov ecx, ax; shr ecx, 11
         const int MWsa = (inst & 0x000007C0) >>  7;
 
         sprintf(disasm, "PC:  0x%03X\ninst:  0x%08X", i & 0xFFC, inst);
-        message(disasm, 1);
+        message(disasm, 0);
         i += 0x004;
         i &= 0x00000FFC;
         if (i_tmp != -1)
@@ -159,10 +159,10 @@ void scan_ICACHE_for_cycle_fault(int rt)
         switch (po)
         {
             case 000: /* SPECIAL */
-                if (rt == MWrt || rt == MWrs)
+                if (cr == MWrt || cr == MWrs)
                 {
                     message("SPECIAL\nTransposed rt?", 2);
-                    rt = MWrd;
+                    cr = MWrd;
                 }
                 switch (inst & 0x0000003F)
                 {
@@ -179,7 +179,7 @@ void scan_ICACHE_for_cycle_fault(int rt)
                         TR[MWrd] = TR[MWrt] << (TR[MWrs] & 31);
                         continue;
                     case 006: /* SRLV */
-                        TR[MWrd] = TR[MWrt] >> ((unsigned int)(TR[MWrs]) & 31);
+                        TR[MWrd] = (unsigned int)(TR[MWrt]) >> (TR[MWrs] & 31);
                         continue;
                     case 007: /* SRAV */
                         TR[MWrd] = TR[MWrt] >> (TR[MWrs] & 31);
@@ -262,25 +262,23 @@ void scan_ICACHE_for_cycle_fault(int rt)
                 continue;
             case 010: /* ADDI */
             case 011: /* ADDIU */
-                if (rt == MWrs)
+                if (cr == MWrs)
                 {
                     message("ADDI\nTransposed rt?", 2);
-                    rt = MWrt;
+                    cr = MWrt;
                 }
                 TR[MWrt] = TR[MWrs] + imm;
                 continue;
             case 012: /* SLTI */
-                TR[MWrt] = (TR[MWrs] < imm);
+                TR[MWrt] = (TR[MWrs] < (signed short)imm);
                 continue;
             case 013: /* SLTIU */
                 TR[MWrt] = ((unsigned int)TR[MWrs] < (unsigned long)(short)imm);
                 continue;
             case 014: /* ANDI:  Real way to check SP signal bits. */
-                if (MWrs != rt)
+                if (MWrs != cr)
                     message("Possible indirection?", 2);
-                imm &= 0x7F80;
-                imm >>= 7; /* SP_STATUS_SIG7 .. SP_STATUS_SIG0 */
-                switch (imm)
+                switch ((unsigned char)(imm >> 7))
                 {
                     case 0x00:
                         message("No signals?", 3);
@@ -323,19 +321,19 @@ void scan_ICACHE_for_cycle_fault(int rt)
                         return; /* This might not work.... */
                 }
             case 015: /* ORI:  A very slim possibility for "extracting" bits. */
-                if (rt == MWrs)
+                if (cr == MWrs)
                 {
                     message("ORI\nTransposed rt?", 2);
-                    rt = MWrt;
+                    cr = MWrt;
                 }
                 TR[MWrt] = TR[MWrs] | imm;
                 message("ORI\nScan unsupported.", 2);
                 continue; /* This is the other method for isolating sig bits. */
             case 016: /* XORI */
-                if (rt == MWrs)
+                if (cr == MWrs)
                 {
                     message("XORI\nTransposed rt?", 2);
-                    rt = MWrt;
+                    cr = MWrt;
                 }
                 TR[MWrt] = TR[MWrs] & imm;
                 continue; /* XOR cannot be used to isolate individual bits... */
@@ -348,11 +346,11 @@ void scan_ICACHE_for_cycle_fault(int rt)
                    message("No scan for MTC0.", 3);
                 /* TR[MWrt] = CR[MWrd]; // eh... need to set up a ptr table */
                 if (MWrd != 4) /* not reading from SP_STATUS */
-                    if (MWrt == rt)
+                    if (MWrt == cr)
                         message("wut", 2); /* overwrite?? */
                     else
                         continue; /* Nobody cares. */
-                if (MWrt != rt) /* Possible indirection! */
+                if (MWrt != cr) /* Possible indirection! */
                 { /* >.< *facepalm* two MERGED cycle-acc. fails?? */
                     message("Voided a co-mfc0.", 2);
                     continue; /* Dunno how to implement this. */

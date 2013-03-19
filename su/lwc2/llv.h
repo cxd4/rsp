@@ -1,29 +1,32 @@
 /******************************************************************************\
-* Project:  SP VU Emulation Table:  Load Longword to Vector Unit (LLV)         *
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2012.12.28                                                         *
+* Project:  SP VU Emulation Table:  Load Longword to Vector Unit               *
+* Authors:  Iconoclast                                                         *
+* Release:  2013.03.10                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
-void LLV(int vt, int element, signed offset, int base)
+void LLV(int vt, int element, signed int offset, int base)
 {
-    register unsigned int addr = SR[base] + (offset * 4);
+    register unsigned int addr;
 
+    addr  = SR[base] + (offset << 2);
     addr &= 0x00000FFF;
-    if (element & 0x3 || addr & 0x003)
-    { /* World Driver Championship gfx ucode will do this in START screen. */
-        message("LLV\nCrossed word index barrier.", 0);
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
+    if (element & 0x3) /* Assemblers permit unaligned addresses. */
+    { /* Technically an illegal instruction to assemble, but H/W allows it. */
+        message("LLV\nWeird element.", 3);
         return;
     }
-    element >>= 01;
-    VR[vt].s[element + 00] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
-    VR[vt].s[element + 01] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
-    return;
+    element >>= 1;
+    switch (addr & 03)
+    {
+        case 00: /* word-aligned */
+            VR[vt].s[element + 00] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
+            VR[vt].s[element + 01] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
+            return;
+        case 01:
+        case 02:
+        case 03:
+            message("LLV\nWeird addr.", 3);
+            return;
+    }
 }

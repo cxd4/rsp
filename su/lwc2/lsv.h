@@ -1,30 +1,41 @@
 /******************************************************************************\
-* Project:  SP VU Emulation Table:  Load Shortword to Vector Unit (LSV)        *
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2012.12.27                                                         *
+* Project:  SP VU Emulation Table:  Load Shortword to Vector Unit              *
+* Authors:  Iconoclast                                                         *
+* Release:  2013.03.10                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
-void LSV(int vt, int element, signed offset, int base)
+void LSV(int vt, int element, signed int offset, int base)
 {
-    register unsigned int addr = SR[base] + (offset * 2);
+    register unsigned int addr;
 
-    addr &= 0x00000FFF; /* RCP no-exception override:  Force SP DMEM range. */
-    if ((element & 0x1) != 0x0 || (addr & 0x001) != 0x000)
-    {
-        message("LSV\nCrossed halfword index barrier.", 0);
-        if (element == 0xF)
-        {
-            VR[vt].b[element ^ 01] = RSP.DMEM[addr ^ 03];
-            return;
-        }
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF; /* Obviously, only for f(0xFFF) = 0xFFF + 1. */
-        VR[vt].b[element ^ 01] = RSP.DMEM[addr ^ 03];
+    addr  = SR[base] + (offset << 1);
+    addr &= 0x00000FFF;
+    if ((element & 0x1) != 0x0) /* Assemblers permit unaligned addresses. */
+    { /* Technically an illegal instruction to assemble, but H/W allows it. */
+        message("LSV\nOdd element.", 3);
         return;
     }
-    addr ^= 0x002; /* halfword endian swap */
-    element >>= 01;
-    VR[vt].s[element] = *(short *)(RSP.DMEM + addr);
-    return;
+    element >>= 1;
+    switch (addr & 03)
+    {
+        case 00: /* word-aligned */
+            VR[vt].s[element] = *(short *)(RSP.DMEM + (addr + 0x002));
+            return;
+        case 01:
+            VR[vt].s[element] = *(short *)(RSP.DMEM + (addr | 0x000));
+            return;
+        case 02:
+            VR[vt].s[element] = *(short *)(RSP.DMEM + (addr - 0x002));
+            return;
+        case 03:
+            message("LSV\nWeird addr.", 3);
+            return;
+    }
 }
+
+/* Note regarding memory endianness.
+ * The MIPS architecture is bi-endian.
+ * The union access `VR[vt].s[element]` indexes from the rightmost halfword.
+ * Halfwords in the vector registers are actually ordered left-to-right.
+ */

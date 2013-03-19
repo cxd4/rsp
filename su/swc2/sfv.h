@@ -27,7 +27,7 @@ void SFV(int vt, int element, signed offset, int base)
             RSP.DMEM[addr + 0xC] = (unsigned char)(VR[vt].s[07] >> 7);
             return;
         default:
-            message("SFV\nCrossed memory dest DW indexing boundary.", 0);
+            message("SFV\nWeird element.", 3);
             return; // Ville Linde:  "FIXME: only works for index 0 and index 8"
     }
 }

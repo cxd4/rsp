@@ -108,7 +108,7 @@ void STV(int vt, int element, signed offset, int base)
             register int e = element/2; /* store only bits 3..1 */
             register int s;
 
-            message("STV\nOdd element.", 0);
+            message("STV\nOdd element.", 1);
             for (s = 0; s < 8; s++)
             {
                 int fs = vt | ((s + e) & 07);

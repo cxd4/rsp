@@ -14,13 +14,13 @@ void SHV(int vt, int element, signed offset, int base)
     {
         register int i;
 
-        message("SHV\nNonzero element / weird addr.", 0);
+        message("SHV\nNonzero element / weird addr.", 2);
         for (i = 0; i < 8; i++)
         {
-            RSP.DMEM[addr ^ 03] = VR[vt].b[element ^ 01] << 1;
+            RSP.DMEM[addr ^ 03] = *(char *)(&(VR[vt]) + (element ^ 01)) << 1;
             ++element;
             element &= 0xF;
-            RSP.DMEM[addr ^ 03] = VR[vt].b[element ^ 01] >> 7;
+            RSP.DMEM[addr ^ 03] = *(char *)(&(VR[vt]) + (element ^ 01)) >> 7;
             ++element;
             element &= 0xF;
             addr += 0x002;

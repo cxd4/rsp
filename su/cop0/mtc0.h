@@ -30,7 +30,7 @@ void SP_DMA_WRITE(void)
         }
     }
     *RSP.SP_DMA_BUSY_REG = 0x00000000;
-    *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
+    *RSP.SP_STATUS_REG &= ~0x00000004; /* SP_STATUS_DMABUSY */
 }
 
 void SP_DMA_READ(void)
@@ -65,7 +65,7 @@ void SP_DMA_READ(void)
         }
     }
     *RSP.SP_DMA_BUSY_REG = 0x00000000;
-    *RSP.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
+    *RSP.SP_STATUS_REG &= ~0x00000004; /* SP_STATUS_DMABUSY */
 }
 
 void MTC0(int rt, int rd)
@@ -97,67 +97,40 @@ void MTC0(int rt, int rd)
             SP_DMA_WRITE();
             return;
         case 0x4:
-/* To-do:  It is possible to use a switch statement here to massively speed
- * up all of the flags maintenance in place of this massive, complex chain of
- * if()'s, by using a switch on every combination possibility of SR[rt] flags
- * set, but that of course is going to take time to implement.  The real
- * bottleneck behind why games are slow is the RDP and VU computational ops.
- */
-            if (SR[rt] & 0x00000001) /* clear halt */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_HALT;
-            if (SR[rt] & 0x00000002) /* set halt */
-                *RSP.SP_STATUS_REG |= SP_STATUS_HALT;
-            if (SR[rt] & 0x00000004) /* clear broke */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_BROKE;
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) <<  0);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000002) <<  0);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000004) <<  1);
             if (SR[rt] & 0x00000008) /* clear SP interrupt */
                 message("MTC0\nSP INTR:CLR", 3);
-            if (SR[rt] & 0x00000010) { /* set SP interrupt */
-                message("Set SP interrupt.", 1); /* WDC && SR64, other games? */
+            if (SR[rt] & 0x00000010) /* set SP interrupt */
+            { /* nonstandard gfx ucode:  Boss Game Studios */
                 *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
                 RSP.CheckInterrupts();
             }
-            if (SR[rt] & 0x00000020) /* clear single step */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SSTEP;
-            if (SR[rt] & 0x00000040) /* set single step */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SSTEP;
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000020) <<  5);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5);
             if (SR[rt] & 0x00000080) /* clear interrupt on break */
                 message("MTC0\nSP INTR BREAK:CLR", 3);
             if (SR[rt] & 0x00000100) /* set interrupt on break */
                 message("MTC0\nSP INTR BREAK:SET", 3);
-            if (SR[rt] & 0x00000200) /* clear signal 0 */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SIG0;
-            if (SR[rt] & 0x00000400) /* set signal 0 */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SIG0;
-            if (SR[rt] & 0x00000800) /* clear signal 1 */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SIG1;
-            if (SR[rt] & 0x00001000) /* set signal 1 */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SIG1;
-            if (SR[rt] & 0x00002000) /* clear signal 2 */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SIG2;
-            if (SR[rt] & 0x00004000) /* set signal 2 */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SIG2;
-            if (SR[rt] & 0x00008000) /* clear signal 3 */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SIG3;
-            if (SR[rt] & 0x00010000) /* set signal 3 */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SIG3;
-            if (SR[rt] & 0x00020000) /* clear signal 4 */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SIG4;
-            if (SR[rt] & 0x00040000) /* set signal 4 */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SIG4;
-            if (SR[rt] & 0x00080000) /* clear signal 5 */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SIG5;
-            if (SR[rt] & 0x00100000) /* set signal 5 */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SIG5;
-            if (SR[rt] & 0x00200000) /* clear signal 6 */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SIG6;
-            if (SR[rt] & 0x00400000) /* set signal 6 */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SIG6;
-            if (SR[rt] & 0x00800000) /* clear signal 7 */
-                *RSP.SP_STATUS_REG &= ~SP_STATUS_SIG7;
-            if (SR[rt] & 0x01000000) /* set signal 7 */
-                *RSP.SP_STATUS_REG |= SP_STATUS_SIG7;
-            if (SR[rt] & 0xFE000000) /* reserved/unused, just ignore these */
-                message("MTC0\nSP_STATUS", 1);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000200) <<  7);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000400) <<  7);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000800) <<  8);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00001000) <<  8);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00002000) <<  9);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00004000) <<  9);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00008000) << 10);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00010000) << 10);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00020000) << 11);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00040000) << 11);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00080000) << 12);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00100000) << 12);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00200000) << 13);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00400000) << 13);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00800000) << 14);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x01000000) << 14);
+            if (SR[rt] & 0xFE000000) /* Reserved | unused; just ignore these. */
+                message("MTC0\nSP_STATUS", 2);
             return;
         case 0x5: /* read-only register, cannot directly write using MTC0 */
             message("MTC0\nDMA_FULL", 3);
@@ -231,22 +204,12 @@ void MTC0(int rt, int rd)
                 if (SR[rt] & 0xFFFFFC00) /* Reserved / unused; just ignore. */
                     message("MTC0\nCMD_STATUS", 1);
             }
-/* To-do:  Here would be a good place for a switch() on mask combinations,
- * instead of this complex chain of if()'s.  However, the technique given
- * here is more readable for the purpose of extracting the information.
- */
-            if (SR[rt] & 0x00000001)
-                *RSP.DPC_STATUS_REG &= ~DP_STATUS_XBUS_DMA;
-            if (SR[rt] & 0x00000002)
-                *RSP.DPC_STATUS_REG |= DP_STATUS_XBUS_DMA;
-            if (SR[rt] & 0x00000004)
-                *RSP.DPC_STATUS_REG &= ~DP_STATUS_FREEZE;
-            if (SR[rt] & 0x00000008)
-                *RSP.DPC_STATUS_REG |= DP_STATUS_FREEZE;
-            if (SR[rt] & 0x00000010)
-                *RSP.DPC_STATUS_REG &= ~DP_STATUS_FLUSH;
-            if (SR[rt] & 0x00000020)
-                *RSP.DPC_STATUS_REG |= DP_STATUS_FLUSH;
+            *RSP.DPC_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) << 0);
+            *RSP.DPC_STATUS_REG |=  (!!(SR[rt] & 0x00000002) << 0);
+            *RSP.DPC_STATUS_REG &= ~(!!(SR[rt] & 0x00000004) << 1);
+            *RSP.DPC_STATUS_REG |=  (!!(SR[rt] & 0x00000008) << 1);
+            *RSP.DPC_STATUS_REG &= ~(!!(SR[rt] & 0x00000010) << 2);
+            *RSP.DPC_STATUS_REG |=  (!!(SR[rt] & 0x00000020) << 2);
             return;
         case 0xC: /* ??? is this read-only or not, hard to tell */
             message("MTC0\nCMD_CLOCK", 2);
