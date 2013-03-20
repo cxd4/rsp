@@ -7,17 +7,27 @@
 #ifndef _VU_H
 #define _VU_H
 
+#define MAX_LONG (~0)
+#if !(MAX_LONG < 0xFFFFFFFFFFFF)
+#define MACHINE_SIZE_48_MIN
+#endif
+
+/*
+ * RSP virtual registers (of vector unit)
+ * The most important are the 32 general-purpose vector registers.
+ * The best way to accurately virtualize these is using fixed 8-HW vectors,
+ * which also ensures the correct big endian byte and HW order using arrays.
+ *
+ * The downside is that we sometimes may need byte-precision access (?WC2).
+ */
+static short VR[32][8];
+
 /*
  * accumulator-indexing macros
  */
 #define LO  00
 #define MD  01
 #define HI  02
-
-#define MAX_LONG (~0)
-#if !(MAX_LONG < 0xFFFFFFFFFFFF)
-#define MACHINE_SIZE_48_MIN
-#endif
 
 static union ACC {
 #ifdef MACHINE_SIZE_48_MIN
@@ -39,6 +49,17 @@ static union ACC {
 unsigned short VCO; /* vector carry out register */
 unsigned short VCC; /* vector compare code register */
 unsigned char VCE; /* vector compare extension register */
+
+/*
+ * vector control register indexing pointer table
+ * This is particularly useful for directly executing CFC2 and CTC2.
+ */
+static const void *vCR[4] = {
+    &VCO,
+    &VCC,
+    &VCE,
+    &VCE /* Invalid vector control register.  (There are only three.) */
+};
 
 #include "vabs.h"
 #include "vadd.h"
@@ -82,15 +103,15 @@ unsigned char VCE; /* vector compare extension register */
 #include "vsubc.h"
 #include "vxor.h"
 
-static void res_M(int vd, int vs, int vt, int element)
+static void res_M(int sa, int rd, int rt, int e)
 {
-    element = vt = vs = vd = 0;
+    e = rt = rd = sa = 0;
     message("VRNDP/VRNDN/VMULQ\nMPEG DCT canceled.", 3);
     return; /* Ultra64 OS did have these, so one could implement this ext. */
 }
-static void res_V(int vd, int rd, int rt, int element)
+static void res_V(int sa, int rd, int rt, int e)
 {
-    element = rt = rd = vd = 0;
+    e = rt = rd = sa = 0;
     message("VU reserved instruction", 3);
     return;
 }
@@ -103,7 +124,7 @@ static void (*SP_COP2_VECTOP[64])(int, int, int, int) = {
     VLT    ,VEQ    ,VNE    ,VGE    ,VCL    ,VCH    ,VCR    ,VMRG   , /* 100 */
     VAND   ,VNAND  ,VOR    ,VNOR   ,VXOR   ,VNXOR  ,res_V  ,res_V  , /* 101 */
     VRCP   ,VRCPL  ,VRCPH  ,VMOV   ,VRSQ   ,VRSQL  ,VRSQH  ,VNOP   , /* 110 */
-    res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V   /* 111 */
+    res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V    /* 111 */
 }; /* 000     001     010     011     100     101     110     111 */
 
 /* Some notes about the vector operation codes matrix.

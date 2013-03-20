@@ -8,6 +8,20 @@
 #define _SU_H
 
 /*
+ * RSP virtual registers (of scalar unit)
+ * The most important are the 32 general-purpose scalar registers.
+ * We have the convenience of using a 32-bit machine (Win32) to emulate
+ * another 32-bit machine (MIPS/N64), so the most natural way to accurately
+ * emulate the scalar GPRs is to use the standard `int` type.  Situations
+ * specifically requiring sign-extension or lack thereof are forcibly
+ * applied as defined in the MIPS quick reference card and user manuals.
+ * Remember that these are not the same "GPRs" as in the MIPS ISA and totally
+ * abandon their designated purposes on the master CPU host (the VR4300),
+ * hence most of the MIPS names "k0, k1, t0, t1, v0, v1 ..." no longer apply.
+ */
+static int SR[32];
+
+/*
  * system control register indexing pointer table
  * This is particularly useful for directly executing MFC0.
  * MTC0 is too complicated to make regular use of this.

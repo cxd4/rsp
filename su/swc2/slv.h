@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Longword from Vector Unit            *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.10                                                         *
+* Release:  2013.03.20                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -11,27 +11,33 @@ void SLV(int vt, int element, signed int offset, int base)
 
     addr  = SR[base] + (offset << 2);
     addr &= 0x00000FFF;
-    if (element & 0x3) /* Assemblers permit unaligned addresses. */
-    { /* Technically an illegal instruction to assemble, but H/W allows it. */
-        message("SLV\nWeird element.", 0);
-        RSP.DMEM[addr++ ^ 03] = VR[vt].b[element++ ^ 01];
-        element &= 0xF;
+    if (element & 0x3) /* The element must be aligned, not the address. */
+    { /* F3DEX2 and some Rareware ucodes will force this illegal operation. */
+        const int a = !(element & 0x1);
+
+        message("SLV\nIllegal element.", 0);
+        element = (unsigned int)(element) >> 1;
+        RSP.DMEM[addr ^ 03] = (unsigned char)(VR[vt][element] >> (8*a));
+        ++addr;
         addr &= 0x00000FFF;
-        RSP.DMEM[addr++ ^ 03] = VR[vt].b[element++ ^ 01];
-        element &= 0xF;
+        element += !a;
+        RSP.DMEM[addr ^ 03] = (unsigned char)(VR[vt][element & 07] >> (8*!a));
+        ++addr;
         addr &= 0x00000FFF;
-        RSP.DMEM[addr++ ^ 03] = VR[vt].b[element++ ^ 01];
-        element &= 0xF;
+        element += a;
+        RSP.DMEM[addr ^ 03] = (unsigned char)(VR[vt][element & 07] >> (8*a));
+        ++addr;
         addr &= 0x00000FFF;
-        RSP.DMEM[addr++ ^ 03] = VR[vt].b[element++ ^ 01];
+        element += !a;
+        RSP.DMEM[addr ^ 03] = (unsigned char)(VR[vt][element & 07] >> (8*!a));
         return;
     }
-    element >>= 1;
+    element = (unsigned int)(element) >> 1;
     switch (addr & 03)
     {
         case 00: /* word-aligned */
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt].s[element + 00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt].s[element + 01];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt][element + 00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt][element + 01];
             return;
         case 01:
         case 02:

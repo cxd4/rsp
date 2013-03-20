@@ -9,7 +9,7 @@ static void VMUDL(int vd, int vs, int vt, int element)
     {
         for (i = 0; i < 8; i++)
         {
-            product = (unsigned short)VR[vs].s[i] * (unsigned short)VR[vt].s[i];
+            product = (unsigned short)VR[vs][i] * (unsigned short)VR[vt][i];
             VACC[i].DW = product >> 16;
         }
     }
@@ -17,8 +17,8 @@ static void VMUDL(int vd, int vs, int vt, int element)
     {
         for (i = 0, j = element & 01; i < 8; i++)
         {
-            product = (unsigned short)VR[vs].s[i]
-                    * (unsigned short)VR[vt].s[j | (i & 0xE)];
+            product = (unsigned short)VR[vs][i]
+                    * (unsigned short)VR[vt][j | (i & 0xE)];
             VACC[i].DW = product >> 16;
         }
     }
@@ -26,8 +26,8 @@ static void VMUDL(int vd, int vs, int vt, int element)
     {
         for (i = 0, j = element & 03; i < 8; i++)
         {
-            product = (unsigned short)VR[vs].s[i]
-                    * (unsigned short)VR[vt].s[j | (i & 0xC)];
+            product = (unsigned short)VR[vs][i]
+                    * (unsigned short)VR[vt][j | (i & 0xC)];
             VACC[i].DW = product >> 16;
         }
     }
@@ -35,11 +35,11 @@ static void VMUDL(int vd, int vs, int vt, int element)
     {
         for (i = 0, j = element & 07; i < 8; i++)
         {
-            product = (unsigned short)VR[vs].s[i] * (unsigned short)VR[vt].s[j];
+            product = (unsigned short)VR[vs][i] * (unsigned short)VR[vt][j];
             VACC[i].DW = product >> 16;
         }
     }
     for (i = 0; i < 8; i++) /* Signed-clamp bits 15..0 of ACC to dest. VR. */
-        VR[vd].s[i] = VACC[i].s[LO]; /* No arithmetic checks needed. */
+        VR[vd][i] = VACC[i].s[LO]; /* No arithmetic checks needed. */
     return;
 }

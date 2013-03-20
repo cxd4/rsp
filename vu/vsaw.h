@@ -8,7 +8,7 @@ static void VSAW(int vd, int vs, int vt, int element)
     short result[8]; /* Prebuffer VR[vs] to prevent source overwrite. */
 
     for (i = 0; i < 8; i++)
-        result[i] = VR[vs].s[i];
+        result[i] = VR[vs][i];
 #else
     vs = 0;
 #endif
@@ -26,26 +26,26 @@ static void VSAW(int vd, int vs, int vt, int element)
     {
         case 00:
             for (i = 0; i < 8; i++)
-                VR[vd].s[i] = VACC[i].s[HI];
+                VR[vd][i] = VACC[i].s[HI];
             break;
         case 01:
             for (i = 0; i < 8; i++)
-                VR[vd].s[i] = VACC[i].s[MD];
+                VR[vd][i] = VACC[i].s[MD];
             break;
         case 02:
             for (i = 0; i < 8; i++)
-                VR[vd].s[i] = VACC[i].s[LO];
+                VR[vd][i] = VACC[i].s[LO];
             break;
         default:
             message("VSAR\nInvalid mask.", 2);
             for (i = 0; i < 8; i++)
-                VR[vd].s[i] = 0x0000;
+                VR[vd][i] = 0x0000; /* override behavior (zilmar) */
     }
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
     element ^= 03;
     --element;
     for (i = 0; i < 8; i++)
-        VACC[i].s[element] = result[i]; /* ... = VR[vs].s[i]; */
+        VACC[i].s[element] = result[i]; /* ... = VR[vs][i]; */
 #endif
     return;
 }

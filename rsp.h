@@ -2,18 +2,39 @@
 #define _RSP_H_
 
 #include "Rsp_#1.1.h"
+RSP_INFO RSP;
 
-typedef union
+__declspec(dllimport) int __stdcall MessageBoxA(
+    HWND hWnd,
+    const char *lpText,
+    const char *lpCaption,
+    unsigned int uType);
+/* No need to import the Windows API, just a message trace function. */
+void message(char *body, int priority)
 {
-    short s[8];
-    unsigned char b[16];
-} VECTOR_REG;
+    const unsigned int type_index[4] = {
+        0x00000000, /* no icon or effect `MB_OK`, for O.K. encounters */
+        0x00000020, /* MB_ICONQUESTION -- curious situation in emulator */
+        0x00000030, /* MB_ICONEXCLAMATION -- might be missing RSP support */
+        0x00000010  /* MB_ICONHAND -- definite error or problem in emulator */
+    };
 
-VECTOR_REG VR[32];
-static int SR[32];
+    priority &= 03;
+    switch (MINIMUM_MESSAGE_PRIORITY)
+    { /* exit table for voiding messages of lower priority */
+        default:  return;
+        case 03:  if (priority < MINIMUM_MESSAGE_PRIORITY) return;
+        case 02:  if (priority < MINIMUM_MESSAGE_PRIORITY) return;
+        case 01:  if (priority < MINIMUM_MESSAGE_PRIORITY) return;
+        case 00:  break;
+    }
+    MessageBoxA(NULL, body, NULL, type_index[priority]);
+    return;
+}
+
 static int temp_PC;
-
 #ifdef SEARCH_INFINITE_LOOPS
+extern int SearchSimpleBlockEscapes(void);
 static int MFC0_count[32];
 /* There are only 32 possible MIPS MFC0 instruction words reading from
  * SP_STATUS that a normal assembler would generate, because rt and rd are
@@ -24,13 +45,21 @@ static int MFC0_count[32];
  */
 #endif
 
-RSP_INFO RSP;
+#include "su/su.h"
+#include "vu/vu.h"
 
 extern void run_microcode(void);
 
 #ifdef SP_EXECUTE_LOG
+extern void step_SP_commands(unsigned long inst);
+extern void export_SP_memory(void);
+extern void trace_RSP_registers(void);
 static FILE *output_log;
 #endif
+
+/* Allocate the RSP CPU loop to its own functional space. */
+extern void run_microcode(void);
+#include "execute.h"
 
 #ifdef SP_EXECUTE_LOG
 void step_SP_commands(unsigned long inst)
@@ -139,101 +168,101 @@ void trace_RSP_registers(void)
  * The problem is organizing the contents by HW/B elements and proper endian.
  */
     fprintf(out, " $v0:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 0].s[07], VR[ 0].s[06], VR[ 0].s[05], VR[ 0].s[04],
-        VR[ 0].s[03], VR[ 0].s[02], VR[ 0].s[01], VR[ 0].s[00]);
+        VR[ 0][00], VR[ 0][01], VR[ 0][02], VR[ 0][03],
+        VR[ 0][04], VR[ 0][05], VR[ 0][06], VR[ 0][07]);
     fprintf(out, " $v1:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 1].s[07], VR[ 1].s[06], VR[ 1].s[05], VR[ 1].s[04],
-        VR[ 1].s[03], VR[ 1].s[02], VR[ 1].s[01], VR[ 1].s[00]);
+        VR[ 1][00], VR[ 1][01], VR[ 1][02], VR[ 1][03],
+        VR[ 1][04], VR[ 1][05], VR[ 1][06], VR[ 1][07]);
     fprintf(out, " $v2:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 2].s[07], VR[ 2].s[06], VR[ 2].s[05], VR[ 2].s[04],
-        VR[ 2].s[03], VR[ 2].s[02], VR[ 2].s[01], VR[ 2].s[00]);
+        VR[ 2][00], VR[ 2][01], VR[ 2][02], VR[ 2][03],
+        VR[ 2][04], VR[ 2][05], VR[ 2][06], VR[ 2][07]);
     fprintf(out, " $v3:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 3].s[07], VR[ 3].s[06], VR[ 3].s[05], VR[ 3].s[04],
-        VR[ 3].s[03], VR[ 3].s[02], VR[ 3].s[01], VR[ 3].s[00]);
+        VR[ 3][00], VR[ 3][01], VR[ 3][02], VR[ 3][03],
+        VR[ 3][04], VR[ 3][05], VR[ 3][06], VR[ 3][07]);
     fprintf(out, " $v4:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 4].s[07], VR[ 4].s[06], VR[ 4].s[05], VR[ 4].s[04],
-        VR[ 4].s[03], VR[ 4].s[02], VR[ 4].s[01], VR[ 4].s[00]);
+        VR[ 4][00], VR[ 4][01], VR[ 4][02], VR[ 4][03],
+        VR[ 4][04], VR[ 4][05], VR[ 4][06], VR[ 4][07]);
     fprintf(out, " $v5:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 5].s[07], VR[ 5].s[06], VR[ 5].s[05], VR[ 5].s[04],
-        VR[ 5].s[03], VR[ 5].s[02], VR[ 5].s[01], VR[ 5].s[00]);
+        VR[ 5][00], VR[ 5][01], VR[ 5][02], VR[ 5][03],
+        VR[ 5][04], VR[ 5][05], VR[ 5][06], VR[ 5][07]);
     fprintf(out, " $v6:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 6].s[07], VR[ 6].s[06], VR[ 6].s[05], VR[ 6].s[04],
-        VR[ 6].s[03], VR[ 6].s[02], VR[ 6].s[01], VR[ 6].s[00]);
+        VR[ 6][00], VR[ 6][01], VR[ 6][02], VR[ 6][03],
+        VR[ 6][04], VR[ 6][05], VR[ 6][06], VR[ 6][07]);
     fprintf(out, " $v7:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 7].s[07], VR[ 7].s[06], VR[ 7].s[05], VR[ 7].s[04],
-        VR[ 7].s[03], VR[ 7].s[02], VR[ 7].s[01], VR[ 7].s[00]);
+        VR[ 7][00], VR[ 7][01], VR[ 7][02], VR[ 7][03],
+        VR[ 7][04], VR[ 7][05], VR[ 7][06], VR[ 7][07]);
     fprintf(out, " $v8:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 8].s[07], VR[ 8].s[06], VR[ 8].s[05], VR[ 8].s[04],
-        VR[ 8].s[03], VR[ 8].s[02], VR[ 8].s[01], VR[ 8].s[00]);
+        VR[ 8][00], VR[ 8][01], VR[ 8][02], VR[ 8][03],
+        VR[ 8][04], VR[ 8][05], VR[ 8][06], VR[ 8][07]);
     fprintf(out, " $v9:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[ 9].s[07], VR[ 9].s[06], VR[ 9].s[05], VR[ 9].s[04],
-        VR[ 9].s[03], VR[ 9].s[02], VR[ 9].s[01], VR[ 9].s[00]);
+        VR[ 9][00], VR[ 9][01], VR[ 9][02], VR[ 9][03],
+        VR[ 9][04], VR[ 9][05], VR[ 9][06], VR[ 9][07]);
     fprintf(out, "$v10:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[10].s[07], VR[10].s[06], VR[10].s[05], VR[10].s[04],
-        VR[10].s[03], VR[10].s[02], VR[10].s[01], VR[10].s[00]);
+        VR[10][00], VR[10][01], VR[10][02], VR[10][03],
+        VR[10][04], VR[10][05], VR[10][06], VR[10][07]);
     fprintf(out, "$v11:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[11].s[07], VR[11].s[06], VR[11].s[05], VR[11].s[04],
-        VR[11].s[03], VR[11].s[02], VR[11].s[01], VR[11].s[00]);
+        VR[11][00], VR[11][01], VR[11][02], VR[11][03],
+        VR[11][04], VR[11][05], VR[11][06], VR[11][07]);
     fprintf(out, "$v12:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[12].s[07], VR[12].s[06], VR[12].s[05], VR[12].s[04],
-        VR[12].s[03], VR[12].s[02], VR[12].s[01], VR[12].s[00]);
+        VR[12][00], VR[12][01], VR[12][02], VR[12][03],
+        VR[12][04], VR[12][05], VR[12][06], VR[12][07]);
     fprintf(out, "$v13:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[13].s[07], VR[13].s[06], VR[13].s[05], VR[13].s[04],
-        VR[13].s[03], VR[13].s[02], VR[13].s[01], VR[13].s[00]);
+        VR[13][00], VR[13][01], VR[13][02], VR[13][03],
+        VR[13][04], VR[13][05], VR[13][06], VR[13][07]);
     fprintf(out, "$v14:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[14].s[07], VR[14].s[06], VR[14].s[05], VR[14].s[04],
-        VR[14].s[03], VR[14].s[02], VR[14].s[01], VR[14].s[00]);
+        VR[14][00], VR[14][01], VR[14][02], VR[14][03],
+        VR[14][04], VR[14][05], VR[14][06], VR[14][07]);
     fprintf(out, "$v15:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[15].s[07], VR[15].s[06], VR[15].s[05], VR[15].s[04],
-        VR[15].s[03], VR[15].s[02], VR[15].s[01], VR[15].s[00]);
+        VR[15][00], VR[15][01], VR[15][02], VR[15][03],
+        VR[15][04], VR[15][05], VR[15][06], VR[15][07]);
     fprintf(out, "$v16:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[16].s[07], VR[16].s[06], VR[16].s[05], VR[16].s[04],
-        VR[16].s[03], VR[16].s[02], VR[16].s[01], VR[16].s[00]);
+        VR[16][00], VR[16][01], VR[16][02], VR[16][03],
+        VR[16][04], VR[16][05], VR[16][06], VR[16][07]);
     fprintf(out, "$v17:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[17].s[07], VR[17].s[06], VR[17].s[05], VR[17].s[04],
-        VR[17].s[03], VR[17].s[02], VR[17].s[01], VR[17].s[00]);
+        VR[17][00], VR[17][01], VR[17][02], VR[17][03],
+        VR[17][04], VR[17][05], VR[17][06], VR[17][07]);
     fprintf(out, "$v18:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[18].s[07], VR[18].s[06], VR[18].s[05], VR[18].s[04],
-        VR[18].s[03], VR[18].s[02], VR[18].s[01], VR[18].s[00]);
+        VR[18][00], VR[18][01], VR[18][02], VR[18][03],
+        VR[18][04], VR[18][05], VR[18][06], VR[18][07]);
     fprintf(out, "$v19:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[19].s[07], VR[19].s[06], VR[19].s[05], VR[19].s[04],
-        VR[19].s[03], VR[19].s[02], VR[19].s[01], VR[19].s[00]);
+        VR[19][00], VR[19][01], VR[19][02], VR[19][03],
+        VR[19][04], VR[19][05], VR[19][06], VR[19][07]);
     fprintf(out, "$v20:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[20].s[07], VR[20].s[06], VR[20].s[05], VR[20].s[04],
-        VR[20].s[03], VR[20].s[02], VR[20].s[01], VR[20].s[00]);
+        VR[20][00], VR[20][01], VR[20][02], VR[20][03],
+        VR[20][04], VR[20][05], VR[20][06], VR[20][07]);
     fprintf(out, "$v21:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[21].s[07], VR[21].s[06], VR[21].s[05], VR[21].s[04],
-        VR[21].s[03], VR[21].s[02], VR[21].s[01], VR[21].s[00]);
+        VR[21][00], VR[21][01], VR[21][02], VR[21][03],
+        VR[21][04], VR[21][05], VR[21][06], VR[21][07]);
     fprintf(out, "$v22:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[22].s[07], VR[22].s[06], VR[22].s[05], VR[22].s[04],
-        VR[22].s[03], VR[22].s[02], VR[22].s[01], VR[22].s[00]);
+        VR[22][00], VR[22][01], VR[22][02], VR[22][03],
+        VR[22][04], VR[22][05], VR[22][06], VR[22][07]);
     fprintf(out, "$v23:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[23].s[07], VR[23].s[06], VR[23].s[05], VR[23].s[04],
-        VR[23].s[03], VR[23].s[02], VR[23].s[01], VR[23].s[00]);
+        VR[23][00], VR[23][01], VR[23][02], VR[23][03],
+        VR[23][04], VR[23][05], VR[23][06], VR[23][07]);
     fprintf(out, "$v24:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[24].s[07], VR[24].s[06], VR[24].s[05], VR[24].s[04],
-        VR[24].s[03], VR[24].s[02], VR[24].s[01], VR[24].s[00]);
+        VR[24][00], VR[24][01], VR[24][02], VR[24][03],
+        VR[24][04], VR[24][05], VR[24][06], VR[24][07]);
     fprintf(out, "$v25:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[25].s[07], VR[25].s[06], VR[25].s[05], VR[25].s[04],
-        VR[25].s[03], VR[25].s[02], VR[25].s[01], VR[25].s[00]);
+        VR[25][00], VR[25][01], VR[25][02], VR[25][03],
+        VR[25][04], VR[25][05], VR[25][06], VR[25][07]);
     fprintf(out, "$v26:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[26].s[07], VR[26].s[06], VR[26].s[05], VR[26].s[04],
-        VR[26].s[03], VR[26].s[02], VR[26].s[01], VR[26].s[00]);
+        VR[26][00], VR[26][01], VR[26][02], VR[26][03],
+        VR[26][04], VR[26][05], VR[26][06], VR[26][07]);
     fprintf(out, "$v27:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[27].s[07], VR[27].s[06], VR[27].s[05], VR[27].s[04],
-        VR[27].s[03], VR[27].s[02], VR[27].s[01], VR[27].s[00]);
+        VR[27][00], VR[27][01], VR[27][02], VR[27][03],
+        VR[27][04], VR[27][05], VR[27][06], VR[27][07]);
     fprintf(out, "$v28:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[28].s[07], VR[28].s[06], VR[28].s[05], VR[28].s[04],
-        VR[28].s[03], VR[28].s[02], VR[28].s[01], VR[28].s[00]);
+        VR[28][00], VR[28][01], VR[28][02], VR[28][03],
+        VR[28][04], VR[28][05], VR[28][06], VR[28][07]);
     fprintf(out, "$v29:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[29].s[07], VR[29].s[06], VR[29].s[05], VR[29].s[04],
-        VR[29].s[03], VR[29].s[02], VR[29].s[01], VR[29].s[00]);
+        VR[29][00], VR[29][01], VR[29][02], VR[29][03],
+        VR[29][04], VR[29][05], VR[29][06], VR[29][07]);
     fprintf(out, "$v30:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n",
-        VR[30].s[07], VR[30].s[06], VR[30].s[05], VR[30].s[04],
-        VR[30].s[03], VR[30].s[02], VR[30].s[01], VR[30].s[00]);
+        VR[30][00], VR[30][01], VR[30][02], VR[30][03],
+        VR[30][04], VR[30][05], VR[30][06], VR[30][07]);
     fprintf(out, "$v31:  [%04X][%04X][%04X][%04X][%04X][%04X][%04X][%04X]\n\n"
-      , VR[31].s[07], VR[31].s[06], VR[31].s[05], VR[31].s[04],
-        VR[31].s[03], VR[31].s[02], VR[31].s[01], VR[31].s[00]);
+      , VR[31][00], VR[31][01], VR[31][02], VR[31][03],
+        VR[31][04], VR[31][05], VR[31][06], VR[31][07]);
 /* The SU has its fair share of registers, but the VU has its counterparts.
  * Just like we have the scalar 16 system control registers for the RSP CP0,
  * we have also a tiny group of special-purpose, vector control registers.

@@ -9,45 +9,45 @@ static void VLT(int vd, int vs, int vt, int element)
     if (!element) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
         {
-            lt  = (VR[vs].s[i] == VR[vt].s[j = i]);
+            lt  = (VR[vs][i] == VR[vt][j = i]);
             lt &= (VCO & 0x0101) == 0x0101;
-            lt |= (VR[vs].s[i] < VR[vt].s[j = i]);
+            lt |= (VR[vs][i] < VR[vt][j = i]);
             VCC |= lt << i;
-            VACC[i].s[LO] = lt ? VR[vs].s[i] : VR[vt].s[j = i];
+            VACC[i].s[LO] = lt ? VR[vs][i] : VR[vt][j = i];
             VCO >>= 1;
         }
     else if (element < 4)
         for (i = 0, j = element & 01; i < 8; i++)
         {
-            lt  = (VR[vs].s[i] == VR[vt].s[j | (i & 0xE)]);
+            lt  = (VR[vs][i] == VR[vt][j | (i & 0xE)]);
             lt &= (VCO & 0x0101) == 0x0101;
-            lt |= (VR[vs].s[i] < VR[vt].s[j | (i & 0xE)]);
+            lt |= (VR[vs][i] < VR[vt][j | (i & 0xE)]);
             VCC |= lt << i;
-            VACC[i].s[LO] = lt ? VR[vs].s[i] : VR[vt].s[j | (i & 0xE)];
+            VACC[i].s[LO] = lt ? VR[vs][i] : VR[vt][j | (i & 0xE)];
             VCO >>= 1;
         }
     else if (element < 8)
         for (i = 0, j = element & 03; i < 8; i++)
         {
-            lt  = (VR[vs].s[i] == VR[vt].s[j | (i & 0xC)]);
+            lt  = (VR[vs][i] == VR[vt][j | (i & 0xC)]);
             lt &= (VCO & 0x0101) == 0x0101;
-            lt |= (VR[vs].s[i] < VR[vt].s[j | (i & 0xC)]);
+            lt |= (VR[vs][i] < VR[vt][j | (i & 0xC)]);
             VCC |= lt << i;
-            VACC[i].s[LO] = lt ? VR[vs].s[i] : VR[vt].s[j | (i & 0xC)];
+            VACC[i].s[LO] = lt ? VR[vs][i] : VR[vt][j | (i & 0xC)];
             VCO >>= 1;
         }
     else /* if (element & 0b1000) */
         for (i = 0, j = element & 07; i < 8; i++)
         {
-            lt  = (VR[vs].s[i] == VR[vt].s[j]);
+            lt  = (VR[vs][i] == VR[vt][j]);
             lt &= (VCO & 0x0101) == 0x0101;
-            lt |= (VR[vs].s[i] < VR[vt].s[j]);
+            lt |= (VR[vs][i] < VR[vt][j]);
             VCC |= lt << i;
-            VACC[i].s[LO] = lt ? VR[vs].s[i] : VR[vt].s[j];
+            VACC[i].s[LO] = lt ? VR[vs][i] : VR[vt][j];
             VCO >>= 1;
         }
     for (i = 0; i < 8; i++)
-        VR[vd].s[i] = VACC[i].s[LO];
+        VR[vd][i] = VACC[i].s[LO];
     VCO = 0x0000;
     return;
 }

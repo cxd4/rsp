@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Load Doubleword to Vector Unit             *
 * Authors:  Iconoclast                                                         *
-* Release:  2012.12.28                                                         *
+* Release:  2013.03.20                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -11,73 +11,83 @@ void LDV(int vt, int element, signed int offset, int base)
 
     addr  = SR[base] + (offset << 3);
     addr &= 0x00000FFF;
-    if (element & 0x7) /* Assemblers permit unaligned addresses. */
+    if (element & 0x7) /* The element must be aligned, not the address. */
     { /* Technically an illegal instruction to assemble, but H/W allows it. */
-        message("LDV\nWeird element.", 1);
-HW_COMPAT:
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element++ ^ 01] = RSP.DMEM[addr++ ^ 03];
-        addr &= 0x00000FFF;
-        VR[vt].b[element ^ 01] = RSP.DMEM[addr ^ 03];
+        message("LDV\nIllegal element.", 3);
         return;
     }
-    element >>= 01;
+    element = (unsigned int)(element) >> 1;
     switch (addr & 0x7)
     {
         case 00:
-            VR[vt].s[element + 00] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
-            VR[vt].s[element + 01] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
-            VR[vt].s[element + 02] = *(short *)(RSP.DMEM + addr + (0x4 ^ 02));
-            VR[vt].s[element + 03] = *(short *)(RSP.DMEM + addr + (0x6 ^ 02));
+            VR[vt][element + 00] = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
+            VR[vt][element + 01] = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
+            VR[vt][element + 02] = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
+            VR[vt][element + 03] = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
             return;
         case 01:
-            message("LDV\nWeird addr.", 0);
-            goto HW_COMPAT;
-        case 02:
-            VR[vt].s[element + 00] = *(short *)(RSP.DMEM + addr - (0x0 ^ 02));
-            VR[vt].s[element + 01] = *(short *)(RSP.DMEM + addr + (0x6 ^ 02));
-            VR[vt].s[element + 02] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
-            addr += 0x006;
+            VR[vt][element + 00] = *(short *)(RSP.DMEM + addr + (0x000 ^ 00));
+            VR[vt][element + 01]  = RSP.DMEM[addr - 0x001] << 8;
+            VR[vt][element + 01] |= RSP.DMEM[addr + 0x006];
+            VR[vt][element + 02] = *(short *)(RSP.DMEM + addr + (0x004 ^ 00));
+            VR[vt][element + 03]  = RSP.DMEM[addr + 0x003] << 8;
+            addr += 0x007 + 03; /* byte endian swap adjust */
             addr &= 0x00000FFF;
-            VR[vt].s[element + 03] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
+            VR[vt][element + 03] |= RSP.DMEM[addr];
+            return;
+        case 02:
+            VR[vt][element + 00] = *(short *)(RSP.DMEM + addr - (0x000 ^ 02));
+            VR[vt][element + 01] = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
+            VR[vt][element + 02] = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
+            addr += 0x006 + 02; /* halfword endian swap adjust */
+            addr &= 0x00000FFF;
+            VR[vt][element + 03] = *(short *)(RSP.DMEM + addr);
             return;
         case 03:
-            message("LDV\nWeird addr.", 0);
-            goto HW_COMPAT;
+            VR[vt][element + 00]  = RSP.DMEM[addr - 0x003] << 8;
+            VR[vt][element + 00] |= RSP.DMEM[addr + 0x004];
+            VR[vt][element + 01] = *(short *)(RSP.DMEM + addr + (0x002 ^ 00));
+            VR[vt][element + 02]  = RSP.DMEM[addr + 0x001] << 8;
+            addr += 0x005 + 03;
+            addr &= 0x00000FFF;
+            VR[vt][element + 02] |= RSP.DMEM[addr];
+            VR[vt][element + 03] = *(short *)(RSP.DMEM + addr - (0x002 ^ 00));
+            return;
         case 04:
-            VR[vt].s[element + 00] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
-            VR[vt].s[element + 01] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
+            VR[vt][element + 00] = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
+            VR[vt][element + 01] = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
             addr += 0x004;
             addr &= 0x00000FFF;
-            VR[vt].s[element + 02] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
-            VR[vt].s[element + 03] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
+            VR[vt][element + 02] = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
+            VR[vt][element + 03] = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
             return;
         case 05:
-            message("LDV\nWeird addr.", 0);
-            goto HW_COMPAT;
+            VR[vt][element + 00] = *(short *)(RSP.DMEM + addr + (0x000 ^ 00));
+            VR[vt][element + 01]  = RSP.DMEM[addr - 0x001] << 8;
+            addr += 0x003 + 03;
+            addr &= 0x00000FFF;
+            VR[vt][element + 01] |= RSP.DMEM[addr];
+            VR[vt][element + 02] = *(short *)(RSP.DMEM + addr - (0x002 ^ 00));
+            VR[vt][element + 03]  = RSP.DMEM[addr - 0x003] << 8;
+            VR[vt][element + 03] |= RSP.DMEM[addr + 0x004];
+            return;
         case 06:
-            VR[vt].s[element + 00] = *(short *)(RSP.DMEM + addr - (0x0 ^ 02));
+            VR[vt][element + 00] = *(short *)(RSP.DMEM + addr - (0x000 ^ 02));
             addr += 0x002;
             addr &= 0x00000FFF;
-            VR[vt].s[element + 01] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
-            VR[vt].s[element + 02] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
-            addr += 0x004;
-            addr &= 0x00000FFF;
-            VR[vt].s[element + 03] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
+            VR[vt][element + 01] = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
+            VR[vt][element + 02] = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
+            VR[vt][element + 03] = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
             return;
         case 07:
-            message("LDV\nWeird addr.", 0);
-            goto HW_COMPAT;
+            VR[vt][element + 00]  = RSP.DMEM[addr - 0x003] << 8;
+            addr += 0x001 + 03;
+            addr &= 0x00000FFF;
+            VR[vt][element + 00] |= RSP.DMEM[addr];
+            VR[vt][element + 01] = *(short *)(RSP.DMEM + addr - (0x002 ^ 00));
+            VR[vt][element + 02]  = RSP.DMEM[addr - 0x003] << 8;
+            VR[vt][element + 02] |= RSP.DMEM[addr + 0x004];
+            VR[vt][element + 03] = *(short *)(RSP.DMEM + addr + (0x002 ^ 00));
+            return;
     }
 }

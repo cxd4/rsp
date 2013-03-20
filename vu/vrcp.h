@@ -9,7 +9,7 @@ static void VRCP(int vd, int del, int vt, int e)
 #endif
     register int rec;
 
-    DivIn = (int)VR[vt].s[e & 07];
+    DivIn = (int)VR[vt][e & 07];
     rec = DivIn;
     if (rec == 0)
     { // divide by zero -> overflow
@@ -58,18 +58,18 @@ static void VRCP(int vd, int del, int vt, int e)
     }
     if (!e)
         for (i = 0; i < 8; i++)
-            VACC[i].s[LO] = VR[vt].s[j = i];
+            VACC[i].s[LO] = VR[vt][j = i];
     else if (e < 4) /* e != 1 */
         for (i = 0, j = e & 01; i < 8; i++)
-            VACC[i].s[LO] = VR[vt].s[j | (i & 0xE)];
+            VACC[i].s[LO] = VR[vt][j | (i & 0xE)];
     else if (e < 8)
         for (i = 0, j = e & 03; i < 8; i++)
-            VACC[i].s[LO] = VR[vt].s[j | (i & 0xC)];
+            VACC[i].s[LO] = VR[vt][j | (i & 0xC)];
     else /* if (8 <= e <= 15) */
         for (i = 0, j = e & 07; i < 8; i++)
-            VACC[i].s[LO] = VR[vt].s[j];
+            VACC[i].s[LO] = VR[vt][j];
     DivOut = rec;
-    VR[vd].s[del & 07] = (short)DivOut; /* store low part */
+    VR[vd][del & 07] = (short)DivOut;
     DPH = 0;
     return;
 }

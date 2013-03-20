@@ -15,16 +15,16 @@ void SFV(int vt, int element, signed offset, int base)
     switch (element)
     {
         case 0x0:
-            RSP.DMEM[addr + 0x0] = (unsigned char)(VR[vt].s[00] >> 7);
-            RSP.DMEM[addr + 0x4] = (unsigned char)(VR[vt].s[01] >> 7);
-            RSP.DMEM[addr + 0x8] = (unsigned char)(VR[vt].s[02] >> 7);
-            RSP.DMEM[addr + 0xC] = (unsigned char)(VR[vt].s[03] >> 7);
+            RSP.DMEM[addr + 0x0] = (unsigned char)(VR[vt][00] >> 7);
+            RSP.DMEM[addr + 0x4] = (unsigned char)(VR[vt][01] >> 7);
+            RSP.DMEM[addr + 0x8] = (unsigned char)(VR[vt][02] >> 7);
+            RSP.DMEM[addr + 0xC] = (unsigned char)(VR[vt][03] >> 7);
             return;
         case 0x8:
-            RSP.DMEM[addr + 0x0] = (unsigned char)(VR[vt].s[04] >> 7);
-            RSP.DMEM[addr + 0x4] = (unsigned char)(VR[vt].s[05] >> 7);
-            RSP.DMEM[addr + 0x8] = (unsigned char)(VR[vt].s[06] >> 7);
-            RSP.DMEM[addr + 0xC] = (unsigned char)(VR[vt].s[07] >> 7);
+            RSP.DMEM[addr + 0x0] = (unsigned char)(VR[vt][04] >> 7);
+            RSP.DMEM[addr + 0x4] = (unsigned char)(VR[vt][05] >> 7);
+            RSP.DMEM[addr + 0x8] = (unsigned char)(VR[vt][06] >> 7);
+            RSP.DMEM[addr + 0xC] = (unsigned char)(VR[vt][07] >> 7);
             return;
         default:
             message("SFV\nWeird element.", 3);

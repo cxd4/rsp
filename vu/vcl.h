@@ -8,8 +8,8 @@ static void VCL(int vd, int vs, int vt, int element)
     if (!element) /* if (element >> 1 == 00) */
         for (i = 0; i < 8; i++)
         {
-            const unsigned short VS = (unsigned short)VR[vs].s[i];
-            const unsigned short VT = (unsigned short)VR[vt].s[j = i];
+            const unsigned short VS = (unsigned short)VR[vs][i];
+            const unsigned short VT = (unsigned short)VR[vt][j = i];
             const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
 
             if ((VCO >> i) & 1)
@@ -40,8 +40,8 @@ static void VCL(int vd, int vs, int vt, int element)
     else if (element < 4)
         for (i = 0, j = element & 01; i < 8; i++)
         {
-            const unsigned short VS = (unsigned short)VR[vs].s[i];
-            const unsigned short VT = (unsigned short)VR[vt].s[j | (i & 0xE)];
+            const unsigned short VS = (unsigned short)VR[vs][i];
+            const unsigned short VT = (unsigned short)VR[vt][j | (i & 0xE)];
             const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
 
             if ((VCO >> i) & 1)
@@ -72,8 +72,8 @@ static void VCL(int vd, int vs, int vt, int element)
     else if (element < 8)
         for (i = 0, j = element & 03; i < 8; i++)
         {
-            const unsigned short VS = (unsigned short)VR[vs].s[i];
-            const unsigned short VT = (unsigned short)VR[vt].s[j | (i & 0xC)];
+            const unsigned short VS = (unsigned short)VR[vs][i];
+            const unsigned short VT = (unsigned short)VR[vt][j | (i & 0xC)];
             const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
 
             if ((VCO >> i) & 1)
@@ -104,8 +104,8 @@ static void VCL(int vd, int vs, int vt, int element)
     else /* if (element & 0b1000) */
         for (i = 0, j = element & 07; i < 8; i++)
         {
-            const unsigned short VS = (unsigned short)VR[vs].s[i];
-            const unsigned short VT = (unsigned short)VR[vt].s[j];
+            const unsigned short VS = (unsigned short)VR[vs][i];
+            const unsigned short VT = (unsigned short)VR[vt][j];
             const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
 
             if ((VCO >> i) & 1)
@@ -134,7 +134,7 @@ static void VCL(int vd, int vs, int vt, int element)
             VCC |= (ge << (i + 8)) | (le << (i + 0));
         }
     for (i = 0; i < 8; i++)
-        VR[vd].s[i] = VACC[i].s[LO];
+        VR[vd][i] = VACC[i].s[LO];
     VCO = 0x0000;
     VCE = 0x00;
     return;

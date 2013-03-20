@@ -20,13 +20,13 @@ void LSV(int vt, int element, signed int offset, int base)
     switch (addr & 03)
     {
         case 00: /* word-aligned */
-            VR[vt].s[element] = *(short *)(RSP.DMEM + (addr + 0x002));
+            VR[vt][element] = *(short *)(RSP.DMEM + (addr + 0x002));
             return;
         case 01:
-            VR[vt].s[element] = *(short *)(RSP.DMEM + (addr | 0x000));
+            VR[vt][element] = *(short *)(RSP.DMEM + (addr | 0x000));
             return;
         case 02:
-            VR[vt].s[element] = *(short *)(RSP.DMEM + (addr - 0x002));
+            VR[vt][element] = *(short *)(RSP.DMEM + (addr - 0x002));
             return;
         case 03:
             message("LSV\nWeird addr.", 3);
@@ -36,6 +36,6 @@ void LSV(int vt, int element, signed int offset, int base)
 
 /* Note regarding memory endianness.
  * The MIPS architecture is bi-endian.
- * The union access `VR[vt].s[element]` indexes from the rightmost halfword.
+ * The union access `VR[vt][element]` indexes from the rightmost halfword.
  * Halfwords in the vector registers are actually ordered left-to-right.
  */

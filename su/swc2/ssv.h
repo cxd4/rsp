@@ -24,37 +24,45 @@ void SSV(int vt, int element, signed int offset, int base)
 
     addr  = SR[base] + (offset << 1);
     addr &= 0x00000FFF;
-    if ((element & 0x1) != 0x0) /* `addr`, not the element, may be unaligned. */
+    if (element & 0x1) /* The element must be aligned, not the address. */
     { /* F3DEX makes use of this typical illegal RCP exception override. */
-        RSP.DMEM[addr ^ 03] = VR[vt].b[element ^ 0x1];
-        ++addr;
+        element = (unsigned int)(element) >> 1;
+        RSP.DMEM[addr ^ 03] = VR[vt][element] & 0x00FF;
+        addr += 0x001;
         addr &= 0x00000FFF;
         ++element;
-        element &= 0xF;
-        RSP.DMEM[addr ^ 03] = VR[vt].b[element ^ 0x1];
+        element &= 07;
+        RSP.DMEM[addr ^ 03] = VR[vt][element] >> 8;
         return;
     }
-    element >>= 1;
+    element = (unsigned int)(element) >> 1;
     switch (addr & 03)
     {
         case 00: /* word-aligned */
-            *(short *)(RSP.DMEM + (addr + 0x002)) = VR[vt].s[element];
+            *(short *)(RSP.DMEM + (addr + 0x002)) = VR[vt][element];
             return;
         case 01:
-            *(short *)(RSP.DMEM + (addr | 0x000)) = VR[vt].s[element];
+            *(short *)(RSP.DMEM + (addr | 0x000)) = VR[vt][element];
             return;
         case 02:
-            *(short *)(RSP.DMEM + (addr - 0x002)) = VR[vt].s[element];
+            *(short *)(RSP.DMEM + (addr - 0x002)) = VR[vt][element];
             return;
         case 03:
-            RSP.DMEM[addr - 0x003] = (unsigned short)(VR[vt].s[element]) >> 8;
-            RSP.DMEM[(addr + 0x004) & 0xFFF] = VR[vt].s[element] & 0x00FF;
+            RSP.DMEM[addr - 0x003] = (unsigned short)(VR[vt][element]) >> 8;
+            RSP.DMEM[(addr + 0x004) & 0xFFF] = VR[vt][element] & 0x00FF;
             return;
     }
 }
 
-/* Note regarding memory endianness.
- * The MIPS architecture is bi-endian.
- * The union access `VR[vt].s[element]` indexes from the rightmost halfword.
- * Halfwords in the vector registers are actually ordered left-to-right.
+/* Note about vector registers.
+ * RSP vectors are just like standard mathematical vectors, big endian.
+ * It is correct to have them as big-endian arrays, with bits in little.
+ *
+ * I have not yet figured out how to address 128-bit vectors by byte quickly.
+ * The legacy of RSP emulation has always used unions to have such
+ * constructors predefined, but this inverted the vector indexing endian.
+ * There is no necessity for Objective-C or unions to define vectors.
+ *
+ * lbv, ldv, sbv, ssv, sdv, spv, and `cop2::mfc2` all require byte-indexing
+ * for the demands of the standard F3DEX graphics microcodes.
  */

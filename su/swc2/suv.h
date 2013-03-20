@@ -19,14 +19,14 @@ void SUV(int vt, int element, signed int offset, int base)
     switch (addr & 07)
     {
         case 00:
-            RSP.DMEM[addr + (07 ^ 03)] = (unsigned char)(VR[vt].s[07] >> 7);
-            RSP.DMEM[addr + (06 ^ 03)] = (unsigned char)(VR[vt].s[06] >> 7);
-            RSP.DMEM[addr + (05 ^ 03)] = (unsigned char)(VR[vt].s[05] >> 7);
-            RSP.DMEM[addr + (04 ^ 03)] = (unsigned char)(VR[vt].s[04] >> 7);
-            RSP.DMEM[addr + (03 ^ 03)] = (unsigned char)(VR[vt].s[03] >> 7);
-            RSP.DMEM[addr + (02 ^ 03)] = (unsigned char)(VR[vt].s[02] >> 7);
-            RSP.DMEM[addr + (01 ^ 03)] = (unsigned char)(VR[vt].s[01] >> 7);
-            RSP.DMEM[addr + (00 ^ 03)] = (unsigned char)(VR[vt].s[00] >> 7);
+            RSP.DMEM[addr + (07 ^ 03)] = (unsigned char)(VR[vt][07] >> 7);
+            RSP.DMEM[addr + (06 ^ 03)] = (unsigned char)(VR[vt][06] >> 7);
+            RSP.DMEM[addr + (05 ^ 03)] = (unsigned char)(VR[vt][05] >> 7);
+            RSP.DMEM[addr + (04 ^ 03)] = (unsigned char)(VR[vt][04] >> 7);
+            RSP.DMEM[addr + (03 ^ 03)] = (unsigned char)(VR[vt][03] >> 7);
+            RSP.DMEM[addr + (02 ^ 03)] = (unsigned char)(VR[vt][02] >> 7);
+            RSP.DMEM[addr + (01 ^ 03)] = (unsigned char)(VR[vt][01] >> 7);
+            RSP.DMEM[addr + (00 ^ 03)] = (unsigned char)(VR[vt][00] >> 7);
             return;
         default:
             message("SPV\nWeird addr.", 3);
@@ -34,7 +34,7 @@ void SUV(int vt, int element, signed int offset, int base)
     }
 /* Official documentation shows that there are exactly eight executions.
  * Although they must also occur simultaneously in the vector unit, the most
- * significant element (VR[vt].s[07]) is listed first in the operation
+ * significant element (VR[vt][07]) is listed first in the operation
  * definition, whose sequence therefore must be:  `for (i = 7; i != 0; --i)`.
  */
 }

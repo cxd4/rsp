@@ -10,42 +10,6 @@
 #include <float.h>
 #endif
 
-__declspec(dllimport) int __stdcall MessageBoxA(
-    HWND hWnd,
-    const char *lpText,
-    const char *lpCaption,
-    unsigned int uType);
-/* No need to import the Windows API, just a message trace function. */
-void message(char *body, int priority)
-{
-    const unsigned int type_index[4] = {
-        0x00000000, /* no icon or effect `MB_OK`, for O.K. encounters */
-        0x00000020, /* MB_ICONQUESTION -- curious situation in emulator */
-        0x00000030, /* MB_ICONEXCLAMATION -- might be missing RSP support */
-        0x00000010  /* MB_ICONHAND -- definite error or problem in emulator */
-    };
-
-    priority &= 03;
-    switch (MINIMUM_MESSAGE_PRIORITY)
-    { /* exit table for voiding messages of lower priority */
-        default:  return;
-        case 03:  if (priority < MINIMUM_MESSAGE_PRIORITY) return;
-        case 02:  if (priority < MINIMUM_MESSAGE_PRIORITY) return;
-        case 01:  if (priority < MINIMUM_MESSAGE_PRIORITY) return;
-        case 00:  break;
-    }
-    MessageBoxA(NULL, body, NULL, type_index[priority]);
-    return;
-}
-
-/* Allocate the RSP CPU loop to its own functional space. */
-extern void run_microcode(void);
-#include "execute.h"
-
-#ifdef SEARCH_INFINITE_LOOPS
-extern int SearchSimpleBlockEscapes(void);
-#endif
-
 __declspec(dllexport) void CloseDLL(void)
 {
     return;

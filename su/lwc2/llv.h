@@ -20,8 +20,8 @@ void LLV(int vt, int element, signed int offset, int base)
     switch (addr & 03)
     {
         case 00: /* word-aligned */
-            VR[vt].s[element + 00] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
-            VR[vt].s[element + 01] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
+            VR[vt][element + 00] = *(short *)(RSP.DMEM + addr + (0x0 ^ 02));
+            VR[vt][element + 01] = *(short *)(RSP.DMEM + addr + (0x2 ^ 02));
             return;
         case 01:
         case 02:

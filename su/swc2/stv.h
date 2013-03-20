@@ -25,84 +25,84 @@ void STV(int vt, int element, signed offset, int base)
     switch (element)
     {
         case 0x0:
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+0].s[00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+1].s[01];
-            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+2].s[02];
-            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+3].s[03];
-            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+4].s[04];
-            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+5].s[05];
-            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+6].s[06];
-            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+7].s[07];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+0][00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+1][01];
+            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+2][02];
+            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+3][03];
+            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+4][04];
+            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+5][05];
+            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+6][06];
+            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+7][07];
             return;
         case 0x2:
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+1].s[00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+2].s[01];
-            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+3].s[02];
-            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+4].s[03];
-            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+5].s[04];
-            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+6].s[05];
-            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+7].s[06];
-            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+0].s[07];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+1][00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+2][01];
+            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+3][02];
+            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+4][03];
+            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+5][04];
+            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+6][05];
+            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+7][06];
+            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+0][07];
             return;
         case 0x4:
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+2].s[00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+3].s[01];
-            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+4].s[02];
-            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+5].s[03];
-            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+6].s[04];
-            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+7].s[05];
-            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+0].s[06];
-            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+1].s[07];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+2][00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+3][01];
+            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+4][02];
+            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+5][03];
+            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+6][04];
+            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+7][05];
+            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+0][06];
+            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+1][07];
             return;
         case 0x6:
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+3].s[00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+4].s[01];
-            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+5].s[02];
-            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+6].s[03];
-            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+7].s[04];
-            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+0].s[05];
-            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+1].s[06];
-            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+2].s[07];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+3][00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+4][01];
+            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+5][02];
+            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+6][03];
+            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+7][04];
+            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+0][05];
+            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+1][06];
+            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+2][07];
             return;
         case 0x8:
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+4].s[00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+5].s[01];
-            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+6].s[02];
-            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+7].s[03];
-            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+0].s[04];
-            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+1].s[05];
-            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+2].s[06];
-            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+3].s[07];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+4][00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+5][01];
+            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+6][02];
+            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+7][03];
+            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+0][04];
+            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+1][05];
+            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+2][06];
+            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+3][07];
             return;
         case 0xA:
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+5].s[00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+6].s[01];
-            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+7].s[02];
-            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+0].s[03];
-            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+1].s[04];
-            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+2].s[05];
-            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+3].s[06];
-            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+4].s[07];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+5][00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+6][01];
+            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+7][02];
+            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+0][03];
+            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+1][04];
+            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+2][05];
+            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+3][06];
+            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+4][07];
             return;
         case 0xC:
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+6].s[00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+7].s[01];
-            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+0].s[02];
-            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+1].s[03];
-            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+2].s[04];
-            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+3].s[05];
-            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+4].s[06];
-            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+5].s[07];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+6][00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+7][01];
+            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+0][02];
+            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+1][03];
+            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+2][04];
+            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+3][05];
+            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+4][06];
+            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+5][07];
             return;
         case 0xE:
-            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+7].s[00];
-            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+0].s[01];
-            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+1].s[02];
-            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+2].s[03];
-            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+3].s[04];
-            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+4].s[05];
-            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+5].s[06];
-            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+6].s[07];
+            *(short *)(RSP.DMEM + addr + (0x0 ^ 02)) = VR[vt+7][00];
+            *(short *)(RSP.DMEM + addr + (0x2 ^ 02)) = VR[vt+0][01];
+            *(short *)(RSP.DMEM + addr + (0x4 ^ 02)) = VR[vt+1][02];
+            *(short *)(RSP.DMEM + addr + (0x6 ^ 02)) = VR[vt+2][03];
+            *(short *)(RSP.DMEM + addr + (0x8 ^ 02)) = VR[vt+3][04];
+            *(short *)(RSP.DMEM + addr + (0xA ^ 02)) = VR[vt+4][05];
+            *(short *)(RSP.DMEM + addr + (0xC ^ 02)) = VR[vt+5][06];
+            *(short *)(RSP.DMEM + addr + (0xE ^ 02)) = VR[vt+6][07];
             return;
         default: {
             register int e = element/2; /* store only bits 3..1 */
@@ -115,7 +115,7 @@ void STV(int vt, int element, signed offset, int base)
 /* `vt[s]` is a function of slice `s`:  f(s) = vt(4..3) || [(s+e) mod 8]
  * We already ensured that (vt & 0b111) is false, so we don't need to mask.
  */
-                *(short *)(RSP.DMEM + (addr ^ 02)) = VR[fs].s[s];
+                *(short *)(RSP.DMEM + (addr ^ 02)) = VR[fs][s];
                 addr += 0x002;
             }
             return;

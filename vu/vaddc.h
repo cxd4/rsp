@@ -10,7 +10,7 @@ static void VADDC(int vd, int vs, int vt, int element)
     {
         for (i = 0; i < 8; i++)
         {
-            result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[i];
+            result = (unsigned short)VR[vs][i] + (unsigned short)VR[vt][i];
             VACC[i].s[LO] = (short)result;
             result >>= 16; /* result = (VS + VT > 0x0000FFFF) ? 1 : 0; */
             VCO |= result << i;
@@ -20,8 +20,8 @@ static void VADDC(int vd, int vs, int vt, int element)
     {
         for (i = 0, j = element & 01; i < 8; i++)
         {
-            result = (unsigned short)VR[vs].s[i]
-                   + (unsigned short)VR[vt].s[j | (i & 0xE)];
+            result = (unsigned short)VR[vs][i]
+                   + (unsigned short)VR[vt][j | (i & 0xE)];
             VACC[i].s[LO] = (short)result;
             result >>= 16; /* result = (VS + VT > 0x0000FFFF) ? 1 : 0; */
             VCO |= result << i;
@@ -31,8 +31,8 @@ static void VADDC(int vd, int vs, int vt, int element)
     {
         for (i = 0, j = element & 03; i < 8; i++)
         {
-            result = (unsigned short)VR[vs].s[i]
-                   + (unsigned short)VR[vt].s[j | (i & 0xC)];
+            result = (unsigned short)VR[vs][i]
+                   + (unsigned short)VR[vt][j | (i & 0xC)];
             VACC[i].s[LO] = (short)result;
             result >>= 16; /* result = (VS + VT > 0x0000FFFF) ? 1 : 0; */
             VCO |= result << i;
@@ -42,13 +42,13 @@ static void VADDC(int vd, int vs, int vt, int element)
     {
         for (i = 0, j = element & 07; i < 8; i++)
         {
-            result = (unsigned short)VR[vs].s[i] + (unsigned short)VR[vt].s[j];
+            result = (unsigned short)VR[vs][i] + (unsigned short)VR[vt][j];
             VACC[i].s[LO] = (short)result;
             result >>= 16; /* result = (VS + VT > 0x0000FFFF) ? 1 : 0; */
             VCO |= result << i;
         }
     }
     for (i = 0; i < 8; i++)
-        VR[vd].s[i] = VACC[i].s[LO];
+        VR[vd][i] = VACC[i].s[LO];
     return;
 }
