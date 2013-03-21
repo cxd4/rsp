@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.02.23                                                         *
+* Release:  2013.03.21                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -138,7 +138,7 @@ static void res_V(int sa, int rd, int rt, int e)
     return;
 }
 
-static void (*SP_COP2_VECTOP[64])(int, int, int, int) = {
+static void (*SP_COP2_C2[64])(int, int, int, int) = {
     VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
     VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
     VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */

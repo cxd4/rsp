@@ -103,10 +103,9 @@
 #define MAX_WAIT                    (0x0001FFFF & 0x1FFFFFFF)
 // #define EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
 // #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
-#define SEARCH_INFINITE_LOOPS // Try with Gauntlet Legends, Stunt Racer 64...
+// #define SEARCH_INFINITE_LOOPS // Try with Gauntlet Legends, Stunt Racer 64...
 // #define FP_CORRECTIONS // Slower than the unimplemented lookup method
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
-// #define VU_OVERRIDE_WEIRD_ELEMENT // Keep it off for more speed.
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
 #if defined EXTERN_COMMAND_LIST_GBI && defined EXTERN_COMMAND_LIST_ABI

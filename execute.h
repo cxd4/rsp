@@ -45,13 +45,8 @@ EX:
             const int vs = (inst & 0x0000FFFF) >> 11;
             const int vt = (inst & 0x001F0000) >> 16;
             const int e  = (inst & 0x01E00000) >> 21;
-#ifdef VU_OVERRIDE_WEIRD_ELEMENT
-            if (e == 1)
-            { /* Illegal assembly instruction, but valid RSP machine code. */
-                message("Weird vector element specifier.", 2);
-            }
-#endif
-            SP_COP2_VECTOP[inst % 64](vd, vs, vt, e);
+
+            SP_COP2_C2[inst % 64](vd, vs, vt, e);
             continue;
         }
         SR[0] ^= SR[0];
