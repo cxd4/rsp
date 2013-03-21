@@ -48,8 +48,6 @@ static int MFC0_count[32];
 #include "su/su.h"
 #include "vu/vu.h"
 
-extern void run_microcode(void);
-
 #ifdef SP_EXECUTE_LOG
 extern void step_SP_commands(unsigned long inst);
 extern void export_SP_memory(void);
