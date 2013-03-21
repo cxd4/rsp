@@ -221,7 +221,7 @@ EX:
                 SR[rt] = imm << 16;
                 continue;
             case 020: /* COP0 */
-#ifdef SEARCH_INFINITE_LOOPS
+#if (0 == 0)
                 SP_COP0[rs &= 31](rt, rd);
                 continue; /* Too complex to maintain in this memory space. */
 #else

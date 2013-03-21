@@ -27,6 +27,7 @@ static int SR[32];
  * MTC0 is too complicated to make regular use of this.
  * I cannot recreate as an array; they are engraved in zilmar plugin module.
  */
+#if 0
 static const unsigned long **CR[32] = {
     &RSP.SP_MEM_ADDR_REG,
     &RSP.SP_DRAM_ADDR_REG,
@@ -61,6 +62,7 @@ static const unsigned long **CR[32] = {
     NULL,
     NULL
 };
+#endif
 
 void res_S(void)
 {

@@ -1,3 +1,4 @@
+#ifdef SEARCH_INFINITE_LOOPS
 void scan_ICACHE_for_cycle_fault(int cr);
 /* My colossal attempt at covering up for faults in the host CPU emulator
  * (the main MIPS CPU, like Project64.exe) concerning cycle timing and
@@ -10,6 +11,7 @@ void scan_ICACHE_for_cycle_fault(int cr);
  * register is probably not necessary (especially since zilmar's method gets
  * away with just a simple break exiting out of the hung-up microcode).
  */
+#endif
 
 void MFC0(int rt, int rd)
 {
@@ -55,7 +57,7 @@ void MFC0(int rt, int rd)
         case 0x7:
             SR[rt] = *RSP.SP_SEMAPHORE_REG;
             *RSP.SP_SEMAPHORE_REG = 0x00000001;
-            *RSP.SP_SEMAPHORE_REG = 0x00000000; /* no cupport by CPU? */
+            *RSP.SP_SEMAPHORE_REG = 0x00000000; /* no support by CPU? */
             return; /* prevented MTC0 DPC status flags on NUS-CIC-6105 boots */
         case 0x8:
             SR[rt] = *RSP.DPC_START_REG;
@@ -89,6 +91,7 @@ void MFC0(int rt, int rd)
     }
 }
 
+#ifdef SEARCH_INFINITE_LOOPS
 void scan_ICACHE_for_cycle_fault(int cr)
 {
     char disasm[80]; /* Unused if priority < MIN; also sprintf is unused. */
@@ -394,3 +397,4 @@ void scan_ICACHE_for_cycle_fault(int cr)
         }
     } while (i == i);
 }
+#endif
