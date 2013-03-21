@@ -2,10 +2,10 @@
 #include "vu.h"
 #include "divrom.h"
 
-static void VRSQL(int vd, int del, int vt, int e)
+static void VRSQL(int vd, int de, int vt, int e)
 {
     register int sqr;
-    register int i, j;
+    register int i;
 #ifdef FP_CORRECTIONS
     unsigned int old_model;
 #endif
@@ -47,20 +47,10 @@ static void VRSQL(int vd, int del, int vt, int e)
             sqr = ~sqr;
         }
     }
-    if (!e)
-        for (i = 0; i < 8; i++)
-            VACC[i].s[LO] = VR[vt][j = i];
-    else if (e < 4) /* e != 1 */
-        for (i = 0, j = e & 01; i < 8; i++)
-            VACC[i].s[LO] = VR[vt][j | (i & 0xE)];
-    else if (e < 8)
-        for (i = 0, j = e & 03; i < 8; i++)
-            VACC[i].s[LO] = VR[vt][j | (i & 0xC)];
-    else /* if (8 <= e <= 15) */
-        for (i = 0, j = e & 07; i < 8; i++)
-            VACC[i].s[LO] = VR[vt][j];
+    for (i = 0; i < 8; i++)
+        VACC[i].s[LO] = VR[vt][ei[e][i]];
     DivOut = sqr;
-    VR[vd][del & 07] = (short)DivOut;
+    VR[vd][de &= 07] = (short)DivOut;
     DPH = 0;
     return;
 }

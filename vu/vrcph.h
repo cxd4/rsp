@@ -1,25 +1,14 @@
 #include "vu.h"
 #include "divrom.h"
 
-static void VRCPH(int vd, int del, int vt, int e)
+static void VRCPH(int vd, int de, int vt, int e)
 {
-    register int i, j;
+    register int i;
 
     DivIn = VR[vt][e & 07] << 16;
-    if (!e)
-        for (i = 0; i < 8; i++)
-            VACC[i].s[LO] = VR[vt][j = i];
-    else if (e < 4) /* e != 1 */
-        for (i = 0, j = e & 01; i < 8; i++)
-            VACC[i].s[LO] = VR[vt][j | (i & 0xE)];
-    else if (e < 8)
-        for (i = 0, j = e & 03; i < 8; i++)
-            VACC[i].s[LO] = VR[vt][j | (i & 0xC)];
-    else /* if (8 <= e <= 15) */
-        for (i = 0, j = e & 07; i < 8; i++)
-            VACC[i].s[LO] = VR[vt][j];
-    del &= 07;
-    VR[vd][del] = DivOut >> 16; /* store high part */
+    for (i = 0; i < 8; i++)
+        VACC[i].s[LO] = VR[vt][ei[e][i]];
+    VR[vd][de &= 07] = DivOut >> 16; /* store high part */
     DPH = 1;
     return;
 }

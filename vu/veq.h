@@ -1,44 +1,22 @@
 #include "vu.h"
 
-static void VEQ(int vd, int vs, int vt, int element)
+static void VEQ(int vd, int vs, int vt, int e)
 {
     int eq; /* equal, unless (NOTEQUAL) */
-    register int i, j;
+    register int i;
 
     VCC = 0x0000;
     VCO >>= 8; /* We don't use the CARRY bits of VCO.  VCO will be cleared. */
-    if (!element) /* if (element >> 1 == 00) */
-        for (i = 0; i < 8; i++)
-        {
-            eq = (VR[vs][i] == VR[vt][j = i]) & !(VCO & 1);
-            VCC |= eq << i;
-            VACC[i].s[LO] = VR[vt][j = i];
-            VCO >>= 1;
-        }
-    else if (element < 4)
-        for (i = 0, j = element & 01; i < 8; i++)
-        {
-            eq = (VR[vs][i] == VR[vt][j | (i & 0xE)]) & !(VCO & 1);
-            VCC |= eq << i;
-            VACC[i].s[LO] = VR[vt][j | (i & 0xE)];
-            VCO >>= 1;
-        }
-    else if (element < 8)
-        for (i = 0, j = element & 03; i < 8; i++)
-        {
-            eq = (VR[vs][i] == VR[vt][j | (i & 0xC)]) & !(VCO & 1);
-            VCC |= eq << i;
-            VACC[i].s[LO] = VR[vt][j | (i & 0xC)];
-            VCO >>= 1;
-        }
-    else /* if (element & 0b1000) */
-        for (i = 0, j = element & 07; i < 8; i++)
-        {
-            eq = (VR[vs][i] == VR[vt][j]) & !(VCO & 1);
-            VCC |= eq << i;
-            VACC[i].s[LO] = VR[vt][j];
-            VCO >>= 1;
-        }
+    for (i = 0; i < 8; i++)
+    {
+        const short VS = VR[vs][i];
+        const short VT = VR[vt][ei[e][i]];
+
+        eq = (VS == VT) & !(VCO & 1);
+        VCC |= eq << i;
+        VACC[i].s[LO] = VT;
+        VCO >>= 1;
+    }
     for (i = 0; i < 8; i++)
         VR[vd][i] = VACC[i].s[LO];
     /* VCO = 0x0000; /* We already cleared VCO by `VCO >>= 1` 16 times. */
