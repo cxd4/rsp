@@ -5,7 +5,7 @@
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
-void LQV(int vt, int element, signed offset, int base)
+void LQV(int vt, int element, signed int offset, int base)
 {
     register unsigned int addr;
     int b;
