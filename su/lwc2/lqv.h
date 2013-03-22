@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Load Quadword to Vector Unit               *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.20                                                         *
+* Release:  2013.03.21                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -20,11 +20,8 @@ void LQV(int vt, int element, signed int offset, int base)
  * However, they give an if-else chain for b={0:7} only, which allows a bug
  * exploitable by Resident Evil 2 and, possibly, some Boss Game publications.
  */
-    if (element != 0x0)
-    {
-        message("LQV\nIllegal element.", 3);
-        return;
-    }
+    if (element != 0x0) /* We need an explicit `goto` for stupid compilers. */
+        goto bitch; /* Blame M$ for their ineptitude with branch weighs. */
     switch (addr & 0x0000000F)
     {
         case 0x0:
@@ -71,4 +68,7 @@ void LQV(int vt, int element, signed int offset, int base)
             message("LQV\nWeird addr.", 3);
             return;
     }
+bitch:
+    message("LQV\nIllegal element.", 3);
+    return;
 }

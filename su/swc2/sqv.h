@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Quadword from Vector Unit            *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.20                                                         *
+* Release:  2013.03.21                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -13,11 +13,8 @@ void SQV(int vt, int element, signed int offset, int base)
     addr  = SR[base] + (offset << 4);
     addr &= 0x00000FFF; /* World Driver Championship:  on load demo intro */
     b = addr & 0x0000000F; /* experimental; patent says should & 07 */
-    if (element != 0x0)
-    {
-        message("SQV\nIllegal element.", 3);
-        return;
-    }
+    if (element != 0x0) /* We need an explicit `goto` for stupid compilers. */
+        goto bitch; /* Blame M$ for their ineptitude with branch weighs. */
     switch (b)
     {
         case 00:
@@ -58,4 +55,7 @@ void SQV(int vt, int element, signed int offset, int base)
             message("SQV\nWeird addr.", 3);
             return;
     }
+bitch:
+    message("SQV\nIllegal element.", 3);
+    return;
 }

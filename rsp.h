@@ -45,6 +45,16 @@ static int MFC0_count[32];
  */
 #endif
 
+#define VR_S(v, e) (*(short *)(&(*(unsigned char *)VR) + 16*v + e))
+/* Say we are emulating:  `LSV $v0[0x0], 0x000($0)`.
+ * We can accurately use a proper vector file:  `VR[0][00] = *(short *)addr`.
+ *
+ * What about:  `LSV $v0[0x1], 0x000($0)`?
+ *
+ * That is what the macro above is for.  `VR_S(0, 1) = *(short *)addr`.
+ * With this we can span across the vector register element indexing barrier.
+ */
+
 #include "su/su.h"
 #include "vu/vu.h"
 

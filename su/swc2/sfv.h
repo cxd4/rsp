@@ -1,15 +1,15 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Alternate Fourths from Vector Unit   *
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2012.12.28                                                         *
+* Authors:  Iconoclast                                                         *
+* Release:  2013.03.21                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
-void SFV(int vt, int element, signed offset, int base)
+void SFV(int vt, int element, signed int offset, int base)
 {
-    register unsigned int addr = SR[base] + (offset * 16);
-    /* register int b = addr 0x003; */
+    register unsigned int addr;
 
+    addr  = SR[base] + (offset << 4);
     addr &= 0x00000FF3;
     addr ^= 0x003; /* byte endian swap */
     switch (element)
@@ -27,7 +27,7 @@ void SFV(int vt, int element, signed offset, int base)
             RSP.DMEM[addr + 0xC] = (unsigned char)(VR[vt][07] >> 7);
             return;
         default:
-            message("SFV\nWeird element.", 3);
-            return; // Ville Linde:  "FIXME: only works for index 0 and index 8"
+            message("SFV\nIllegal element.", 3);
+            return;
     }
 }

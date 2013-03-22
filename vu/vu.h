@@ -15,15 +15,28 @@
 /*
  * RSP virtual registers (of vector unit)
  * The most important are the 32 general-purpose vector registers.
- * The best way to accurately virtualize these is using fixed 8-HW vectors,
- * which also ensures the correct big endian byte and HW order using arrays.
+ * The correct way to accurately store these is using big-endian vectors.
  *
- * The downside is that we sometimes may need byte-precision access (?WC2).
+ * For ?WC2 we may need to do byte-precision access just as directly.
+ * This is ammended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
 static short VR[32][8];
 
 /*
  * vector-scalar element decoding
+ *
+ * Obviously, doing a switch jump table on (element & 0xF) is very fast
+ * because it saves the decoding time of constantly fetching source elements.
+ *
+ * However, there are several disadvantages to the above method:
+ *     * Extremely difficult to maintain.  (Algorithm fixes need 16 copies.)
+ *     * Not accurate.  (Real H/W decodes all of the elements iteratively.)
+ *     * Colossal boost in program size, cutting down command cache memory.
+ *     * Using branch frames for performing at least one conditional jump.
+ *     * Even if element = 0x0, it's still 8 un-merged, separate data movs.
+ *     * Faster only for large-cache processors.  (RSP is very small-cache.)
+ *     * Difficult to read.
+ *     * Pointless to try to optimize that way when SSSE3 could be applied.
  */
 static const int ei[16][8] = {
     { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none (vector-only operand) */

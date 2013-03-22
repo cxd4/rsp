@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Packed Unsigned from Vector Unit     *
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2012.12.24                                                         *
+* Authors:  Iconoclast                                                         *
+* Release:  2013.03.22                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -11,11 +11,8 @@ void SUV(int vt, int element, signed int offset, int base)
 
     addr  = SR[base] + (offset << 3);
     addr &= 0x00000FFF; /* World Driver Championship:  on load START screen */
-    if (element != 0x0)
-    {
-        message("SUV\nWeird element.", 3);
-        return;
-    }
+    if (element == 0xF) /* We need an explicit `goto` for stupid compilers. */
+        goto bitch; /* Blame M$ for their ineptitude with branch weighs. */
     switch (addr & 07)
     {
         case 00:
@@ -28,13 +25,11 @@ void SUV(int vt, int element, signed int offset, int base)
             RSP.DMEM[addr + (01 ^ 03)] = (unsigned char)(VR[vt][01] >> 7);
             RSP.DMEM[addr + (00 ^ 03)] = (unsigned char)(VR[vt][00] >> 7);
             return;
-        default:
-            message("SPV\nWeird addr.", 3);
+        default: /* Completely legal, just never seen it be done. */
+            message("SUV\nWeird addr.", 3);
             return;
     }
-/* Official documentation shows that there are exactly eight executions.
- * Although they must also occur simultaneously in the vector unit, the most
- * significant element (VR[vt][07]) is listed first in the operation
- * definition, whose sequence therefore must be:  `for (i = 7; i != 0; --i)`.
- */
+bitch:
+    message("SUV\nIllegal element.", 3);
+    return;
 }

@@ -1,21 +1,18 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Load Packed Signed to Vector Unit          *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.20                                                         *
+* Release:  2013.03.21                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
-void LPV(int vt, int element, signed offset, int base)
+void LPV(int vt, int element, signed int offset, int base)
 {
     register unsigned int addr;
 
     addr  = SR[base] + (offset << 3);
     addr &= 0x00000FFF;
-    if (element != 0x0) /* The element must be aligned, not the address. */
-    { /* Technically an illegal instruction to assemble, but H/W allows it. */
-        message("LPV\nIllegal element.", 3);
-        return;
-    }
+    if (element != 0x0) /* We need an explicit `goto` for stupid compilers. */
+        goto bitch; /* Blame M$ for their ineptitude with branch weighs. */
     switch (addr & 07)
     {
         case 00:
@@ -44,4 +41,7 @@ void LPV(int vt, int element, signed offset, int base)
             message("LPV\nWeird addr.", 3);
             return;
     }
+bitch:
+    message("LPV\nIllegal element.", 3);
+    return;
 }

@@ -1,43 +1,46 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Alternate Bytes from Vector Unit     *
-* Creator:  R. J. Swedlow                                                      *
-* Release:  2012.12.25                                                         *
+* Authors:  Iconoclast                                                         *
+* Release:  2013.03.21                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
-void SHV(int vt, int element, signed offset, int base)
+void SHV(int vt, int element, signed int offset, int base)
 {
-    register unsigned int addr = SR[base] + (offset * 16);
-	
+    register unsigned int addr;
+
+    addr  = SR[base] + (offset << 4);
     addr &= 0x00000FFF;
-    if (element || addr & 0xE) /* NOT 0xF */
+    if (element != 0x0) /* We need an explicit `goto` for stupid compilers. */
+        goto bitch; /* Blame M$ for their ineptitude with branch weighs. */
+    switch (addr & 0x0000000F)
     {
-        message("SHV\nWeird addr.", 3);
-        return;
+        case 0x0:
+            RSP.DMEM[addr + (0x00F ^ 02)] = (unsigned char)(VR[vt][07] >> 7);
+            RSP.DMEM[addr + (0x00D ^ 02)] = (unsigned char)(VR[vt][06] >> 7);
+            RSP.DMEM[addr + (0x00B ^ 02)] = (unsigned char)(VR[vt][05] >> 7);
+            RSP.DMEM[addr + (0x009 ^ 02)] = (unsigned char)(VR[vt][04] >> 7);
+            RSP.DMEM[addr + (0x007 ^ 02)] = (unsigned char)(VR[vt][03] >> 7);
+            RSP.DMEM[addr + (0x005 ^ 02)] = (unsigned char)(VR[vt][02] >> 7);
+            RSP.DMEM[addr + (0x003 ^ 02)] = (unsigned char)(VR[vt][01] >> 7);
+            RSP.DMEM[addr + (0x001 ^ 02)] = (unsigned char)(VR[vt][00] >> 7);
+            return;
+        case 0x1:
+            --addr;
+            RSP.DMEM[addr + (0x00E ^ 02)] = (unsigned char)(VR[vt][07] >> 7);
+            RSP.DMEM[addr + (0x00C ^ 02)] = (unsigned char)(VR[vt][06] >> 7);
+            RSP.DMEM[addr + (0x00A ^ 02)] = (unsigned char)(VR[vt][05] >> 7);
+            RSP.DMEM[addr + (0x008 ^ 02)] = (unsigned char)(VR[vt][04] >> 7);
+            RSP.DMEM[addr + (0x006 ^ 02)] = (unsigned char)(VR[vt][03] >> 7);
+            RSP.DMEM[addr + (0x004 ^ 02)] = (unsigned char)(VR[vt][02] >> 7);
+            RSP.DMEM[addr + (0x002 ^ 02)] = (unsigned char)(VR[vt][01] >> 7);
+            RSP.DMEM[addr + (0x000 ^ 02)] = (unsigned char)(VR[vt][00] >> 7);
+            return;
+        default:
+            message("SHV\nIllegal addr.", 3);
+            return;
     }
-    if ((addr & 0x001) == 0x000)
-    {
-        RSP.DMEM[addr + (0xF ^ 02)] = (unsigned char)(VR[vt][07] >> 7);
-        RSP.DMEM[addr + (0xD ^ 02)] = (unsigned char)(VR[vt][06] >> 7);
-        RSP.DMEM[addr + (0xB ^ 02)] = (unsigned char)(VR[vt][05] >> 7);
-        RSP.DMEM[addr + (0x9 ^ 02)] = (unsigned char)(VR[vt][04] >> 7);
-        RSP.DMEM[addr + (0x7 ^ 02)] = (unsigned char)(VR[vt][03] >> 7);
-        RSP.DMEM[addr + (0x5 ^ 02)] = (unsigned char)(VR[vt][02] >> 7);
-        RSP.DMEM[addr + (0x3 ^ 02)] = (unsigned char)(VR[vt][01] >> 7);
-        RSP.DMEM[addr + (0x1 ^ 02)] = (unsigned char)(VR[vt][00] >> 7);
-        return;
-    }
-    else
-    {
-        --addr; /* For readability, not efficiency (helps balance timing). */
-        RSP.DMEM[addr + (0xE ^ 02)] = (unsigned char)(VR[vt][07] >> 7);
-        RSP.DMEM[addr + (0xC ^ 02)] = (unsigned char)(VR[vt][06] >> 7);
-        RSP.DMEM[addr + (0xA ^ 02)] = (unsigned char)(VR[vt][05] >> 7);
-        RSP.DMEM[addr + (0x8 ^ 02)] = (unsigned char)(VR[vt][04] >> 7);
-        RSP.DMEM[addr + (0x6 ^ 02)] = (unsigned char)(VR[vt][03] >> 7);
-        RSP.DMEM[addr + (0x4 ^ 02)] = (unsigned char)(VR[vt][02] >> 7);
-        RSP.DMEM[addr + (0x2 ^ 02)] = (unsigned char)(VR[vt][01] >> 7);
-        RSP.DMEM[addr + (0x0 ^ 02)] = (unsigned char)(VR[vt][00] >> 7);
-        return;
-    }
+bitch:
+    message("SHV\nIllegal element.", 3);
+    return;
 }

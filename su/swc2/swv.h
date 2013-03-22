@@ -5,7 +5,7 @@
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
-void SWV(int vt, int element, signed offset, int base)
+void SWV(int vt, int element, signed int offset, int base)
 { /* Dummy implementation only:  Do any games execute this? */
     char debugger[24] = "SWV\t$v00[X], 0x000($00)";
     const char digits[16] = {
