@@ -26,10 +26,29 @@ extern void SWV(int vt, int element, signed int offset, int base);
 #include "swc2/srv.h"
 #include "swc2/spv.h"
 #include "swc2/suv.h"
+/* omitted from the RCP:  SXV (replaced with SHV) */
+/* omitted from the RCP:  SZV (replaced with SFV) */
 #include "swc2/shv.h"
 #include "swc2/sfv.h"
+/* omitted from the RCP:  SAV */
 #include "swc2/swv.h"
 #include "swc2/stv.h"
+/* reserved */
+
+/*
+ * Note about reserved vector transfer instructions.
+ *
+ * The op-code matrices for LWC2 and SWC2 in compliance with modern-day
+ * vector units (not only SGI) are public domain information and were
+ * examined and converted from various VU patents, including but not
+ * limited to GNU VICE MSP and United States patent no. 5,812,147 by SGI.
+ *
+ * In cases of the Nintendo 64's RCP for which this cannot be applied
+ * (reserved instructions), the operations are commented out because they
+ * had deserved that modern binary index into the op-code matrix but were
+ * subsetted out of the matrix in a way not forward-extensible.  (HV goes
+ * where XV should go, FV goes where ZV should go, etc.)
+ */
 
 void res_072(int vt, int element, signed int offset, int base)
 {

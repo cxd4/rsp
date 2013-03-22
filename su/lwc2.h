@@ -25,9 +25,29 @@ extern void LUV(int vt, int element, signed int offset, int base);
 #include "lwc2/lrv.h"
 #include "lwc2/lpv.h"
 #include "lwc2/luv.h"
+/* omitted from the RCP:  LXV (replaced with LHV) */
+/* omitted from the RCP:  LZV (replaced with LFV) */
 #include "lwc2/lhv.h"
 #include "lwc2/lfv.h"
+/* omitted from the RCP:  LAV */
+/* omitted from the RCP:  LTWV */
 #include "lwc2/ltv.h"
+/* reserved */
+
+/*
+ * Note about reserved vector transfer instructions.
+ *
+ * The op-code matrices for LWC2 and SWC2 in compliance with modern-day
+ * vector units (not only SGI) are public domain information and were
+ * examined and converted from various VU patents, including but not
+ * limited to GNU VICE MSP and United States patent no. 5,812,147 by SGI.
+ *
+ * In cases of the Nintendo 64's RCP for which this cannot be applied
+ * (reserved instructions), the operations are commented out because they
+ * had deserved that modern binary index into the op-code matrix but were
+ * subsetted out of the matrix in a way not forward-extensible.  (HV goes
+ * where XV should go, FV goes where ZV should go, etc.)
+ */
 
 void res_062(int vt, int element, signed int offset, int base)
 {
