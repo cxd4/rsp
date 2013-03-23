@@ -45,13 +45,22 @@ static int MFC0_count[32];
  */
 #endif
 
-#define VR_S(v, e) (*(short *)(&(*(unsigned char *)VR) + 16*v + e))
+// #define VR_B(v, e) (((unsigned char *)VR[v])[e ^ 0x1])
+// #define VR_B(v, e) ((((unsigned char *)(VR + v))[e ^ 0x1]))
+#define VR_B(v, e) (*(unsigned char *)(((unsigned char *)(VR + v)) + (e ^ 0x1)))
+/* In `vu.h` we have defined `static short VR[32][8]`, a proper two-
+ * dimensional array for accurately storing real signal vectors (big endian).
+ *
+ * The weakness to this is that it fixates all VR indexing to 16-bit shorts.
+ * We can still use "pointer" indirection if we need to target by octet.
+ */
+#define VR_S(v, e) (*(short *)((unsigned char *)(*(VR + v)) + e))
 /* Say we are emulating:  `LSV $v0[0x0], 0x000($0)`.
  * We can accurately use a proper vector file:  `VR[0][00] = *(short *)addr`.
  *
  * What about:  `LSV $v0[0x1], 0x000($0)`?
  *
- * That is what the macro above is for.  `VR_S(0, 1) = *(short *)addr`.
+ * That is what the macro above is for.  `VR_S(0, 0x1) = *(short *)addr`.
  * With this we can span across the vector register element indexing barrier.
  */
 
