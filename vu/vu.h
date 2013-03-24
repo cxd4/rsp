@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.21                                                         *
+* Release:  2013.03.24                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -96,6 +96,108 @@ static const void *vCR[4] = {
     &VCE /* Invalid vector control register.  (There are only three.) */
 };
 
+static void res_V(int vd, int rd, int rt, int e)
+{
+    rt = rd = 0;
+    message("C2\nRESERVED", 2); /* uncertain how to handle reserved, untested */
+    for (e = 0; e < 8; e++)
+        VR[vd][e] = 0x0000; /* override behavior (Michael Tedder) */
+    return;
+}
+static void res_M(int sa, int rd, int rt, int e)
+{
+    message("VRNDP/VRNDN/VMULQ", 0);
+    res_V(sa, rd, rt, e);
+    return; /* Ultra64 OS did have these, so one could implement this ext. */
+}
+
+/* vector computational multiplies */
+static void VMULF(int vd, int vs, int vt, int e);
+static void VMULU(int vd, int vs, int vt, int e);
+/* omitted from the RCP:  VMULI "VRNDP" */
+/* omitted from the RCP:  VMULQ */
+static void VMUDL(int vd, int vs, int vt, int e);
+static void VMUDM(int vd, int vs, int vt, int e);
+static void VMUDN(int vd, int vs, int vt, int e);
+static void VMUDH(int vd, int vs, int vt, int e);
+static void VMACF(int vd, int vs, int vt, int e);
+static void VMACU(int vd, int vs, int vt, int e);
+/* omitted from the RCP:  VMACI "VRNDN" */
+static void VMACQ(int vd, int vs, int vt, int e);
+static void VMADL(int vd, int vs, int vt, int e);
+static void VMADM(int vd, int vs, int vt, int e);
+static void VMADN(int vd, int vs, int vt, int e);
+static void VMADH(int vd, int vs, int vt, int e);
+
+/* vector computational add operations */
+static void VADD(int vd, int vs, int vt, int e);
+static void VSUB(int vd, int vs, int vt, int e);
+/* omitted from the RCP:  VSUT */
+static void VABS(int vd, int vs, int vt, int e);
+static void VADDC(int vd, int vs, int vt, int e);
+static void VSUBC(int vd, int vs, int vt, int e);
+/* omitted from the RCP:  VADDB */
+/* omitted from the RCP:  VSUBB */
+/* omitted from the RCP:  VACCB */
+/* omitted from the RCP:  VSUCB */
+/* omitted from the RCP:  VSAD */
+/* omitted from the RCP:  VSAC */
+/* omitted from the RCP:  VSUM */
+static void VSAW(int vd, int vs, int vt, int e);
+/* reserved "VACC" */
+/* reserved "VSUC" */
+
+/* vector computational select operations */
+static void VLT(int vd, int vs, int vt, int e);
+static void VEQ(int vd, int vs, int vt, int e);
+static void VNE(int vd, int vs, int vt, int e);
+static void VGE(int vd, int vs, int vt, int e);
+static void VCL(int vd, int vs, int vt, int e);
+static void VCH(int vd, int vs, int vt, int e);
+static void VCR(int vd, int vs, int vt, int e);
+static void VMRG(int vd, int vs, int vt, int e);
+
+/* vector computational logical operations */
+static void VAND(int vd, int vs, int vt, int e);
+static void VNAND(int vd, int vs, int vt, int e);
+static void VOR(int vd, int vs, int vt, int e);
+static void VNOR(int vd, int vs, int vt, int e);
+static void VXOR(int vd, int vs, int vt, int e);
+static void VNXOR(int vd, int vs, int vt, int e);
+/* reserved "VUNK" */
+/* reserved */
+
+/* vector computational divide operations */
+static void VRCP(int vd, int de, int vt, int e);
+static void VRCPL(int vd, int de, int vt, int e);
+static void VRCPH(int vd, int de, int vt, int e);
+static void VMOV(int vd, int de, int vt, int e);
+static void VRSQ(int vd, int de, int vt, int e);
+static void VRSQL(int vd, int de, int vt, int e);
+static void VRSQH(int vd, int de, int vt, int e);
+static void VNOP(int sa, int rd, int rt, int rs);
+/* 
+ * Architecturally speaking, VMOV is still considered a reciprocal operation,
+ * and VNOP is still considered a reciprocal square root operation.
+ *
+ * This is also true from the legacy and future perspectives, in which both
+ * operation codes service an entirely different functionality.  In fact, one
+ * of the extensions to GNU acknowledge none of the above "divide" mnemonics.
+ */
+
+/*
+ * vector computational pack operations (None were used by the RSP.)
+ *
+ * `VEXTT` "VPKT"
+ * `VEXTQ` "VPKQ"
+ * `VEXTN` "VPKN"
+ * reserved
+ * `VINST` "VUPKT"
+ * `VINSQ` "VUPKQ"
+ * `VINSN` "VUPKN"
+ * `VNULLOP` (archaic method of VNOP)
+ */
+
 #include "vabs.h"
 #include "vadd.h"
 #include "vaddc.h"
@@ -137,19 +239,6 @@ static const void *vCR[4] = {
 #include "vsub.h"
 #include "vsubc.h"
 #include "vxor.h"
-
-static void res_M(int sa, int rd, int rt, int e)
-{
-    e = rt = rd = sa = 0;
-    message("VRNDP/VRNDN/VMULQ\nMPEG DCT canceled.", 3);
-    return; /* Ultra64 OS did have these, so one could implement this ext. */
-}
-static void res_V(int sa, int rd, int rt, int e)
-{
-    e = rt = rd = sa = 0;
-    message("VU reserved instruction", 3);
-    return;
-}
 
 static void (*SP_COP2_C2[64])(int, int, int, int) = {
     VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
