@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Load Quadword to Vector Unit               *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.21                                                         *
+* Release:  2013.03.23                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -19,10 +19,11 @@ void LQV(int vt, int element, signed int offset, int base)
  *
  * However, they give an if-else chain for b={0:7} only, which allows a bug
  * exploitable by Resident Evil 2 and, possibly, some Boss Game publications.
+ * Conker's Bad Fur Day audio also could have exploited this but covers it.
  */
     if (element != 0x0) /* We need an explicit `goto` for stupid compilers. */
         goto bitch; /* Blame M$ for their ineptitude with branch weighs. */
-    switch (addr & 0x0000000F)
+    switch (b)
     {
         case 0x0:
             VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
@@ -35,7 +36,7 @@ void LQV(int vt, int element, signed int offset, int base)
             VR[vt][07] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         case 0x2:
-            VR[vt][00] = *(short *)(RSP.DMEM + addr - 0x002);
+            VR[vt][00] = *(short *)(RSP.DMEM + addr - (0x000 ^ 02));
             VR[vt][01] = *(short *)(RSP.DMEM + addr + 0x004);
             VR[vt][02] = *(short *)(RSP.DMEM + addr + 0x002);
             VR[vt][03] = *(short *)(RSP.DMEM + addr + 0x008);
@@ -52,7 +53,7 @@ void LQV(int vt, int element, signed int offset, int base)
             VR[vt][05] = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
             return;
         case 0x6:
-            VR[vt][00] = *(short *)(RSP.DMEM + addr - 0x002);
+            VR[vt][00] = *(short *)(RSP.DMEM + addr - (0x000 ^ 02));
             VR[vt][01] = *(short *)(RSP.DMEM + addr + 0x004);
             VR[vt][02] = *(short *)(RSP.DMEM + addr + 0x002);
             VR[vt][03] = *(short *)(RSP.DMEM + addr + 0x008);
@@ -64,8 +65,20 @@ void LQV(int vt, int element, signed int offset, int base)
             VR[vt][02] = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
             VR[vt][03] = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
             return;
+        case 0xA: /* "Conker's Bad Fur Day" audio microcode by Rareware */
+            VR[vt][00] = *(short *)(RSP.DMEM + addr - (0x000 ^ 02));
+            VR[vt][01] = *(short *)(RSP.DMEM + addr + 0x004);
+            VR[vt][02] = *(short *)(RSP.DMEM + addr + 0x002);
+            return;
+        case 0xC: /* "Conker's Bad Fur Day" audio microcode by Rareware */
+            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
+            VR[vt][01] = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
+            return;
+        case 0xE: /* "Conker's Bad Fur Day" audio microcode by Rareware */
+            VR[vt][00] = *(short *)(RSP.DMEM + addr - (0x000 ^ 02));
+            return;
         default:
-            message("LQV\nWeird addr.", 3);
+            message("LQV\nOdd addr.", 3);
             return;
     }
 bitch:
