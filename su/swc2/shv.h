@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Alternate Bytes from Vector Unit     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.22                                                         *
+* Release:  2013.03.24                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -10,11 +10,10 @@ void SHV(int vt, int element, signed int offset, int base)
     register unsigned int addr;
 
     addr  = SR[base] + (offset << 4);
+    addr -= element;
     addr &= 0x00000FFF;
-    if (element != 0x0) /* We need an explicit `goto` for stupid compilers. */
-        goto bitch; /* Blame M$ for their ineptitude with branch weighs. */
     if (addr & 0x0000000E)
-        goto ass;
+        goto BAD_ADDR;
 /* The official algorithm for ?HV as defined in US patent no. 5,812,147 first
  * checks the least significant bit of `addr` to specify whether to load
  * every even byte or every odd byte.
@@ -33,10 +32,7 @@ void SHV(int vt, int element, signed int offset, int base)
     RSP.DMEM[addr + (0x002 ^ 02)] = (unsigned char)(VR[vt][01] >> 7);
     RSP.DMEM[addr + (0x000 ^ 02)] = (unsigned char)(VR[vt][00] >> 7);
     return;
-bitch:
-    message("SHV\nIllegal element.", 3);
-    return;
-ass:
-    message("SHV\nIllegal addr.", 3);
+BAD_ADDR: /* "Illegal" command, but on the N64 there is override behavior. */
+    message("LHV\nIllegal addr.", 3);
     return;
 }
