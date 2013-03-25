@@ -287,22 +287,21 @@ EX:
                         SR[rt]  |= RSP.DMEM[addr - 0x002];
                         SR[rt] <<= 8;
                         addr += 0x005;
-                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        addr &= 0x00000FFF;
+                        SR[rt]  |= RSP.DMEM[addr | 0x000];
                         SR[rt] <<= 8;
-                        --addr;
-                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        SR[rt]  |= RSP.DMEM[addr - 0x001];
                         continue;
                     case 03:
                         SR[rt]   = RSP.DMEM[addr - 0x003];
                         SR[rt] <<= 8;
                         addr += 0x004;
-                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        addr &= 0x00000FFF;
+                        SR[rt]  |= RSP.DMEM[addr | 0x000];
                         SR[rt] <<= 8;
-                        --addr;
-                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        SR[rt]  |= RSP.DMEM[addr - 0x001];
                         SR[rt] <<= 8;
-                        --addr;
-                        SR[rt]  |= RSP.DMEM[addr &= 0x00000FFF];
+                        SR[rt]  |= RSP.DMEM[addr - 0x002];
                         continue;
                 }
             case 044: /* LBU */
@@ -345,8 +344,8 @@ EX:
                         *(short *)(RSP.DMEM + (addr - 0x002)) = SR[rt] & 0xFFFF;
                         continue;
                     case 03:
-                        RSP.DMEM[addr - 03] = (SR[rt] >> 8) & 0xFF;
-                        RSP.DMEM[(addr += 04) & 0x00000FFF] = SR[rt] & 0xFF;
+                        RSP.DMEM[addr - 0x003] = (SR[rt] >> 8) & 0xFF;
+                        RSP.DMEM[(addr += 0x004) & 0x00000FFF] = SR[rt] & 0xFF;
                         continue;
                 }
             case 053: /* SW */
@@ -361,24 +360,23 @@ EX:
                         RSP.DMEM[addr | 0x000] = (SR[rt] >> 16) & 0xFF;
                         RSP.DMEM[addr - 0x001] = (SR[rt] >>  8) & 0xFF;
                         addr += 0x006;
-                        RSP.DMEM[addr & 0x00000FFF] = SR[rt] & 0xFF;
+                        RSP.DMEM[addr &= 0x00000FFF] = SR[rt] & 0xFF;
                         continue;
                     case 02:
                         RSP.DMEM[addr - 0x001] = (SR[rt] >> 24) & 0xFF;
                         RSP.DMEM[addr - 0x002] = (SR[rt] >> 16) & 0xFF;
                         addr += 0x005;
-                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >> 8) & 0xFF;
-                        --addr;
-                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >> 0) & 0xFF;
+                        addr &= 0x00000FFF;
+                        RSP.DMEM[addr | 0x000] = (SR[rt] >>  8) & 0xFF;
+                        RSP.DMEM[addr - 0x001] = (SR[rt] >>  0) & 0xFF;
                         continue;
                     case 03:
                         RSP.DMEM[addr - 0x003] = (SR[rt] >> 24) & 0xFF;
                         addr += 0x004;
-                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >> 16) & 0xFF;
-                        --addr;
-                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >>  8) & 0xFF;
-                        --addr;
-                        RSP.DMEM[addr & 0x00000FFF] = (SR[rt] >>  0) & 0xFF;
+                        addr &= 0x00000FFF;
+                        RSP.DMEM[addr | 0x000] = (SR[rt] >> 16) & 0xFF;
+                        RSP.DMEM[addr - 0x001] = (SR[rt] >>  8) & 0xFF;
+                        RSP.DMEM[addr - 0x002] = (SR[rt] >>  0) & 0xFF;
                         continue;
                 }
             case 062: /* LWC2 */
