@@ -12,13 +12,13 @@ static void VMADH(int vd, int vs, int vt, int e)
     }
     for (i = 0; i < 8; i++) /* Sign-clamp bits 31..16 of ACC to dest. VR. */
         if (VACC[i].DW & 0x800000000000) /* acc < 0 */
-            if (~VACC[i].DW & ~0x00007FFFFFFF) /* short underflow */
-                VR[vd][i] = 0x8000;
+            if ((VACC[i].DW & 0xFFFF80000000) != 0xFFFF80000000)
+                VR[vd][i] = 0x8000; /* slice underflow */
             else
                 VR[vd][i] = VACC[i].s[MD];
         else
-            if (VACC[i].DW & ~0x00007FFFFFFF) /* short overflow */
-                VR[vd][i] = 0x7FFF;
+            if ((VACC[i].DW & 0xFFFF80000000) != 0x000000000000)
+                VR[vd][i] = 0x7FFF; /* slice overflow */
             else
                 VR[vd][i] = VACC[i].s[MD];
     return;
