@@ -54,7 +54,7 @@ static int MFC0_count[32];
  * The weakness to this is that it fixates all VR indexing to 16-bit shorts.
  * We can still use "pointer" indirection if we need to target by octet.
  */
-#define VR_S(v, e) (*(short *)((unsigned char *)(*(VR + v)) + e + (e & 01)))
+#define VR_S(v, e) (*(short *)((unsigned char *)(*(VR + v)) + ((e + 01) & ~01)))
 /* Say we are emulating:  `LSV $v0[0x0], 0x000($0)`.
  * We can accurately use a proper vector file:  `VR[0][00] = *(short *)addr`.
  *
