@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Shortword from Vector Unit           *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.21                                                         *
+* Release:  2013.04.01                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -24,10 +24,11 @@ void SSV(int vt, int element, signed int offset, int base)
         case 02:
             *(short *)(RSP.DMEM + (addr - 0x002)) = VR_S(vt, element);
             return;
-        case 03: /*
-            RSP.DMEM[addr - 0x003] = (unsigned short)(VR[vt][element]) >> 8;
-            RSP.DMEM[(addr + 0x004) & 0xFFF] = VR[vt][element] & 0x00FF; */
-            message("SSV\nWeird addr.", 3);
+        case 03: /* Mostly useful for continuing from erroneous CPU requests. */
+            RSP.DMEM[addr - 0x003] = VR_B(vt, element + 0x0);
+            addr += 0x001 + 03; /* byte endian swap adjust */
+            addr &= 0x00000FFF;
+            RSP.DMEM[addr] = VR_B(vt, element + 0x1);
             return;
     }
 bitch:
