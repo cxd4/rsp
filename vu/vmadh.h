@@ -11,15 +11,11 @@ static void VMADH(int vd, int vs, int vt, int e)
         VACC[i].DW += product << 16;
     }
     for (i = 0; i < 8; i++) /* Sign-clamp bits 31..16 of ACC to dest. VR. */
-        if (VACC[i].DW & 0x800000000000) /* acc < 0 */
-            if ((VACC[i].DW & 0xFFFF80000000) != 0xFFFF80000000)
-                VR[vd][i] = 0x8000; /* slice underflow */
-            else
-                VR[vd][i] = VACC[i].s[MD];
+        if (CLAMP_BASE(i, 16) < -32768)
+            VR[vd][i] = -32768; /* element underflow */
+        else if (CLAMP_BASE(i, 16) > +32767)
+            VR[vd][i] = +32767; /* element overflow */
         else
-            if ((VACC[i].DW & 0xFFFF80000000) != 0x000000000000)
-                VR[vd][i] = 0x7FFF; /* slice overflow */
-            else
-                VR[vd][i] = VACC[i].s[MD];
+            VR[vd][i] = CLAMP_BASE(i, 16) & 0x0000FFFF;
     return;
 }

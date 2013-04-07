@@ -15,25 +15,21 @@
 
 static void VMACQ(int vd, int vs, int vt, int e)
 {
-    register int i;
-
     vt = vs = 0; /* ignored inputs */
     message("VMACQ", 1); /* untested, any N64 ROMs use this?? */
-    for (i = 0; i < 8; i++)
-        if (VACC[i].DW & (32 << 16)) /* Bit 21 of acc must be nonzero. */
-            VACC[i].DW += 0x000000000000;
+    for (e = 0; e < 8; e++)
+        if (VACC[e].DW & (32 << 16)) /* Bit 21 of acc must be nonzero. */
+            continue; /* VACC[e].DW += 0x000000000000; */
         else
-            VACC[i].DW += (VACC[i].DW & 0x800000000000) ? +32 << 16 : -32 << 16;
-    for (i = 0; i < 8; i++)
-        if (VACC[i].DW & 0x800000000000) /* acc < 0 */
-            if ((VACC[i].DW & 0xFFFF00000000) != 0xFFFF00000000)
-                VR[vd][i] = 0x8000 & ~0x000F;
-            else
-                VR[vd][i] = (short)(VACC[i].DW >> 17) & ~0x000F;
+            VACC[e].DW += (VACC[e].DW & 0x800000000000) ? +32 << 16 : -32 << 16;
+    for (e = 0; e < 8; e++) /* Sign-extend 48-bit to 64-bit supersets. */
+        VACC[e].HW[03] = VACC[e].s[HI] >> 15;
+    for (e = 0; e < 8; e++) /* Sign-clamp bits 32..17 of ACC to dest. VR. */
+        if (CLAMP_BASE(e, 17) < -32768)
+            VR[vd][e] = -32768 & ~0x000F; /* element underflow */
+        else if (CLAMP_BASE(e, 17) > +32767)
+            VR[vd][e] = +32767 & ~0x000F; /* element overflow */
         else
-            if ((VACC[i].DW & 0xFFFF00000000) != 0x000000000000)
-                VR[vd][i] = 0x7FFF & ~0x000F;
-            else
-                VR[vd][i] = (short)(VACC[i].DW >> 17) & ~0x000F;
+            VR[vd][e] = CLAMP_BASE(e, 17) & 0x0000FFF0;
     return;
 }

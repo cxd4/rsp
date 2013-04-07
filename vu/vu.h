@@ -80,6 +80,24 @@ static union ACC {
     unsigned long long UDW;
 } VACC[8];
 
+/*
+ * special macro service for clamping accumulators
+ *
+ * Clamping on the RSP is the same as traditional vector units, not just SGI.
+ * This algorithm, therefore, is public domain material.
+ *
+ * In almost all cases, the RSP requests clamping to bits 47..16 of each acc.
+ * We therefore compare the 32-bit (signed int)(acc >> 16) and clamp it down
+ * to, usually, 16-bit results (0x8000 if < -32768, 0x7FFF if > +32767).
+ *
+ * The exception is VMACQ, which requests a clamp index lsb of >> 17.
+ */
+#define CLAMP_BASE(acc, lo) ((signed int)(VACC[acc].DW >> lo))
+/*
+ * This algorithm might have a bug if you invoke shifts greater than 16,
+ * because the 48-bit acc needs to be sign-extended when shifting right here.
+ */
+
 /* special-purpose vector control registers */
 unsigned short VCO; /* vector carry out register */
 unsigned short VCC; /* vector compare code register */
@@ -176,7 +194,7 @@ static void VRSQ(int vd, int de, int vt, int e);
 static void VRSQL(int vd, int de, int vt, int e);
 static void VRSQH(int vd, int de, int vt, int e);
 static void VNOP(int sa, int rd, int rt, int rs);
-/* 
+/*
  * Architecturally speaking, VMOV is still considered a reciprocal operation,
  * and VNOP is still considered a reciprocal square root operation.
  *
