@@ -99,6 +99,8 @@ void MTC0(int rt, int rd)
         case 0x4:
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) <<  0);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000002) <<  0);
+            if (SR[rt] & 0x00000002)
+                message("MTC0\nSet HALT", 3);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000004) <<  1);
             if (SR[rt] & 0x00000008) /* clear SP interrupt */
                 message("MTC0\nSP INTR:CLR", 3);
