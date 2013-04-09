@@ -23,9 +23,9 @@ static void VRCP(int vd, int de, int vt, int e)
     DivOut = (0x40000000 | (fetch << 14)) >> shift;
     if (DivIn < 0)
         DivOut = ~DivOut;
-    if (DivIn == 0) /* corner case:  overflow via division by zero */
+    else if (DivIn == 0) /* corner case:  overflow via division by zero */
         DivOut = 0x7FFFFFFF;
-    if (DivIn == -32768) /* corner case:  signed underflow barrier */
+    else if (DivIn == -32768) /* corner case:  signed underflow barrier */
         DivOut = 0xFFFF0000;
     for (shift = 0; shift < 8; shift++)
         VACC[shift].s[LO] = VR[vt][ei[e][shift]];
