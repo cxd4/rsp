@@ -111,7 +111,7 @@ __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCo
 {
     *CycleCount = 0; // число циклов,перед тем,как вернуть к-ль эмулятору.
     RSP = Rsp_Info;
-    *RSP.SP_PC_REG = 0x00000000; // 0x4001000;
+    *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF;
     while (RSP.IMEM != RSP.DMEM + 4096)
         message("This EXE sucks.\nPick another one.", 3);
 /* The real N64 RCP memory map has DMEM and IMEM mapped side-by-side.
