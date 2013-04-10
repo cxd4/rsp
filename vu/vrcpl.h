@@ -3,68 +3,40 @@
 
 static void VRCPL(int vd, int de, int vt, int e)
 {
-    register int rec;
-    register int i;
-#ifdef FP_CORRECTIONS
-    unsigned int old_model;
-#endif
+    unsigned int addr;
+    int data;
+    int fetch;
+    int shift = 32;
 
-    DivIn = DPH
-          ? DivIn | (unsigned short)VR[vt][e & 07]
-          : (int)VR[vt][e & 07];
-    rec = DivIn;
-    if (rec == 0)
-    { // divide by zero -> overflow
-        rec = 0x7FFFFFFF;
-    }
+    if (DPH)
+        DivIn |= (unsigned short)VR[vt][e & 07];
     else
+        DivIn  = VR[vt][e & 07] & 0x0000FFFF; /* Do not sign-extend. */
+    data = DivIn;
+    if (data < 0)
+        data = -data - (data < -32768); /* -(x) if >=; ~(x) if < */
+    do
     {
-        int negative = 0;
-        if (rec < 0)
-        {
-            negative = 1;
-            rec = ~rec;
-            if ((rec & 0xFFFF8000) == 0x00000000)
-            {
-                ++rec;
-            }
-        }
-/* Goodie.  More controversial rounding.
-        for (i = 31; i > 0; i--)
-        {
-            if (rec & (1 << i))
-            {
-                rec &= ((0xFFC00000) >> (31 - i));
-                i = 0;
-            }
-        }
-*/
-#ifdef FP_CORRECTIONS
-        old_model = _controlfp(_RC_CHOP, _MCW_RC);
-#endif
-        rec = 0x7FFFFFFF / rec;
-#ifdef FP_CORRECTIONS
-        old_model = _controlfp(old_model, _MCW_RC);
-#endif
-/* Nuh-uh!!
-        for (i = 31; i > 0; i--)
-        {
-            if (rec & (1 << i))
-            {
-                rec &= ((0xFFFF8000) >> (31 - i));
-                i = 0;
-            }
-        }
-*/
-        if (negative)
-        {
-            rec = ~rec;
-        }
-    }
-    for (i = 0; i < 8; i++)
-        VACC[i].s[LO] = VR[vt][ei[e][i]];
-    DivOut = rec;
-    VR[vd][de &= 07] = (short)DivOut; /* store low part */
+        --shift;
+        if (data & (1 << shift))
+            goto FOUND_MSB;
+    } while (shift); /* while (shift > 0) or ((shift ^ 31) < 32) */
+    shift = 31 - 16*DPH; /* if (data == 0) shift = DPH ? 16 ^ 31 : 0 ^ 31; */
+FOUND_MSB:
+    shift ^= 31; /* Right-to-left shift direction conversion. */
+    addr = (data << shift) >> 22;
+    fetch = div_ROM[addr &= 0x000001FF];
+    shift ^= 31; /* Flipped shift direction back to right-. */
+    DivOut = (0x40000000 | (fetch << 14)) >> shift;
+    if (DivIn < 0)
+        DivOut = ~DivOut;
+    else if (DivIn == 0) /* corner case:  overflow via division by zero */
+        DivOut = 0x7FFFFFFF;
+    else if (DivIn == -32768) /* corner case:  signed underflow barrier */
+        DivOut = 0xFFFF0000;
+    for (addr = 0; addr < 8; addr++)
+        VACC[addr].s[LO] = VR[vt][ei[e][addr]];
+    VR[vd][de &= 07] = (short)DivOut;
     DPH = 0;
     return;
 }

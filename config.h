@@ -61,14 +61,6 @@
  * search based on what type of jump/branch order is beyond this scope.)
  */
 
-#undef  FP_CORRECTIONS
-/* This control applies zilmar's floating-point control strategy.
- * The FP precision used by the RCP is pretty imprecise, more-so even than
- * what the Microsoft code generation settings will allow us to specify.
- *
- * This will only affect the operation of the VU computational divides.
- */
-
 #undef  SP_EXECUTE_LOG
 /* This is my mechanism to use file output of 32 bits per each SP operation.
  * I use this in conjunction with my EXE to handle debug, but still checking
@@ -104,7 +96,6 @@
 // #define EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
 // #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
 // #define SEARCH_INFINITE_LOOPS // Try with Gauntlet Legends, Stunt Racer 64...
-// #define FP_CORRECTIONS // Slower than the unimplemented lookup method
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 

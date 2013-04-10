@@ -6,10 +6,6 @@
 #include "Rsp_#1.1.h"
 #include "rsp.h"
 
-#ifdef FP_CORRECTIONS
-#include <float.h>
-#endif
-
 __declspec(dllexport) void CloseDLL(void)
 {
     return;
