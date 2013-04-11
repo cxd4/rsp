@@ -24,12 +24,6 @@ static void VMACQ(int vd, int vs, int vt, int e)
             VACC[e].DW += (VACC[e].DW & 0x800000000000) ? +32 << 16 : -32 << 16;
     for (e = 0; e < 8; e++) /* Sign-extend 48-bit to 64-bit supersets. */
         VACC[e].HW[03] = VACC[e].s[HI] >> 15;
-    for (e = 0; e < 8; e++) /* Sign-clamp bits 32..17 of ACC to dest. VR. */
-        if (CLAMP_BASE(e, 17) < -32768)
-            VR[vd][e] = -32768 & ~0x000F; /* element underflow */
-        else if (CLAMP_BASE(e, 17) > +32767)
-            VR[vd][e] = +32767 & ~0x000F; /* element overflow */
-        else
-            VR[vd][e] = CLAMP_BASE(e, 17) & 0x0000FFF0;
+    SIGNED_CLAMP(vd, 2);
     return;
 }

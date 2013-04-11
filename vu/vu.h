@@ -98,6 +98,52 @@ static union ACC {
  * because the 48-bit acc needs to be sign-extended when shifting right here.
  */
 
+inline void SIGNED_CLAMP(int vt, int mode)
+{
+    register int i;
+    register signed int result;
+
+    switch (mode)
+    {
+        case 0: /* typical sign-clamp of accumulator-mid (bits 31:16) */
+            for (i = 0; i < 8; i++)
+            {
+                result = CLAMP_BASE(i, 16);
+                if (result < -32768)
+                    VR[vt][i] = -32768;
+                else if (result > +32767)
+                    VR[vt][i] = +32767;
+				else
+                    VR[vt][i] = result & 0x0000FFFF; /* VACC[i]31..16 */
+            }
+            return;
+        case 1: /* sign-clamp accumulator-low (bits 15:0) */
+            for (i = 0; i < 8; i++)
+            {
+                result = CLAMP_BASE(i, 16);
+                if (result < -32768)
+                    VR[vt][i] = 0x0000;
+                else if (result > +32767)
+                    VR[vt][i] = ~0x0000;
+                else
+                    VR[vt][i] = VACC[i].DW & 0x00000000FFFF;
+            }
+            return;
+        case 2: /* oddified sign-clamp employed by VMACQ and VMULQ */
+            for (i = 0; i < 8; i++)
+            {
+                result = CLAMP_BASE(i, 17);
+                if (result < -32768)
+                    VR[vt][i] = -32768 & ~0x000F;
+                else if (result > +32767)
+                    VR[vt][i] = +32767 & ~0x000F;
+                else
+                    VR[vt][i] = result & 0x0000FFF0;
+            }
+            return;
+    }
+}
+
 /* special-purpose vector control registers */
 unsigned short VCO; /* vector carry out register */
 unsigned short VCC; /* vector compare code register */
