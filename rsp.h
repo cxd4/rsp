@@ -10,7 +10,7 @@ inline int MessageBoxA(
     uType = 0x00000000;
     if (*(lpText + 0) == *(lpCaption + 0)) /* unused variables */
         hWnd = NULL;
-    return (NULL);
+    return (0);
 } /* not going to maintain message boxes on the Microsoft compilers */
 inline void message(char *body, int priority)
 {
