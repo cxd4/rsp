@@ -14,9 +14,9 @@ static void VSUB(int vd, int vs, int vt, int e)
     {
         VACC[i].s[LO] = (short)result[i];
         if (result[i] > +32767)
-            VR[vd][i] = 0x7FFF;
+            VR[vd][i] = +32767;
         else if (result[i] < -32768)
-            VR[vd][i] = 0x8000;
+            VR[vd][i] = -32768;
         else
             VR[vd][i] = (short)result[i];
     }

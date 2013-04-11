@@ -3,7 +3,21 @@
 
 #include "Rsp_#1.1.h"
 RSP_INFO RSP;
-
+#ifdef _MSC_VER
+int MessageBoxA(
+    HWND hWnd, const char *lpText, const char *lpCaption, unsigned int uType)
+{
+    hWnd = NULL;
+    uType = *(lpText + 0) == *(lpCaption + 0); /* unused variables */
+    return (NULL);
+} /* not going to maintain message boxes on the Microsoft compilers */
+void message(char *body, int priority)
+{
+    priority ^= priority;
+    *(body + 0) = '\0';
+    return; /* Why?  Because I am keeping Win32-only builds dependency-free. */
+} /* The primary target is GNU/GCC (cross-OS portability, free of APIs). */
+#else
 __declspec(dllimport) int __stdcall MessageBoxA(
     HWND hWnd,
     const char *lpText,
@@ -31,6 +45,7 @@ void message(char *body, int priority)
     MessageBoxA(NULL, body, NULL, type_index[priority]);
     return;
 }
+#endif
 
 static int temp_PC;
 #ifdef SEARCH_INFINITE_LOOPS

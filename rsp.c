@@ -38,6 +38,7 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
         message("SP_STATUS_HALT", 3);
         return 0x00000000;
     }
+#if defined(EXTERN_COMMAND_LIST_GBI) || defined(EXTERN_COMMAND_LIST_ABI)
     switch (*(unsigned int *)(RSP.DMEM + 0xFC0))
     { /* Simulation barrier to redirect processing externally. */
 #ifdef EXTERN_COMMAND_LIST_GBI
@@ -65,6 +66,7 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
             return 0;
 #endif
     }
+#endif
 #if (defined EXTERN_COMMAND_LIST_GBI && defined EXTERN_COMMAND_LIST_ABI)
     {
         const char digits[16] = {
@@ -114,7 +116,6 @@ __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCo
  * While an emulator's failure to comply to this layout could be tolerated,
  * assuming an emulator's idiocy slows down (one example) DMA transactions.
  */
-    memset(RSP.DMEM, 0x00, 0x2000); /* Warning:  Breaks PJ64 1.7. */
 #ifdef SP_EXECUTE_LOG
     output_log = fopen("simd_log.bin", "ab");
 #endif
