@@ -1,15 +1,13 @@
-﻿Build started 3/21/2013 4:18:26 PM.
+﻿Build started 4/10/2013 11:32:29 PM.
      1>Project "F:\rsp\winbuild\SP Interpreter\SP Interpreter.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Release\SP Interpreter.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Ob2 /Oi /Ot /Oy /GT /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D SPINTERPRETER_EXPORTS /D _WINDLL /GF /Gm- /MD /Zp16 /GS- /Gy- /arch:SSE2 /fp:fast /fp:except- /Zc:wchar_t- /Zc:forScope /FAs /Fa"F:\lolnut.asm" /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TC /analyze- /errorReport:prompt ..\..\rsp.c
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Ob1 /Oi /Ot /Oy /GT /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D SPINTERPRETER_EXPORTS /D _WINDLL /GF /Gm- /MD /Zp16 /GS- /Gy- /arch:SSE2 /fp:fast /fp:except- /Zc:wchar_t- /Zc:forScope /FAs /Fa"F:\lolnut.asm" /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\rsp.c
          rsp.c
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\rsp.dll" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST:NO /PDB:"F:\rsp\winbuild\rsp.pdb" /SUBSYSTEM:WINDOWS,"5.00" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /NOENTRY /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\rsp.lib" /MACHINE:X86 /DLL Release\rsp.obj
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\rsp.dll" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST:NO /PDB:"F:\rsp\winbuild\rsp.pdb" /SUBSYSTEM:WINDOWS,"5.00" /OPT:REF /OPT:ICF /TLBID:1 /NOENTRY /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\rsp.lib" /MACHINE:X86 /DLL Release\rsp.obj
             Creating library ..\rsp.lib and object ..\rsp.exp
-         Generating code
-         Finished generating code
          SP Interpreter.vcxproj -> F:\rsp\winbuild\SP Interpreter\..\rsp.dll
        FinalizeBuildStatus:
          Deleting file "Release\SP Interpreter.unsuccessfulbuild".
@@ -18,4 +16,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:29.81
+Time Elapsed 00:00:17.73
