@@ -4,14 +4,15 @@
 #include "Rsp_#1.1.h"
 RSP_INFO RSP;
 #ifdef _MSC_VER
-int MessageBoxA(
+inline int MessageBoxA(
     HWND hWnd, const char *lpText, const char *lpCaption, unsigned int uType)
 {
-    hWnd = NULL;
-    uType = *(lpText + 0) == *(lpCaption + 0); /* unused variables */
+    uType = 0x00000000;
+    if (*(lpText + 0) == *(lpCaption + 0)) /* unused variables */
+        hWnd = NULL;
     return (NULL);
 } /* not going to maintain message boxes on the Microsoft compilers */
-void message(char *body, int priority)
+inline void message(char *body, int priority)
 {
     priority ^= priority;
     *(body + 0) = '\0';
