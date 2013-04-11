@@ -1,16 +1,27 @@
 #ifndef _DIVROM_H
 #define _DIVROM_H
 
-static int DivIn = 0, DivOut = 0;
+static int DivIn = 0; /* buffered numerator of division read from vector file */
+static int DivOut = 0; /* global division result set by VRCP/VRCPL/VRSQ/VRSQH */
+static int MovIn; /* We do not emulate this register (obsolete, for VMOV). */
 
-int DPH; /* Boolean:  Was last vector divide (besides VMOV/VNOP) double-high? */
-int res_RCP;
-int res_RSQ;
-int res_RCP_high;
-int res_RSQ_high;
+static int DPH;
+/*
+ * Boolean flag:  Double-precision high was the last vector divide op?
+ *
+ * if (lastDivideOp == VRCP, VRCPL, VRSQ, VRSQL)
+ *     DPH = false; // single-precision or double-precision low, not high
+ * else if (lastDivideOp == VRCPH, VRSQH)
+ *     DPH = true; // double-precision high
+ * else if (lastDivideOp == VMOV, VNOP)
+ *     DPH = DPH; // no change, divide-group ops but not real divides
+ */
 
-static const unsigned short div_ROM[1024] =
-{
+/*
+ * 11-bit vector divide result look-up table
+ * Thanks to Ville Linde @ MAME for organizing.
+ */
+static const unsigned short div_ROM[1024] = {
     0xFFFF,
     0xFF00,
     0xFE01,
