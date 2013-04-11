@@ -97,24 +97,18 @@ void MTC0(int rt, int rd)
             SP_DMA_WRITE();
             return;
         case 0x4:
+            if (SR[rt] & 0xFE000052)
+                message("MTC0\nSP_STATUS", 2); /* New way to break RSP tasks. */
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) <<  0);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000002) <<  0);
-            if (SR[rt] & 0x00000002)
-                message("MTC0\nSet HALT", 3);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000004) <<  1);
-            if (SR[rt] & 0x00000008) /* clear SP interrupt */
-                message("MTC0\nSP INTR:CLR", 3);
-            if (SR[rt] & 0x00000010) /* set SP interrupt */
-            { /* nonstandard gfx ucode:  Boss Game Studios */
-                *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
-                RSP.CheckInterrupts();
-            }
+            *RSP.MI_INTR_REG &= ~((SR[rt] & 0x00000008) >> 3); /* SP_CLR_INTR */
+         /* if (SR[rt] & 0x00000010) // Boss Game Studios ucodes
+                message("MTC0\nSP_SET_INTR", 3); // too complex, not worth it */
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000020) <<  5);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5);
-            if (SR[rt] & 0x00000080) /* clear interrupt on break */
-                message("MTC0\nSP INTR BREAK:CLR", 3);
-            if (SR[rt] & 0x00000100) /* set interrupt on break */
-                message("MTC0\nSP INTR BREAK:SET", 3);
+            *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000080) <<  6);
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000100) <<  6);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000200) <<  7);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000400) <<  7);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000800) <<  8);
@@ -131,8 +125,6 @@ void MTC0(int rt, int rd)
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00400000) << 13);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00800000) << 14);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x01000000) << 14);
-            if (SR[rt] & 0xFE000000) /* Reserved | unused; just ignore these. */
-                message("MTC0\nSP_STATUS", 2);
             return;
         case 0x5: /* read-only register, cannot directly write using MTC0 */
             message("MTC0\nDMA_FULL", 3);
