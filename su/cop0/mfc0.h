@@ -44,21 +44,17 @@ void MFC0(int rt, int rd)
 #endif
             SR[rt] = *RSP.SP_STATUS_REG;
             return;
-        case 0x5:
-            if (*RSP.SP_DMA_FULL_REG)
-                message("MFC0\nDMA_FULL", 3);
-            SR[rt] = 0x00000000;
+        case 0x5: /* if (*RSP.SP_DMA_FULL_REG != 0x00000000), check the flag? */
+            SR[rt] = *RSP.SP_DMA_FULL_REG;
             return;
-        case 0x6:
-            if (*RSP.SP_DMA_BUSY_REG)
-                message("MFC0\nDMA_BUSY", 3);
-            SR[rt] = 0x00000000;
+        case 0x6: /* if (*RSP.SP_DMA_BUSY_REG != 0x00000000), check the flag? */
+            SR[rt] = *RSP.SP_DMA_FULL_REG;
             return;
         case 0x7:
             SR[rt] = *RSP.SP_SEMAPHORE_REG;
             *RSP.SP_SEMAPHORE_REG = 0x00000001;
-            *RSP.SP_SEMAPHORE_REG = 0x00000000; /* no support by CPU? */
-            return; /* prevented MTC0 DPC status flags on NUS-CIC-6105 boots */
+            *RSP.SP_STATUS_REG |= 0x00000001; /* temporary bit to break CPU */
+            return; /* Break the SP task (zilmar). */
         case 0x8:
             SR[rt] = *RSP.DPC_START_REG;
             return;
@@ -70,7 +66,7 @@ void MFC0(int rt, int rd)
             return;
         case 0xB:
             if (*RSP.DPC_STATUS_REG & 0x00000600) /* end/start valid ? */
-            { /* CP0 register locking/unlocking not added yet. */
+            { /* CP0 register locking/unlocking not tested yet. */
                 message("MFC0\nCMD_STATUS", 2);
                 *RSP.DPC_STATUS_REG &= ~0x00000600;
             }

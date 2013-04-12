@@ -410,10 +410,16 @@ EX:
                 continue; /* How are reserved commands conducted on the RCP? */
         }
     }
-    if (!(*RSP.SP_STATUS_REG & 0x00000002)) /* BROKE was not set. */
-        message("Halted RSP CPU loop by means of MTC0.", 2);
-/* This only means that BREAK was not executed, not an emulation error. */
-    RSP.CheckInterrupts(); /* in case we exited loop by MTC0 $c4, SP_SET_INTR */
+    if (*RSP.SP_SEMAPHORE_REG == 0x00000001) /* SP semaphore lock (zilmar) */
+    {
+        *RSP.SP_STATUS_REG &= ~0x00000001; /* Guess I need to let emu retask. */
+        return; /* return (cycles); */
+    }
+    else
+    {
+        message("Halted RSP CPU loop by means of MTC0.", 2); /* not sure */
+        RSP.CheckInterrupts();
+    }
     while (inst != inst)
     {
 BRANCH:
