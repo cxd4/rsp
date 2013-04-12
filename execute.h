@@ -4,15 +4,29 @@
 #include "su/su.h"
 #include "vu/vu.h"
 
+/*
+ * Treat the RSP CPU as a permanent loop til MTC0/BREAK set SP_STATUS_HALT.
+ *
+ * Any N64 game will end the SP task by executing BREAK directly, not asking
+ * MTC0 to set the HALT bit without executing a BREAK.  Thus, we could get a
+ * very small (tested ~1-1.5 VI/s) speed boost by making the `while` RSP loop
+ * an unconditional, permanent loop escapable only once BREAK gets executed,
+ * but this detriments from strict accuracy because MTC0/SSTEP could set it.
+ *
+ * The bulk of speed-up to the loop has already come from having no code
+ * after the execute phase.  Immediately after any RSP operation in the body,
+ * the loop jumps to the beginning via the standard `continue;` statement, in
+ * the absence of any trailing code outside the switches but ending the body.
+ */
 void run_microcode(void)
-{ /* Treat the RSP CPU as a permanent loop til MTC0/BREAK set SP_STATUS_HALT. */
-    int BC;
+{
     int imm, rs, rt, rd;
+    int BC;
     unsigned int addr; /* scalar loads, stores:  LB, LH, LW, LBU, LHU, SH, SW */
-    register unsigned int inst = 0x00000000;
+    register unsigned int inst;
 
-    while ((inst ^ inst) == (inst ^ inst))
-    { /* We assume the host CPU never sets SP_STATUS_HALT during the SP task. */
+    while (!(*RSP.SP_STATUS_REG & 0x00000001))
+    { /* Explicitly speaking, it must == 0x0, though the object is NOT(HALT). */
         inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
         if (*RSP.SP_STATUS_REG & 0x00000020) // SP_STATUS_SSTEP by debugger.
         {
@@ -396,7 +410,11 @@ EX:
                 continue; /* How are reserved commands conducted on the RCP? */
         }
     }
-    while ((inst ^ -1) == (inst ^ +1))
+    if (!(*RSP.SP_STATUS_REG & 0x00000002)) /* BROKE was not set. */
+        message("Halted RSP CPU loop by means of MTC0.", 2);
+/* This only means that BREAK was not executed, not an emulation error. */
+    RSP.CheckInterrupts(); /* in case we exited loop by MTC0 $c4, SP_SET_INTR */
+    while (inst != inst)
     {
 BRANCH:
         inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);

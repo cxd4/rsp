@@ -91,8 +91,6 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
     for (cycles = 0; cycles < 32; cycles++)
         MFC0_count[cycles] ^= MFC0_count[cycles];
 #endif
-    if (!(*RSP.SP_STATUS_REG & 0x00000002)) /* BROKE was not set. */
-        message("Halted RSP CPU loop by means of MTC0.", 2);
     return (cycles);
 }
 __declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo)
