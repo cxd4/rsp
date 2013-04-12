@@ -44,6 +44,20 @@
  * Enabling both of these does not guarantee that the RSP will never execute.
  */
 
+#undef  SEMAPHORE_LOCK_CORRECTIONS
+/* The CPU-RSP semaphore is a lock defining synchronization with the host.
+ * As of the time in which bpoint reversed the RSP, host interpretation of
+ * this lock was incorrect.  The problem has been inherent for a very long
+ * time until a rather recent update applied between Project64 1.7:2.0.
+ *
+ * If this is on, 1964 and Mupen64 will have no sound for [any?] games.
+ * It will be almost completely useless on Project64 1.6 or older.
+ * The exception is HLE audio, where it will work for almost every game.
+ *
+ * Keep this off when using audio LLE or playing games booting off the NUS-
+ * CIC-6105 chip (also uses the semaphore); keep it on with Project64 2.0.
+ */
+
 #undef  SEARCH_INFINITE_LOOPS
 /* The most common use for this is to compensate for cycle-accuracy misses by
  * the master processor (the MIPS R4300 CPU), which go hand-in-hand with this
@@ -95,6 +109,7 @@
 #define MAX_WAIT                    (0x0001FFFF & 0x1FFFFFFF)
 // #define EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
 // #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
+ #define SEMAPHORE_LOCK_CORRECTIONS // Recommended only for CPUs supporting it
 // #define SEARCH_INFINITE_LOOPS // Try with Gauntlet Legends, Stunt Racer 64...
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
