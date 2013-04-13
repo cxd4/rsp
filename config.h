@@ -29,12 +29,6 @@
  * See the `void message()` for details on this centralized API invocation.
  */
 
-#undef  MAX_WAIT
-/* How many times did the new PC match the previous PC?  If that exceeds
- * `MAX_WAIT`, we assume that the loop is infinite.  We try to exit two types
- * of loops:  simple and complex.  See `SEARCH_INFINITE_LOOPS` for details.
- */
-
 #undef  EXTERN_COMMAND_LIST_GBI
 /* If this is defined, the RSP never executes graphics tasks.
  * Those will all be sent to the video plugin for simulation processing.
@@ -58,21 +52,14 @@
  * CIC-6105 chip (also uses the semaphore); keep it on with Project64 2.0.
  */
 
-#undef  SEARCH_INFINITE_LOOPS
-/* The most common use for this is to compensate for cycle-accuracy misses by
- * the master processor (the MIPS R4300 CPU), which go hand-in-hand with this
- * processor (the slave, the RSP, under the RCP) in managing the SP_STATUS
- * register's signal flags (SP_STATUS_SIG7..SP_STATUS_SIG0), used for vendor-
- * defined synchronization between the master and the RSP slave.  As today's
- * emulators conforming to zilmar's limited plugin specifications have issues
- * managing RSP cycle timing, the presence of this hack in a zilmar-spec RSP
- * emulator is somewhat mandatory for success, although it is inaccurate.
- *
- * Whatever the cause of the permanent loop, as assumed by the MAX_WAIT test,
- * the RSP CPU will eventually enter a search loop back-tracking to the most
- * recent branch instruction that was missed and unconditionally take that
- * branch in an attempt to recover from the loop.  (The exact behavior of the
- * search based on what type of jump/branch order is beyond this scope.)
+#undef  WAIT_FOR_CPU_HOST
+/*
+ * Bad cycle timing on the part of the CPU host generally means that some
+ * SP tasks could be started and end up operating on non-up-to-date SP
+ * status register signal bits (SIG0:SIG7).  Enable this setting to restart
+ * the RSP task after exceeding 10 counts of reading the SP status register
+ * from within the current task.
+ * This will work ONLY with Project64 2.0 at the moment (or some of 1.7.x).
  */
 
 #undef  SP_EXECUTE_LOG
@@ -94,11 +81,10 @@
 
 /* Choose whether to define, or keep undefined, the above macros. */
 #define MINIMUM_MESSAGE_PRIORITY    1 // show most messages of RSP weirdness
-#define MAX_WAIT                    (0x0001FFFF & 0x1FFFFFFF)
 // #define EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
 // #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
 // #define SEMAPHORE_LOCK_CORRECTIONS // Recommended only for CPUs supporting it
-// #define SEARCH_INFINITE_LOOPS // Try with Gauntlet Legends, Stunt Racer 64...
+// #define WAIT_FOR_CPU_HOST // Never use, except with some ROMs on Project64 2.
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 

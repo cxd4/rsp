@@ -49,16 +49,8 @@ void message(char *body, int priority)
 #endif
 
 static int temp_PC;
-#ifdef SEARCH_INFINITE_LOOPS
-extern int SearchSimpleBlockEscapes(void);
-static int MFC0_count[32];
-/* There are only 32 possible MIPS MFC0 instruction words reading from
- * SP_STATUS that a normal assembler would generate, because rt and rd are
- * the only variable operands to a MFC0 operation, and rd == SP_STATUS.
- * Due to the possibility of conflicting SP_STATUS reads within the same loop
- * caused by faulty cycle timing by the host CPU, it is wiser to keep count
- * over how many times an exact MFC0 was encountered, not the opcode itself.
- */
+#ifdef WAIT_FOR_CPU_HOST
+static int MFC0_count;
 #endif
 
 // #define VR_B(v, e) (((unsigned char *)VR[v])[e ^ 0x1])

@@ -37,12 +37,12 @@ void MFC0(int rt, int rd)
             message("MFC0\nDMA_WRITE_LENGTH", 3);
             return; /* dunno what to do, so error */
         case 0x4:
-#ifdef SEARCH_INFINITE_LOOPS
-            ++MFC0_count[rt];
-            if (MFC0_count[rt] > MAX_WAIT)
-                scan_ICACHE_for_cycle_fault(rt);
-#endif
             SR[rt] = *RSP.SP_STATUS_REG;
+#ifdef WAIT_FOR_CPU_HOST
+            ++MFC0_count;
+            if (MFC0_count > 10)
+                *RSP.SP_STATUS_REG |= 0x00000001; /* Let OS restart the task. */
+#endif
             return;
         case 0x5: /* if (*RSP.SP_DMA_FULL_REG != 0x00000000), check the flag? */
             SR[rt] = *RSP.SP_DMA_FULL_REG;
@@ -52,12 +52,14 @@ void MFC0(int rt, int rd)
             return;
         case 0x7:
             SR[rt] = *RSP.SP_SEMAPHORE_REG;
-            *RSP.SP_SEMAPHORE_REG = 0x00000000; /* old method, inaccurate */
 #ifdef SEMAPHORE_LOCK_CORRECTIONS
             *RSP.SP_SEMAPHORE_REG = 0x00000001;
             *RSP.SP_STATUS_REG |= 0x00000001; /* temporary bit to break CPU */
-#endif
             return; /* Break the SP task (zilmar). */
+#else
+            *RSP.SP_SEMAPHORE_REG = 0x00000000; /* old method, inaccurate */
+            return;
+#endif
         case 0x8:
             SR[rt] = *RSP.DPC_START_REG;
             return;

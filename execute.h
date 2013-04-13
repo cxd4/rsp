@@ -113,6 +113,9 @@ EX:
                         goto BRANCH;
                     case 015: /* BREAK */
                         *RSP.SP_STATUS_REG |= 0x00000003;
+#ifdef WAIT_FOR_CPU_HOST
+                        MFC0_count ^= MFC0_count;
+#endif
                         if (*RSP.SP_STATUS_REG & 0x00000040)
                         { /* SP_STATUS_INTR_BREAK */
                             *RSP.MI_INTR_REG |= 0x00000001;
@@ -415,12 +418,19 @@ EX:
         *RSP.SP_STATUS_REG &= ~0x00000001; /* Guess I need to let emu retask. */
         return; /* return (cycles); */
     }
+#ifdef WAIT_FOR_CPU_HOST
+    else if (MFC0_count != 0)
+    {
+        *RSP.SP_STATUS_REG &= ~0x00000001; /* CPU restarts with correct SIGs. */
+        MFC0_count = 0;
+    }
+#endif
     else
     {
         message("Halted RSP CPU loop by means of MTC0.", 2); /* not sure */
         RSP.CheckInterrupts();
     }
-    while (inst != inst)
+    while (SR[0] != SR[0])
     {
 BRANCH:
         inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
