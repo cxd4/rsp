@@ -50,7 +50,8 @@ void message(char *body, int priority)
 
 static int temp_PC;
 #ifdef WAIT_FOR_CPU_HOST
-static int MFC0_count;
+static int MFC0_count[32];
+/* Keep one C0 MF status read count for each scalar register. */
 #endif
 
 // #define VR_B(v, e) (((unsigned char *)VR[v])[e ^ 0x1])

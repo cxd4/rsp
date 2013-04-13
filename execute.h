@@ -25,6 +25,10 @@ void run_microcode(void)
     unsigned int addr; /* scalar loads, stores:  LB, LH, LW, LBU, LHU, SH, SW */
     register unsigned int inst;
 
+#ifdef WAIT_FOR_CPU_HOST
+    for (rt = 0; rt < 31; rt++)
+        MFC0_count[rt] = 0;
+#endif
     while (!(*RSP.SP_STATUS_REG & 0x00000001))
     { /* Explicitly speaking, it must == 0x0, though the object is NOT(HALT). */
         inst = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
@@ -113,9 +117,6 @@ EX:
                         goto BRANCH;
                     case 015: /* BREAK */
                         *RSP.SP_STATUS_REG |= 0x00000003;
-#ifdef WAIT_FOR_CPU_HOST
-                        MFC0_count ^= MFC0_count;
-#endif
                         if (*RSP.SP_STATUS_REG & 0x00000040)
                         { /* SP_STATUS_INTR_BREAK */
                             *RSP.MI_INTR_REG |= 0x00000001;
@@ -414,20 +415,15 @@ EX:
         }
     }
     if (*RSP.SP_SEMAPHORE_REG == 0x00000001) /* SP semaphore lock (zilmar) */
-    {
         *RSP.SP_STATUS_REG &= ~0x00000001; /* Guess I need to let emu retask. */
-        return; /* return (cycles); */
-    }
 #ifdef WAIT_FOR_CPU_HOST
     else if (MFC0_count != 0)
-    {
         *RSP.SP_STATUS_REG &= ~0x00000001; /* CPU restarts with correct SIGs. */
-        MFC0_count = 0;
-    }
 #endif
     else
     {
         message("Halted RSP CPU loop by means of MTC0.", 2); /* not sure */
+        *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
         RSP.CheckInterrupts();
     }
     while (SR[0] != SR[0])

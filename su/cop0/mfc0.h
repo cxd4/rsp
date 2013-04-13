@@ -39,8 +39,8 @@ void MFC0(int rt, int rd)
         case 0x4:
             SR[rt] = *RSP.SP_STATUS_REG;
 #ifdef WAIT_FOR_CPU_HOST
-            ++MFC0_count;
-            if (MFC0_count > 10)
+            ++MFC0_count[rt];
+            if (MFC0_count[rt] > 0xF)
                 *RSP.SP_STATUS_REG |= 0x00000001; /* Let OS restart the task. */
 #endif
             return;
