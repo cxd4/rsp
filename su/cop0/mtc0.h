@@ -151,7 +151,7 @@ void MTC0(int rt, int rd)
             message("MTC0\nCMD_CURRENT", 2);
             return;
         case 0xB:
-            if (SR[rt] & 0xFFFFFFC0) /* unsupported or reserved bits */
+            if (SR[rt] & 0xFFFFFD80) /* unsupported or reserved bits */
                 message("MTC0\nCMD_STATUS", 2);
             *RSP.DPC_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) << 0);
             *RSP.DPC_STATUS_REG |=  (!!(SR[rt] & 0x00000002) << 0);
@@ -159,6 +159,11 @@ void MTC0(int rt, int rd)
             *RSP.DPC_STATUS_REG |=  (!!(SR[rt] & 0x00000008) << 1);
             *RSP.DPC_STATUS_REG &= ~(!!(SR[rt] & 0x00000010) << 2);
             *RSP.DPC_STATUS_REG |=  (!!(SR[rt] & 0x00000020) << 2);
+/* Some NUS-CIC-6105 SP tasks try to clear some zeroed DPC registers. */
+            *RSP.DPC_TMEM_REG     &= -((SR[rt] & 0x00000040) == 0x00000000);
+         /* *RSP.DPC_PIPEBUSY_REG &= -((SR[rt] & 0x00000080) == 0x00000000); */
+         /* *RSP.DPC_BUFBUSY_REG  &= -((SR[rt] & 0x00000100) == 0x00000000); */
+            *RSP.DPC_CLOCK_REG    &= -((SR[rt] & 0x00000200) == 0x00000000);
             return;
         case 0xC: /* ??? is this read-only or not, hard to tell */
             message("MTC0\nCMD_CLOCK", 2);
