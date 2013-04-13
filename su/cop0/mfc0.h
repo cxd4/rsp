@@ -40,7 +40,7 @@ void MFC0(int rt, int rd)
             SR[rt] = *RSP.SP_STATUS_REG;
 #ifdef WAIT_FOR_CPU_HOST
             ++MFC0_count[rt];
-            if (MFC0_count[rt] > 0xF)
+            if (MFC0_count[rt] > 07)
                 *RSP.SP_STATUS_REG |= 0x00000001; /* Let OS restart the task. */
 #endif
             return;
@@ -57,8 +57,7 @@ void MFC0(int rt, int rd)
             *RSP.SP_STATUS_REG |= 0x00000001; /* temporary bit to break CPU */
             return; /* Break the SP task (zilmar). */
 #else
-            *RSP.SP_SEMAPHORE_REG = 0x00000000; /* old method, inaccurate */
-            return;
+            return; /* old method, inaccurate */
 #endif
         case 0x8:
             SR[rt] = *RSP.DPC_START_REG;
