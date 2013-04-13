@@ -9,6 +9,7 @@ void LQV(int vt, int element, signed int offset, int base)
 {
     register unsigned int addr;
     int b;
+    const int e = element; /* "Boss Game Studios" audio use illegal elements. */
 
     addr  = SR[base] + (offset << 4);
     b = addr & 0x0000000F;
@@ -21,61 +22,59 @@ void LQV(int vt, int element, signed int offset, int base)
  * exploitable by Resident Evil 2 and, possibly, some Boss Game publications.
  * Conker's Bad Fur Day audio also could have exploited this but covers it.
  */
-    if (element != 0x0) /* We need an explicit `goto` for stupid compilers. */
-        goto ILLEGAL; /* Illegal vector inst but not an invalid N64 RCP inst. */
     switch (b)
     {
         case 0x0:
-            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
-            VR[vt][01] = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
-            VR[vt][02] = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
-            VR[vt][03] = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
-            VR[vt][04] = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
-            VR[vt][05] = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
-            VR[vt][06] = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
-            VR[vt][07] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + (0x000 ^ 02));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
+            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
+            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
+            VR_S(vt,e+0xC) = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
+            VR_S(vt,e+0xE) = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         case 0x2:
-            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
-            VR[vt][01] = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
-            VR[vt][02] = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
-            VR[vt][03] = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
-            VR[vt][04] = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
-            VR[vt][05] = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
-            VR[vt][06] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + (0x002 ^ 02));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
+            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
+            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
+            VR_S(vt,e+0xC) = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         case 0x4:
-            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
-            VR[vt][01] = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
-            VR[vt][02] = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
-            VR[vt][03] = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
-            VR[vt][04] = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
-            VR[vt][05] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + (0x004 ^ 02));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
+            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
+            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         case 0x6:
-            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
-            VR[vt][01] = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
-            VR[vt][02] = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
-            VR[vt][03] = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
-            VR[vt][04] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + (0x006 ^ 02));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
+            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         case 0x8: /* Resident Evil 2 cinematics and Boss Game Studios */
-            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
-            VR[vt][01] = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
-            VR[vt][02] = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
-            VR[vt][03] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + (0x008 ^ 02));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         case 0xA: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
-            VR[vt][01] = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
-            VR[vt][02] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + (0x00A ^ 02));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         case 0xC: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
-            VR[vt][01] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + (0x00C ^ 02));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         case 0xE: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR[vt][00] = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + (0x00E ^ 02));
             return;
         default:
             message("LQV\nOdd addr.", 3);
@@ -85,7 +84,4 @@ void LQV(int vt, int element, signed int offset, int base)
  * written by removing `addr &= 0x00000FF0;` and adjusting all offsets
  * accordingly, but this is slow and harder to optimize for several reasons.
  */
-ILLEGAL:
-    message("LQV\nIllegal element.", 3);
-    return;
 }
