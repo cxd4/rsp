@@ -326,4 +326,4 @@ void trace_RSP_registers(void)
 }
 #endif
 
-#endif // ifndef _RSP_H_
+#endif
