@@ -109,11 +109,7 @@ __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCo
     RSP = Rsp_Info;
     *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF;
     while (RSP.IMEM != RSP.DMEM + 4096)
-        message("This EXE sucks.\nPick another one.", 3);
-/* The real N64 RCP memory map has DMEM and IMEM mapped side-by-side.
- * While an emulator's failure to comply to this layout could be tolerated,
- * assuming an emulator's idiocy slows down (one example) DMA transactions.
- */
+        message("Virtual host map noncontiguity.", 3);
 #ifdef SP_EXECUTE_LOG
     output_log = fopen("simd_log.bin", "ab");
 #endif

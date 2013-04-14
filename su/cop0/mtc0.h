@@ -3,8 +3,6 @@ void SP_DMA_WRITE(void)
     register unsigned int length;
     register unsigned int count;
     register unsigned int skip;
-    const unsigned char *MSP_CACHE = ((*RSP.SP_MEM_ADDR_REG & 0x1000) == 0x000)
-                                   ? RSP.DMEM : RSP.IMEM;
 
     skip   = *RSP.SP_WR_LEN_REG;
     length  = skip;
@@ -23,9 +21,9 @@ void SP_DMA_WRITE(void)
         --count;
         while (i < length)
         {
-            offC = (count*length + *RSP.SP_MEM_ADDR_REG + i) & 0x00000FFF;
+            offC = (count*length + *RSP.SP_MEM_ADDR_REG + i) & 0x00001FFF;
             offD = (count*skip + *RSP.SP_DRAM_ADDR_REG + i) & 0x00FFFFFF;
-            memcpy(RSP.RDRAM + offD, MSP_CACHE + offC, 1);
+            memcpy(RSP.RDRAM + offD, RSP.DMEM + offC, 1);
             i += 0x000001;
         }
     }
@@ -38,8 +36,6 @@ void SP_DMA_READ(void)
     register unsigned int length;
     register unsigned int count;
     register unsigned int skip;
-    unsigned char *MSP_CACHE = ((*RSP.SP_MEM_ADDR_REG & 0x1000) == 0x000)
-                             ? RSP.DMEM : RSP.IMEM;
 
     skip   = *RSP.SP_RD_LEN_REG;
     length  = skip;
@@ -58,9 +54,9 @@ void SP_DMA_READ(void)
         --count;
         while (i < length)
         {
-            offC = (count*length + *RSP.SP_MEM_ADDR_REG + i) & 0x00000FFF;
+            offC = (count*length + *RSP.SP_MEM_ADDR_REG + i) & 0x00001FFF;
             offD = (count*skip + *RSP.SP_DRAM_ADDR_REG + i) & 0x00FFFFFF;
-            memcpy(MSP_CACHE + offC, RSP.RDRAM + offD, 1);
+            memcpy(RSP.DMEM + offC, RSP.RDRAM + offD, 1);
             i += 0x001;
         }
     }
