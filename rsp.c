@@ -87,10 +87,6 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
     }
 #endif
     run_microcode();
-#ifdef SEARCH_INFINITE_LOOPS
-    for (cycles = 0; cycles < 32; cycles++)
-        MFC0_count[cycles] ^= MFC0_count[cycles];
-#endif
     return (cycles);
 }
 __declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo)
@@ -105,7 +101,7 @@ strcpy(/* Not meant to be a CRT dependency--should optimize to QWORD moves. */
 }
 __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCount)
 {
-    *CycleCount = 0; // число циклов,перед тем,как вернуть к-ль эмулятору.
+    *CycleCount = 0x00000000; /* cycle-accuracy not doable with today's hosts */
     RSP = Rsp_Info;
     *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF;
     while (RSP.IMEM != RSP.DMEM + 4096)

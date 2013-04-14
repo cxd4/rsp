@@ -11,7 +11,7 @@ static void VNE(int vd, int vs, int vt, int e)
     {
         const short VS = VR[vs][i];
         const short VT = VR[vt][ei[e][i]];
-		
+
         ne = (VS != VT) | (VCO & 1);
         VCC |= ne << i;
         VACC[i].s[LO] = ne ? VS : VT;
