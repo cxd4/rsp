@@ -43,6 +43,8 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
     { /* Simulation barrier to redirect processing externally. */
 #ifdef EXTERN_COMMAND_LIST_GBI
         case 0x00000001:
+            if (*(unsigned int *)(RSP.DMEM + 0xFF0) == 0x00000000)
+                break; /* Resident Evil 2 */
             if (RSP.ProcessDList == 0) {} else
                 RSP.ProcessDList();
             *RSP.SP_STATUS_REG |= 0x00000203;
