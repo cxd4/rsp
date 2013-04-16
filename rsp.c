@@ -108,7 +108,8 @@ strcpy(/* Not meant to be a CRT dependency--should optimize to QWORD moves. */
 }
 EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
 {
-    *CycleCount = 0x00000000; /* cycle-accuracy not doable with today's hosts */
+    if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
+        *CycleCount = 0x00000000;
     RSP = Rsp_Info;
     *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF;
     while (RSP.IMEM != RSP.DMEM + 4096)
