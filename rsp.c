@@ -45,13 +45,18 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
         case 0x00000001:
             if (*(unsigned int *)(RSP.DMEM + 0xFF0) == 0x00000000)
                 break; /* Resident Evil 2 */
-            if (RSP.ProcessDList == 0) {} else
+            if (RSP.ProcessDList == NULL) {/*branch next*/} else
                 RSP.ProcessDList();
             *RSP.SP_STATUS_REG |= 0x00000203;
             if (*RSP.SP_STATUS_REG & 0x00000040) /* SP_STATUS_INTR_BREAK */
             {
                 *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
                 RSP.CheckInterrupts();
+            }
+            if (*RSP.DPC_STATUS_REG & 0x00000002) /* DPC_STATUS_FREEZE */
+            {
+                message("DPC_CLR_FREEZE", 2);
+                *RSP.DPC_STATUS_REG &= ~0x00000002;
             }
             return 0;
 #endif
