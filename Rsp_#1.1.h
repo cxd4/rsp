@@ -18,6 +18,7 @@ struct HMENU__ {int unused;};
 typedef struct HMENU__ *HMENU;
 struct HDC__ {int unused;};
 typedef struct HDC__ *HDC;
+#endif
 
 typedef struct {
 	unsigned short Version;        /* Should be set to 0x0101 */
@@ -117,6 +118,14 @@ typedef struct {
 	void (*Enter_Memory_Window)(void);
 } DEBUG_INFO;
 
+#if defined(WIN32)
+#define EXPORT __declspec(dllexport)
+#define CALL   __cdecl
+#else
+#define EXPORT __attribute__((visibility("default")))
+#define CALL
+#endif
+
 /******************************************************************
   Function: CloseDLL
   Purpose:  This function is called when the emulator is closing
@@ -124,7 +133,7 @@ typedef struct {
   input:    none
   output:   none
 *******************************************************************/ 
-__declspec(dllexport) void CloseDLL(void);
+EXPORT void CALL CloseDLL(void);
 
 /******************************************************************
   Function: DllAbout
@@ -133,7 +142,7 @@ __declspec(dllexport) void CloseDLL(void);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/ 
-__declspec(dllexport) void DllAbout(HWND hParent);
+EXPORT void CALL DllAbout(HWND hParent);
 
 /******************************************************************
   Function: DllConfig
@@ -142,7 +151,7 @@ __declspec(dllexport) void DllAbout(HWND hParent);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/
-__declspec(dllexport) void DllConfig(HWND hParent);
+EXPORT void CALL DllConfig(HWND hParent);
 
 /******************************************************************
   Function: DllTest
@@ -151,7 +160,7 @@ __declspec(dllexport) void DllConfig(HWND hParent);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/ 
-__declspec(dllexport) void DllTest(HWND hParent);
+EXPORT void CALL DllTest(HWND hParent);
 
 /******************************************************************
   Function: DoRspCycles
@@ -164,7 +173,7 @@ __declspec(dllexport) void DllTest(HWND hParent);
 			should have performed.
 			(this value is ignored if the RSP is stoped)
 *******************************************************************/ 
-__declspec(dllexport) unsigned long DoRspCycles(unsigned long Cycles);
+EXPORT unsigned int CALL DoRspCycles(unsigned int Cycles);
 
 /******************************************************************
   Function: GetDllInfo
@@ -174,7 +183,7 @@ __declspec(dllexport) unsigned long DoRspCycles(unsigned long Cycles);
             filled by the function. (see def above)
   output:   none
 *******************************************************************/ 
-__declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo);
+EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo);
 
 /******************************************************************
   Function: GetRspDebugInfo
@@ -185,7 +194,7 @@ __declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo);
             filled by the function. (see def above)
   output:   none
 *******************************************************************/ 
-__declspec(dllexport) void GetRspDebugInfo(RSPDEBUG_INFO *RSPDebugInfo);
+EXPORT void CALL GetRspDebugInfo(RSPDEBUG_INFO *RSPDebugInfo);
 
 /******************************************************************
   Function: InitiateRSP
@@ -198,7 +207,7 @@ __declspec(dllexport) void GetRspDebugInfo(RSPDEBUG_INFO *RSPDebugInfo);
 			control between the RSP and r4300i core.
   output:   none
 *******************************************************************/ 
-__declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCount);
+EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount);
 
 /******************************************************************
   Function: InitiateRSPDebugger
@@ -210,7 +219,7 @@ __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCo
             above.
   output:   none
 *******************************************************************/ 
-__declspec(dllexport) void InitiateRSPDebugger(DEBUG_INFO DebugInfo);
+EXPORT void CALL InitiateRSPDebugger(DEBUG_INFO DebugInfo);
 
 /******************************************************************
   Function: RomClosed
@@ -218,7 +227,7 @@ __declspec(dllexport) void InitiateRSPDebugger(DEBUG_INFO DebugInfo);
   input:    none
   output:   none
 *******************************************************************/ 
-__declspec(dllexport) void RomClosed(void);
+EXPORT void CALL RomClosed(void);
 
 #if defined(__cplusplus)
 }

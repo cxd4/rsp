@@ -6,17 +6,17 @@
 #include "Rsp_#1.1.h"
 #include "rsp.h"
 
-__declspec(dllexport) void CloseDLL(void)
+EXPORT void CALL CloseDLL(void)
 {
     return;
 }
-__declspec(dllexport) void DllAbout(HWND hParent)
+EXPORT void CALL DllAbout(HWND hParent)
 {
     MessageBoxA(hParent, L_ABOUT, L_TITLE, 0x00000040);
     return;
 }
 #ifdef SP_EXECUTE_LOG
-__declspec(dllexport) void DllConfig(HWND hParent)
+EXPORT void CALL DllConfig(HWND hParent)
 {
     trace_RSP_registers();
     export_SP_memory();
@@ -31,7 +31,7 @@ __declspec(dllexport) void DllConfig(HWND hParent)
     return;
 }
 #endif
-__declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
+EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
 {
     if (*RSP.SP_STATUS_REG & 0x00000003)
     {
@@ -96,7 +96,7 @@ __declspec(dllexport) unsigned long _cdecl DoRspCycles(unsigned long cycles)
     run_microcode();
     return (cycles);
 }
-__declspec(dllexport) void GetDllInfo(PLUGIN_INFO *PluginInfo)
+EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
     PluginInfo -> Version = 0x0101;
     PluginInfo -> Type = PLUGIN_TYPE_RSP;
@@ -106,7 +106,7 @@ strcpy(/* Not meant to be a CRT dependency--should optimize to QWORD moves. */
     PluginInfo -> MemoryBswaped = 1;
     return;
 }
-__declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCount)
+EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
 {
     *CycleCount = 0x00000000; /* cycle-accuracy not doable with today's hosts */
     RSP = Rsp_Info;
@@ -118,12 +118,12 @@ __declspec(dllexport) void InitiateRSP(RSP_INFO Rsp_Info, unsigned long *CycleCo
 #endif
     return;
 }
-__declspec(dllexport) void InitiateRSPDebugger(DEBUG_INFO DebugInfo)
+EXPORT void CALL InitiateRSPDebugger(DEBUG_INFO DebugInfo)
 {
     DebugInfo.UpdateMemory();
     return;
 }
-__declspec(dllexport) void RomClosed(void)
+EXPORT void CALL RomClosed(void)
 {
     *RSP.SP_PC_REG = 0x00000000;
     return;
