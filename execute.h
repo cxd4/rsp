@@ -398,15 +398,13 @@ EX:
                         continue;
                 }
             case 062: /* LWC2 */
-                imm  = -1 * !!(inst & 0x00000040);
-                imm &= 0xFF80;
-                imm |= (inst & 0x0000007F);
+                imm &= 0x007F;
+                imm |= -(imm & 0x0040);
                 SP_LWC2[rd](rt, (inst >>= 7) & 0xF, imm, rs &= 31);
                 continue; /* Too complex to maintain in this memory space. */
             case 072: /* SWC2 */
-                imm  = -1 * !!(inst & 0x00000040);
-                imm &= 0xFF80;
-                imm |= (inst & 0x0000007F);
+                imm &= 0x007F;
+                imm |= -(imm & 0x0040);
                 SP_SWC2[rd](rt, (inst >>= 7) & 0xF, imm, rs &= 31);
                 continue; /* Too complex to maintain in this memory space. */
             default:
