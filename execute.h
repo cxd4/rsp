@@ -261,7 +261,7 @@ EX:
                 continue;
             case 040: /* LB */
                 addr = (SR[rs &= 31] + imm) & 0x00000FFF;
-                SR[rt] = *(signed char *)(RSP.DMEM + (addr ^ 03));
+                SR[rt] = *(signed char *)(RSP.DMEM + BES(addr));
                 continue;
             case 041: /* LH */
                 addr = (SR[rs &= 31] + imm) & 0x00000FFF;
@@ -324,7 +324,7 @@ EX:
                 }
             case 044: /* LBU */
                 addr = (SR[rs &= 31] + imm) & 0x00000FFF;
-                SR[rt] = *(unsigned char *)(RSP.DMEM + (addr ^ 03));
+                SR[rt] = *(unsigned char *)(RSP.DMEM + BES(addr));
                 continue;
             case 045: /* LHU */
                 addr = (SR[rs &= 31] + imm) & 0x00000FFF;
@@ -346,7 +346,7 @@ EX:
                 }
             case 050: /* SB */
                 addr = (SR[rs &= 31] + imm) & 0x00000FFF;
-                *(RSP.DMEM + (addr ^ 03)) = SR[rt] & 0xFF;
+                *(RSP.DMEM + BES(addr)) = SR[rt] & 0xFF;
                 continue;
             case 051: /* SH */
                 addr = (SR[rs &= 31] + imm) & 0x00000FFF;

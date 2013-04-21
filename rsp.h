@@ -54,6 +54,9 @@ static int MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
+#define BES(address) (address ^ 03)
+/* Do a swap on the byte endian on a 32-bit segment boundary. */
+
 // #define VR_B(v, e) (((unsigned char *)VR[v])[e ^ 0x1])
 // #define VR_B(v, e) ((((unsigned char *)(VR + v))[e ^ 0x1]))
 #define VR_B(v, e) (*(unsigned char *)(((unsigned char *)(VR + v)) + (e ^ 0x1)))
