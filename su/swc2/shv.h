@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Alternate Bytes from Vector Unit     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.24                                                         *
+* Release:  2013.04.20                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -9,8 +9,9 @@ void SHV(int vt, int element, signed int offset, int base)
 {
     register unsigned int addr;
 
-    addr  = SR[base] + (offset << 4);
-    addr -= element;
+    if (element != 0x0)
+        goto ILLEGAL_EL;
+    addr  = SR[base] + (offset <<= 4);
     addr &= 0x00000FFF;
     if (addr & 0x0000000E)
         goto BAD_ADDR;
@@ -22,17 +23,20 @@ void SHV(int vt, int element, signed int offset, int base)
  * check by statically emulating the halfword index intervals `+= 0x002`.
  * Don't forget to swap the endianness of the halfword index barrier `^= 02`.
  */
-    addr ^= 0x001; /* Because MIPS is bi-endian, and Intel isn't. */
-    RSP.DMEM[addr + (0x00E ^ 02)] = (unsigned char)(VR[vt][07] >> 7);
-    RSP.DMEM[addr + (0x00C ^ 02)] = (unsigned char)(VR[vt][06] >> 7);
-    RSP.DMEM[addr + (0x00A ^ 02)] = (unsigned char)(VR[vt][05] >> 7);
-    RSP.DMEM[addr + (0x008 ^ 02)] = (unsigned char)(VR[vt][04] >> 7);
-    RSP.DMEM[addr + (0x006 ^ 02)] = (unsigned char)(VR[vt][03] >> 7);
-    RSP.DMEM[addr + (0x004 ^ 02)] = (unsigned char)(VR[vt][02] >> 7);
-    RSP.DMEM[addr + (0x002 ^ 02)] = (unsigned char)(VR[vt][01] >> 7);
-    RSP.DMEM[addr + (0x000 ^ 02)] = (unsigned char)(VR[vt][00] >> 7);
+    addr ^= BES(00) & 0x001;
+    RSP.DMEM[addr + HES(0x00E)] = (unsigned char)(VR[vt][07] >> 7);
+    RSP.DMEM[addr + HES(0x00C)] = (unsigned char)(VR[vt][06] >> 7);
+    RSP.DMEM[addr + HES(0x00A)] = (unsigned char)(VR[vt][05] >> 7);
+    RSP.DMEM[addr + HES(0x008)] = (unsigned char)(VR[vt][04] >> 7);
+    RSP.DMEM[addr + HES(0x006)] = (unsigned char)(VR[vt][03] >> 7);
+    RSP.DMEM[addr + HES(0x004)] = (unsigned char)(VR[vt][02] >> 7);
+    RSP.DMEM[addr + HES(0x002)] = (unsigned char)(VR[vt][01] >> 7);
+    RSP.DMEM[addr + HES(0x000)] = (unsigned char)(VR[vt][00] >> 7);
     return;
 BAD_ADDR: /* "Illegal" command, but on the N64 there is override behavior. */
     message("LHV\nIllegal addr.", 3);
+    return;
+ILLEGAL_EL:
+    message("LHV\nIllegal element.", 3);
     return;
 }
