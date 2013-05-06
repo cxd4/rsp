@@ -1,26 +1,9 @@
-#ifdef SEARCH_INFINITE_LOOPS
-void scan_ICACHE_for_cycle_fault(int cr);
-/* My colossal attempt at covering up for faults in the host CPU emulator
- * (the main MIPS CPU, like Project64.exe) concerning cycle timing and
- * related inaccuracies.  Days of frustration were spent writing this.
- * I teach the software to teach its self, to intelligently "guess" which
- * CPU-RSP synchronization signal bit (SP_STATUS_SIG[?]) failed to get set.
- *
- * Additionally, I then XOR this bit in/out and assume this responsibility
- * over the main emulator EXE, although doing that update to the SP status
- * register is probably not necessary (especially since zilmar's method gets
- * away with just a simple break exiting out of the hung-up microcode).
- */
-#endif
-
 void MFC0(int rt, int rd)
 {
+/*
     if (rt == 0)
-    {
-        message("MFC0\t$zero, rd", 1);
-        SR[000] = 0x00000000;
-        return;
-    }
+        return; // zero permanence already handled in main CPU loop
+*/
     switch (rd)
     {
         case 0x0:

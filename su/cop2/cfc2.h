@@ -2,12 +2,10 @@
 
 void CFC2(int rt, int vcr, int unused)
 {
+/*
     if (rt == 0)
-    {
-        message("CFC2\t$zero, vcr", 1);
-        /* SR[000] = 0x00000000; /* When writing to $zero, discard source. */
-        return;
-    }
+        return; // zero permanence already handled in main CPU loop
+*/
     unused = 0; /* no element specifier */
     switch (vcr & 03) /* RCP no-exception override */
     {

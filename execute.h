@@ -64,9 +64,11 @@ EX:
             const int vt = (inst & 0x001F0000) >> 16;
             const int e  = (inst & 0x01E00000) >> 21;
 
-            SP_COP2_C2[inst % 64](vd, vs, vt, e);
+            SP_COP2_C2[inst %= 64](vd, vs, vt, e);
             continue;
         }
+        if (SR[0] != 0x00000000)
+            message("$0", 0); /* tried to overwrite MIPS GPR $zero */
         SR[0] ^= SR[0];
 /* I don't want to essay out an entire list of accurate ways we could emulate
  * the MIPS `zero` register's permanence, but let's just remember these keys:
