@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Packed Unsigned from Vector Unit     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.04.20                                                         *
+* Release:  2013.05.06                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -26,6 +26,18 @@ void SUV(int vt, int element, signed int offset, int base)
             RSP.DMEM[addr + BES(0x002)] = (unsigned char)(VR[vt][02] >> 7);
             RSP.DMEM[addr + BES(0x001)] = (unsigned char)(VR[vt][01] >> 7);
             RSP.DMEM[addr + BES(0x000)] = (unsigned char)(VR[vt][00] >> 7);
+            return;
+        case 04: /* "Indiana Jones and the Infernal Machine" in-game */
+            RSP.DMEM[addr + BES(0x004)] = (unsigned char)(VR[vt][00] >> 7);
+            RSP.DMEM[addr + BES(0x005)] = (unsigned char)(VR[vt][01] >> 7);
+            RSP.DMEM[addr + BES(0x006)] = (unsigned char)(VR[vt][02] >> 7);
+            RSP.DMEM[addr + BES(0x007)] = (unsigned char)(VR[vt][03] >> 7);
+            addr += 0x008;
+            addr &= 0x00000FFF;
+            RSP.DMEM[addr + BES(0x000)] = (unsigned char)(VR[vt][04] >> 7);
+            RSP.DMEM[addr + BES(0x001)] = (unsigned char)(VR[vt][05] >> 7);
+            RSP.DMEM[addr + BES(0x002)] = (unsigned char)(VR[vt][06] >> 7);
+            RSP.DMEM[addr + BES(0x003)] = (unsigned char)(VR[vt][07] >> 7);
             return;
         default: /* Completely legal, just never seen it be done. */
             message("SUV\nWeird addr.", 3);
