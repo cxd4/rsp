@@ -81,6 +81,11 @@ static int MFC0_count[32];
  * That is what the macro above is for.  `VR_S(0, 0x1) = *(short *)addr`.
  * With this we can span across the vector register element indexing barrier.
  */
+#define VR_H(v, e) (*(short *)((unsigned char *)(*(VR + v)) + e))
+/* The VR_S macro above is more stable but slower.
+ * In some cases, we may as well adjust the elemental offset, if it is odd.
+ * If this is made flexible in advance, we can just use this macro to finish.
+ */
 
 #include "su/su.h"
 #include "vu/vu.h"
