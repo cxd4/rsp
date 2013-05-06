@@ -23,7 +23,7 @@ void LHV(int vt, int element, signed int offset, int base)
  * check by statically emulating the halfword index intervals `+= 0x002`.
  * Don't forget to swap the endianness of the halfword index barrier `^= 02`.
  */
-    addr ^= BES(00) & 0x001;
+    addr ^= MES(00);
     VR[vt][07] = RSP.DMEM[addr + HES(0x00E)] << 7;
     VR[vt][06] = RSP.DMEM[addr + HES(0x00C)] << 7;
     VR[vt][05] = RSP.DMEM[addr + HES(0x00A)] << 7;

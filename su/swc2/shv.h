@@ -23,7 +23,7 @@ void SHV(int vt, int element, signed int offset, int base)
  * check by statically emulating the halfword index intervals `+= 0x002`.
  * Don't forget to swap the endianness of the halfword index barrier `^= 02`.
  */
-    addr ^= BES(00) & 0x001;
+    addr ^= MES(00);
     RSP.DMEM[addr + HES(0x00E)] = (unsigned char)(VR[vt][07] >> 7);
     RSP.DMEM[addr + HES(0x00C)] = (unsigned char)(VR[vt][06] >> 7);
     RSP.DMEM[addr + HES(0x00A)] = (unsigned char)(VR[vt][05] >> 7);

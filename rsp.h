@@ -58,6 +58,10 @@ static int MFC0_count[32];
 /* Do a swap on the byte endian on a 32-bit segment boundary. */
 #define HES(address) (address ^ 02)
 /* Do a swap on the halfword endian on a 32-bit segment boundary. */
+#define MES(address) (address ^ 01)
+/* Do a mixed endian swap, intermediating between byte and halfword bounds. */
+#define WES(address) (address ^ 00)
+/* Because MIPS and Win32 machines are both 32 bits, no endian update needed. */
 
 // #define VR_B(v, e) (((unsigned char *)VR[v])[e ^ 0x1])
 // #define VR_B(v, e) ((((unsigned char *)(VR + v))[e ^ 0x1]))
