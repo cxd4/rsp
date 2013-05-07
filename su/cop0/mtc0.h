@@ -4,15 +4,13 @@ void SP_DMA_WRITE(void)
     register unsigned int count;
     register unsigned int skip;
 
-    skip   = *RSP.SP_WR_LEN_REG;
-    length  = skip;
-    length &= 0x00000FFF;
-    skip >>= 12;
-    count = (unsigned char)skip;
-    ++count;
-    skip >>= 8;
+    length = (*RSP.SP_WR_LEN_REG & 0x00000FFF) >>  0;
+    count  = (*RSP.SP_WR_LEN_REG & 0x000FF000) >> 12;
+    skip   = (*RSP.SP_WR_LEN_REG & 0xFFF00000) >> 20;
+    /* length |= 07; // already corrected by mtc0 */
     ++length;
-    skip  += length;
+    ++count;
+    skip += length;
     while (count)
     {
         unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
@@ -37,15 +35,13 @@ void SP_DMA_READ(void)
     register unsigned int count;
     register unsigned int skip;
 
-    skip   = *RSP.SP_RD_LEN_REG;
-    length  = skip;
-    length &= 0x00000FFF;
-    skip >>= 12;
-    count = (unsigned char)skip;
-    ++count;
-    skip >>= 8;
+    length = (*RSP.SP_RD_LEN_REG & 0x00000FFF) >>  0;
+    count  = (*RSP.SP_RD_LEN_REG & 0x000FF000) >> 12;
+    skip   = (*RSP.SP_RD_LEN_REG & 0xFFF00000) >> 20;
+    /* length |= 07; // already corrected by mtc0 */
     ++length;
-    skip  += length;
+    ++count;
+    skip += length;
     while (count)
     {
         unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
