@@ -13,7 +13,7 @@
  * It's basically Microsoft's way of saying they're better than everyone.
  */
 
-#undef  MINIMUM_MESSAGE_PRIORITY
+// #undef  MINIMUM_MESSAGE_PRIORITY
 /* Many people will have different uses for an RSP emulator.
  * Some people only want to see message boxes for definite RSP LLE errors.
  * Other people are interested in being notified of technical RSP oddities.
@@ -29,16 +29,16 @@
  * See the `void message()` for details on this centralized API invocation.
  */
 
-#undef  EXTERN_COMMAND_LIST_GBI
+// #undef  EXTERN_COMMAND_LIST_GBI
 /* If this is defined, the RSP never executes graphics tasks.
  * Those will all be sent to the video plugin for simulation processing.
  */
-#undef  EXTERN_COMMAND_LIST_ABI
+// #undef  EXTERN_COMMAND_LIST_ABI
 /* If this is defined, the RSP never executes audio tasks; use audio plugin.
  * Enabling both of these does not guarantee that the RSP will never execute.
  */
 
-#undef  SEMAPHORE_LOCK_CORRECTIONS
+// #undef  SEMAPHORE_LOCK_CORRECTIONS
 /* The CPU-RSP semaphore is a lock defining synchronization with the host.
  * As of the time in which bpoint reversed the RSP, host interpretation of
  * this lock was incorrect.  The problem has been inherent for a very long
@@ -52,7 +52,7 @@
  * CIC-6105 chip (also uses the semaphore); keep it on with Project64 2.0.
  */
 
-#undef  WAIT_FOR_CPU_HOST
+// #undef  WAIT_FOR_CPU_HOST
 /*
  * Bad cycle timing on the part of the CPU host generally means that some
  * SP tasks could be started and end up operating on non-up-to-date SP
@@ -62,13 +62,13 @@
  * This will work ONLY with Project64 2.0 at the moment (or some of 1.7.x).
  */
 
-#undef  SP_EXECUTE_LOG
+// #undef  SP_EXECUTE_LOG
 /* This is my mechanism to use file output of 32 bits per each SP operation.
  * I use this in conjunction with my EXE to handle debug, but still checking
  * every single frame even with file output turned off is ~1-2 VI/s slower.
  */
 
-#undef  VU_EMULATE_SCALAR_ACCUMULATOR_READ
+// #undef  VU_EMULATE_SCALAR_ACCUMULATOR_READ
 /* VSAW is the only RSP instruction that can access the vector accumulator
  * elements directly.  In the original RSP for Ultra64 this was supposed to
  * be called `VSAR` "Vector Accumulator Read (and Write)".  (The 'S' probably
@@ -88,12 +88,20 @@
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
-#if defined EXTERN_COMMAND_LIST_GBI && defined EXTERN_COMMAND_LIST_ABI
-#define L_TITLE "Basic RSP Simulator"
-#elif defined EXTERN_COMMAND_LIST_GBI || defined EXTERN_COMMAND_LIST_ABI
-#define L_TITLE "Iconoclast's MLE Test"
-#else
 #define L_TITLE "RSP Interpreter"
-#endif
 #define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, Gonetz\n"\
                 "SP thread examples:  bpoint, zilmar, Ville Linde"
+
+#if defined(EXTERN_COMMAND_LIST_GBI) && defined(EXTERN_COMMAND_LIST_ABI)
+#define L_NAME "Iconoclast's SP Interpreter (HLE)"
+#elif defined(EXTERN_COMMAND_LIST_GBI)
+#define L_NAME "Iconoclast's SP Interpreter (MLE)"
+#elif defined(EXTERN_COMMAND_LIST_ABI)
+#define L_NAME "Iconoclast's SP Interpreter (LLE)"
+#elif defined(SEMAPHORE_LOCK_CORRECTIONS) || defined(WAIT_FOR_CPU_HOST)
+#define L_NAME "Iconoclast's SP Interpreter (PJ642)"
+#elif defined(SP_EXECUTE_LOG) || defined(VU_EMULATE_SCALAR_ACCUMULATOR_READ)
+#define L_NAME "Iconoclast's SP Interpreter (debug)"
+#else
+#define L_NAME "Iconoclast's SP Interpreter"
+#endif

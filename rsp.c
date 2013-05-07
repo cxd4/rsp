@@ -98,10 +98,10 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
 }
 EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
-    PluginInfo -> Version = 0x0101;
+    PluginInfo -> Version = 0x0101; /* zilmar #1.1 (only standard RSP spec) */
     PluginInfo -> Type = PLUGIN_TYPE_RSP;
 strcpy(/* Not meant to be a CRT dependency--should optimize to QWORD moves. */
-    PluginInfo -> Name, "Iconoclast's LLE SP Interpreter");
+    PluginInfo -> Name, L_NAME);
     PluginInfo -> NormalMemory = 0;
     PluginInfo -> MemoryBswaped = 1;
     return;
