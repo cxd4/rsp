@@ -98,7 +98,7 @@ static FILE *output_log;
 #endif
 
 /* Allocate the RSP CPU loop to its own functional space. */
-extern void run_microcode(void);
+extern void run_task(void);
 #include "execute.h"
 
 #ifdef SP_EXECUTE_LOG

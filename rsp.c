@@ -93,7 +93,7 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
         MessageBoxA(NULL, task_hex, "OSTask.type", 0x00000000);
     }
 #endif
-    run_microcode();
+    run_task();
     return (cycles);
 }
 EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)

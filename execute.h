@@ -18,7 +18,7 @@
  * the loop jumps to the beginning via the standard `continue;` statement, in
  * the absence of any trailing code outside the switches but ending the body.
  */
-void run_microcode(void)
+void run_task(void)
 {
     int imm, rs, rt, rd;
     int BC;
