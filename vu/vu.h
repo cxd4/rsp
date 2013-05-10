@@ -21,6 +21,40 @@
  * This is ammended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
 static short VR[32][8];
+static short VC[8]; /* vector/scalar coefficient */
+
+int sub_mask[16] = {
+    0x0,
+    0x0,
+    0x1, 0x1,
+    0x3, 0x3, 0x3, 0x3,
+    0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
+};
+
+inline void SHUFFLE_VECTOR(int vt, int e)
+{
+    register int i, j;
+#if (0 == 1) /* speed mode (not yet stabilized */
+    j = sub_mask[e];
+    e = j ^ 07;
+    for (i = 0; i < 8; i++)
+        VC[i] = VR[vt][(i & e) | j];
+#else /* compatibility mode (temporary choice) */
+    if (e & 0x8)
+        for (i = 0; i < 8; i++)
+            VC[i] = VR[vt][(i & 00) | (e & 0x7)];
+    else if (e & 0x4)
+        for (i = 0; i < 8; i++)
+            VC[i] = VR[vt][(i & 04) | (e & 0x3)];
+    else if (e & 0x2)
+        for (i = 0; i < 8; i++)
+            VC[i] = VR[vt][(i & 06) | (e & 0x1)];
+    else // e == 0b0000 || e == 0b0001
+        for (i = 0; i < 8; i++)
+            VC[i] = VR[vt][(i & 07) | (e & 0x0)];
+#endif
+    return;
+}
 
 /*
  * vector-scalar element decoding
