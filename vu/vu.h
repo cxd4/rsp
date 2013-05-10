@@ -13,50 +13,6 @@
 #endif
 
 /*
- * RSP virtual registers (of vector unit)
- * The most important are the 32 general-purpose vector registers.
- * The correct way to accurately store these is using big-endian vectors.
- *
- * For ?WC2 we may need to do byte-precision access just as directly.
- * This is ammended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
- */
-static short VR[32][8];
-static short VC[8]; /* vector/scalar coefficient */
-
-int sub_mask[16] = {
-    0x0,
-    0x0,
-    0x1, 0x1,
-    0x3, 0x3, 0x3, 0x3,
-    0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
-};
-
-inline void SHUFFLE_VECTOR(int vt, int e)
-{
-    register int i, j;
-#if (0 == 1) /* speed mode (not yet stabilized */
-    j = sub_mask[e];
-    e = j ^ 07;
-    for (i = 0; i < 8; i++)
-        VC[i] = VR[vt][(i & e) | j];
-#else /* compatibility mode (temporary choice) */
-    if (e & 0x8)
-        for (i = 0; i < 8; i++)
-            VC[i] = VR[vt][(i & 00) | (e & 0x7)];
-    else if (e & 0x4)
-        for (i = 0; i < 8; i++)
-            VC[i] = VR[vt][(i & 04) | (e & 0x3)];
-    else if (e & 0x2)
-        for (i = 0; i < 8; i++)
-            VC[i] = VR[vt][(i & 06) | (e & 0x1)];
-    else // e == 0b0000 || e == 0b0001
-        for (i = 0; i < 8; i++)
-            VC[i] = VR[vt][(i & 07) | (e & 0x0)];
-#endif
-    return;
-}
-
-/*
  * vector-scalar element decoding
  *
  * Obviously, doing a switch jump table on (element & 0xF) is very fast
@@ -90,6 +46,83 @@ static const int ei[16][8] = {
     { 06, 06, 06, 06, 06, 06, 06, 06 }, /* 6 */
     { 07, 07, 07, 07, 07, 07, 07, 07 }  /* 7 */
 };
+
+/*
+ * RSP virtual registers (of vector unit)
+ * The most important are the 32 general-purpose vector registers.
+ * The correct way to accurately store these is using big-endian vectors.
+ *
+ * For ?WC2 we may need to do byte-precision access just as directly.
+ * This is ammended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
+ */
+static short VR[32][8];
+static short VC[8]; /* vector/scalar coefficient */
+
+#define PARALLELIZE_VECTOR_TRANSFERS
+/*
+ * Leaving this defined, the RSP emulator will try to encourage parallel
+ * transactions within vector element operations by shuffling the target
+ * (partially scalar coefficient) vector register as necessary so that
+ * the elements `i`(0..7) of VS can directly match up with 1:1
+ * parallelism to the short elements `i`(0..7) of the shuffled VT.
+ */
+
+#ifdef PARALLELIZE_VECTOR_TRANSFERS
+#define VR_T(i) VC[i]
+#else
+#define VR_T(i) VR[vt][ei[e][i]]
+#endif
+
+#ifdef PARALLELIZE_VECTOR_TRANSFERS
+#define ACC_R(i)    VR[vd][i]
+#define ACC_W(i)    VACC[i].s[00]
+#else
+#define ACC_R(i)    VACC[i].s[00]
+#define ACC_W(i)    VR[vd][i]
+#endif
+/*
+ * If we want to parallelize vector transfers, we probably also want to
+ * linearize the register files.  (VR dest. reads from VR src. op. VR trg.)
+ * Lining up the emulator for VR[vd] = VR[vs] & VR[vt] is a lot easier than
+ * doing it for VACC[i](15..0) = VR[vs][i] & VR[vt][i] inside of some loop.
+ * However, the correct order in vector units is to update the accumulator
+ * register file BEFORE the vector register file.  This is slower but more
+ * accurate and even required in some cases (VMAC* and VMAD* operations).
+ * However, it is worth sacrificing if it means doing vectors in parallel.
+ */
+
+int sub_mask[16] = {
+    0x0,
+    0x0,
+    0x1, 0x1,
+    0x3, 0x3, 0x3, 0x3,
+    0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
+};
+
+inline void SHUFFLE_VECTOR(int vt, int e)
+{
+    register int i, j;
+#if (0 == 1) /* speed mode (not yet stabilized) */
+    j = sub_mask[e];
+    e = j ^ 07;
+    for (i = 0; i < 8; i++)
+        VC[i] = VR[vt][(i & e) | j];
+#else /* compatibility mode (temporary choice) */
+    if (e & 0x8)
+        for (i = 0; i < 8; i++)
+            VC[i] = VR[vt][(i & 00) | (e & 0x7)];
+    else if (e & 0x4)
+        for (i = 0; i < 8; i++)
+            VC[i] = VR[vt][(i & 04) | (e & 0x3)];
+    else if (e & 0x2)
+        for (i = 0; i < 8; i++)
+            VC[i] = VR[vt][(i & 06) | (e & 0x1)];
+    else // e == 0b0000 || e == 0b0001
+        for (i = 0; i < 8; i++)
+            VC[i] = VR[vt][(i & 07) | (e & 0x0)];
+#endif
+    return;
+}
 
 /*
  * accumulator-indexing macros
