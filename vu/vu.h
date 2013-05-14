@@ -1,7 +1,7 @@
 /******************************************************************************\
-* Project:  MSP Emulation Table for Vector Unit Computational Operations       *
+* Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.03.24                                                         *
+* Release:  2013.05.13                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -58,13 +58,16 @@ static const int ei[16][8] = {
 static short VR[32][8];
 static short VC[8]; /* vector/scalar coefficient */
 
-#define PARALLELIZE_VECTOR_TRANSFERS
+// #define PARALLELIZE_VECTOR_TRANSFERS
 /*
  * Leaving this defined, the RSP emulator will try to encourage parallel
  * transactions within vector element operations by shuffling the target
  * (partially scalar coefficient) vector register as necessary so that
  * the elements `i`(0..7) of VS can directly match up with 1:1
  * parallelism to the short elements `i`(0..7) of the shuffled VT.
+ *
+ * Be careful when compiling this with GCC or SSE vector support, as the
+ * compiler may produce unstable results that can crash in some opcodes.
  */
 
 #ifdef PARALLELIZE_VECTOR_TRANSFERS
@@ -102,12 +105,13 @@ int sub_mask[16] = {
 inline void SHUFFLE_VECTOR(int vt, int e)
 {
     register int i, j;
-#if (0 == 1) /* speed mode (not yet stabilized) */
+#if (0 == 0)
     j = sub_mask[e];
-    e = j ^ 07;
+    e &= j;
+    j ^= 07;
     for (i = 0; i < 8; i++)
-        VC[i] = VR[vt][(i & e) | j];
-#else /* compatibility mode (temporary choice) */
+        VC[i] = VR[vt][(i & j) | e];
+#else
     if (e & 0x8)
         for (i = 0; i < 8; i++)
             VC[i] = VR[vt][(i & 00) | (e & 0x7)];
@@ -117,7 +121,7 @@ inline void SHUFFLE_VECTOR(int vt, int e)
     else if (e & 0x2)
         for (i = 0; i < 8; i++)
             VC[i] = VR[vt][(i & 06) | (e & 0x1)];
-    else // e == 0b0000 || e == 0b0001
+    else /* if ((e == 0b0000) || (e == 0b0001)) */
         for (i = 0; i < 8; i++)
             VC[i] = VR[vt][(i & 07) | (e & 0x0)];
 #endif
