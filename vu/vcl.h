@@ -2,42 +2,47 @@
 
 static void VCL(int vd, int vs, int vt, int e)
 {
+    const register unsigned short VCC_old = VCC;
     int ge, le;
     register int i;
 
+    VCC = 0x0000; /* Undergo the correction phase, factoring old VCC bits. */
     for (i = 0; i < 8; i++)
     {
         const unsigned short VS = (unsigned short)VR[vs][i];
-        const unsigned short VT = (unsigned short)VR[vt][ei[e][i]];
-        const int eq = (((VCO >> (i + 8)) & 1) == 0); /* !(NOTEQUAL) */
+        const unsigned short VT = (unsigned short)VR_T(i);
+        const int eq = (~VCO >> (i + 0x8)) & 0x0001; /* !(NOTEQUAL) */
+        const int sn =  (VCO >> (i + 0x0)) & 0x0001; /* CARRY */
 
-        if ((VCO >> i) & 1)
+        le = VCC_old & (0x0001 << i); /* unless (eq & sn) */
+        ge = VCC_old & (0x0100 << i); /* unless (eq & !sn) */
+        if (sn)
         {
-            ge = (VCC >> (i + 8)) & 1;
             if (eq)
             {
                 const int sum = VS + VT;
-                int ce = (VCE >> i) & 1;
+                const int ce = (VCE >> i) & 0x01;
                 int lz = ((sum & 0x0000FFFF) == 0x00000000);
                 int uz = ((sum & 0xFFFF0000) == 0x00000000); /* !carryout */
 
-                le = (ce & (lz | uz)) | (!ce & (lz & uz));
+                le = (!ce & (lz & uz)) | (ce & (lz | uz));
+                le <<= i + 0x0;
             }
-            else
-                le = (VCC >> i) & 1;
-            VACC[i].s[LO] = le ? -VT : VS;
+            ACC_R(i) = le ? -VT : VS;
         }
         else
         {
-            le = (VCC >> i) & 1;
-            ge = eq ? (VS - VT >= 0) : (VCC >> (i + 8)) & 1;
-            VACC[i].s[LO] = ge ? VT : VS;
+            if (eq)
+            {
+                ge = (VS - VT >= 0);
+                ge <<= i + 0x8;
+            }
+            ACC_R(i) = ge ? VT : VS;
         }
-        VCC &= ~(0x0101 << i);
-        VCC |= (ge << (i + 8)) | (le << (i + 0));
+        VCC |= ge | le;
     }
     for (i = 0; i < 8; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        ACC_W(i) = ACC_R(i);
     VCO = 0x0000;
     VCE = 0x00;
     return;

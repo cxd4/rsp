@@ -1,9 +1,8 @@
 #include "vu.h"
 
-static void VSAW(int vd, int vs, int vt, int element)
+static void VSAW(int vd, int vs, int vt, int e)
 {
     register int i;
-
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
     short result[8]; /* Prebuffer VR[vs] to prevent source overwrite. */
 
@@ -17,12 +16,12 @@ static void VSAW(int vd, int vs, int vt, int element)
  * as reversing, lots of games seem to specify it as nonzero, possibly to
  * avoid register stalling or other VU hazards.  Not really certain why yet.
  */
-    element ^= 0x8;
-/* Or, for exception overrides, should this be `element &= 0x7;` ?
+    e ^= 0x8;
+/* Or, for exception overrides, should this be `e &= 0x7;` ?
  * Currently this code is safer because &= is less likely to catch oddities.
  * Either way, documentation shows that the switch range is 0:2, not 8:A.
  */
-    switch (element)
+    switch (e)
     {
         case 00:
             for (i = 0; i < 8; i++)
@@ -42,10 +41,10 @@ static void VSAW(int vd, int vs, int vt, int element)
                 VR[vd][i] = 0x0000; /* override behavior (zilmar) */
     }
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
-    element ^= 03;
-    --element;
+    e ^= 03;
+    --e;
     for (i = 0; i < 8; i++)
-        VACC[i].s[element] = result[i]; /* ... = VR[vs][i]; */
+        VACC[i].s[e] = result[i]; /* ... = VR[vs][i]; */
 #endif
     return;
 }

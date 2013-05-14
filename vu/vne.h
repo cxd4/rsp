@@ -3,22 +3,23 @@
 static void VNE(int vd, int vs, int vt, int e)
 {
     int ne; /* not equal or, unless !(NOTEQUAL), equal */
+    register unsigned char VCO_VCE;
     register int i;
 
     VCC = 0x0000;
-    VCO >>= 8; /* We don't use the CARRY bits of VCO.  VCO will be cleared. */
+    VCO_VCE = ~(unsigned char)(VCO >> 8); /* NOT ah; MOV ax, ah; # eq = ~neq */
     for (i = 0; i < 8; i++)
     {
-        const short VS = VR[vs][i];
-        const short VT = VR[vt][ei[e][i]];
+        const signed short VS = VR[vs][i];
+        const signed short VT = VR_T(i);
 
-        ne = (VS != VT) | (VCO & 1);
-        VCC |= ne << i;
-        VACC[i].s[LO] = ne ? VS : VT;
-        VCO >>= 1;
+        ne  = (~VCO_VCE >> i) & 0x01;
+        ne |= (VS != VT);
+        VCC |= ne <<= i;
+        ACC_R(i) = VS; /* More accurately, `ACC_R(i) = ne ? VS : VT`. */
     }
     for (i = 0; i < 8; i++)
-        VR[vd][i] = VACC[i].s[LO];
-    /* VCO = 0x0000; /* We already cleared VCO by `VCO >>= 1` 16 times. */
+        ACC_W(i) = ACC_R(i);
+    VCO = 0x0000;
     return;
 }

@@ -6,13 +6,12 @@ static void VABS(int vd, int vs, int vt, int e)
 
     for (i = 0; i < 8; i++)
         if (VR[vs][i] < 0)
-            VACC[i].s[LO] = -(VR[vt][ei[e][i]] ^ (VR[vt][ei[e][i]] == 0x8000));
-         /* VACC[i].s[LO] = ~VR[vt][ei[e][i]] + (VR[vt][ei[e][i]] != 0x8000); */
+            ACC_R(i) = -(VR_T(i) ^ (VR_T(i) == -32768));
         else if (VR[vs][i] == 0)
-            VACC[i].s[LO] = 0x0000;
+            ACC_R(i) = 0x0000;
         else
-            VACC[i].s[LO] = +VR[vt][ei[e][i]];
+            ACC_R(i) = +VR_T(i);
     for (i = 0; i < 8; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        ACC_W(i) = ACC_R(i);
     return;
 }

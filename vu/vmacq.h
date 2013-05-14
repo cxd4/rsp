@@ -23,7 +23,7 @@ static void VMACQ(int vd, int vs, int vt, int e)
         else
             VACC[e].DW += (VACC[e].DW & 0x800000000000) ? +32 << 16 : -32 << 16;
     for (e = 0; e < 8; e++) /* Sign-extend 48-bit to 64-bit supersets. */
-        VACC[e].HW[03] = VACC[e].s[HI] >> 15;
+        VACC[e].HW[03] = (signed short)(VACC[e].s[HI]) >> 15;
     SIGNED_CLAMP(vd, 2);
     return;
 }

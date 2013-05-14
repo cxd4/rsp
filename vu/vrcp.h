@@ -32,7 +32,7 @@ FOUND_MSB:
     else if (DivIn == -32768) /* corner case:  signed underflow barrier */
         DivOut = 0xFFFF0000;
     for (addr = 0; addr < 8; addr++)
-        VACC[addr].s[LO] = VR[vt][ei[e][addr]];
+        VACC[addr].s[LO] = VR_T(addr);
     VR[vd][de &= 07] = (short)DivOut;
     DPH = 0;
     return;

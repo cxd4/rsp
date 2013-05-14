@@ -2,7 +2,7 @@
 
 static void VCH(int vd, int vs, int vt, int e)
 {
-    int eq, ge, le;
+    int ge, le, neq;
     register int i;
 
     VCO = 0x0000;
@@ -10,32 +10,32 @@ static void VCH(int vd, int vs, int vt, int e)
     VCE = 0x00;
     for (i = 0; i < 8; i++)
     {
-        const short VS = VR[vs][i];
-        const short VT = VR[vt][ei[e][i]];
+        const signed short VS = VR[vs][i];
+        const signed short VT = VR_T(i);
+        const int sn = (VS ^ VT) < 0; /* sn = (unsigned short)(VS ^ VT) >> 15 */
 
-        if ((VS ^ VT) < 0)
+        if (sn)
         {
             ge = (VT < 0);
             le = (VS + VT <= 0);
-            eq = (VS + VT == -1); /* compare extension */
-            VCE |= eq << i;
-            eq ^= !(VS + VT == 0);
-            VACC[i].s[LO] = le ? -VT : VS;
-            VCC |= (ge << (i + 8)) | (le << (i + 0));
-            VCO |= (eq << (i + 8)) | (0x0001 << i);
+            neq = (VS + VT == -1); /* compare extension */
+            VCE |= neq << i;
+            neq ^= !(VS + VT == 0); /* !(x | y) = x ^ !(y), if (x & y) != 1 */
+            ACC_R(i) = le ? -VT : VS;
+            VCO |= (neq <<= (i + 0x8)) | (sn << (i + 0x0)); /* sn = 1 */
         }
         else
         {
             le = (VT < 0);
             ge = (VS - VT >= 0);
-            eq = !(VS - VT == 0); /* vs != +vt */
-            VACC[i].s[LO] = ge ? VT : VS;
-            VCC |= (ge << (i + 8)) | (le << (i + 0));
-            VCO |= (eq << (i + 8)) | (0x0000 << i);
+            neq = !(VS - VT == 0);
             VCE |= 0x00 << i;
+            ACC_R(i) = ge ? VT : VS;
+            VCO |= (neq <<= (i + 0x8)) | (sn << (i + 0x0)); /* sn = 0 */
         }
+        VCC |=  (ge <<= (i + 0x8)) | (le <<= (i + 0x0));
     }
     for (i = 0; i < 8; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        ACC_W(i) = ACC_R(i);
     return;
 }
