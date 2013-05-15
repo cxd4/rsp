@@ -9,6 +9,6 @@ static void VMUDH(int vd, int vs, int vt, int e)
         VACC[i].DW = VR[vs][i] * VR_T(i);
         VACC[i].DW <<= 16;
     }
-    SIGNED_CLAMP(vd, 0);
+    SIGNED_CLAMP(VMUL_PTR, 0);
     return;
 }

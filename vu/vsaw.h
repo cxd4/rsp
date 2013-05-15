@@ -25,20 +25,20 @@ static void VSAW(int vd, int vs, int vt, int e)
     {
         case 00:
             for (i = 0; i < 8; i++)
-                VR[vd][i] = VACC[i].s[HI];
+                VR_D(i) = VACC[i].s[HI];
             break;
         case 01:
             for (i = 0; i < 8; i++)
-                VR[vd][i] = VACC[i].s[MD];
+                VR_D(i) = VACC[i].s[MD];
             break;
         case 02:
             for (i = 0; i < 8; i++)
-                VR[vd][i] = VACC[i].s[LO];
+                VR_D(i) = VACC[i].s[LO];
             break;
         default:
             message("VSAR\nInvalid mask.", 2);
             for (i = 0; i < 8; i++)
-                VR[vd][i] = 0x0000; /* override behavior (zilmar) */
+                VR_D(i) = 0x0000; /* override behavior (zilmar) */
     }
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
     e ^= 03;

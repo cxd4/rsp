@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.05.13                                                         *
+* Release:  2013.05.15                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -58,7 +58,16 @@ static const int ei[16][8] = {
 static short VR[32][8];
 static short VC[8]; /* vector/scalar coefficient */
 
-// #define PARALLELIZE_VECTOR_TRANSFERS
+/* #define EMULATE_VECTOR_RESULT_BUFFER */
+/*
+ * There is a hidden vector result register used for moving the data to the
+ * real vector destination register near the end of the execute cycle for a
+ * vector unit instruction, but it is not required to emulate the presence
+ * of this register.  It is currently slower than just directly writing to
+ * the destination vector register file from within the vector operation.
+ */
+
+/* #define PARALLELIZE_VECTOR_TRANSFERS */
 /*
  * Leaving this defined, the RSP emulator will try to encourage parallel
  * transactions within vector element operations by shuffling the target
@@ -70,18 +79,30 @@ static short VC[8]; /* vector/scalar coefficient */
  * compiler may produce unstable results that can crash in some opcodes.
  */
 
+#ifdef EMULATE_VECTOR_RESULT_BUFFER
+static short Result[8];
+#endif
+
 #ifdef PARALLELIZE_VECTOR_TRANSFERS
 #define VR_T(i) VC[i]
 #else
 #define VR_T(i) VR[vt][ei[e][i]]
 #endif
 
+#ifdef EMULATE_VECTOR_RESULT_BUFFER
+#define VMUL_PTR    Result
+#else
+#define VMUL_PTR    VR[vd]
+#endif
+
+#define VR_D(i) VMUL_PTR[i]
+
 #ifdef PARALLELIZE_VECTOR_TRANSFERS
-#define ACC_R(i)    VR[vd][i]
+#define ACC_R(i)    VR_D(i)
 #define ACC_W(i)    VACC[i].s[00]
 #else
 #define ACC_R(i)    VACC[i].s[00]
-#define ACC_W(i)    VR[vd][i]
+#define ACC_W(i)    VR_D(i)
 #endif
 /*
  * If we want to parallelize vector transfers, we probably also want to
@@ -169,7 +190,7 @@ static union ACC {
  * because the 48-bit acc needs to be sign-extended when shifting right here.
  */
 
-inline void SIGNED_CLAMP(int vt, int mode)
+inline void SIGNED_CLAMP(short* VD, int mode)
 {
     register int i;
 
@@ -179,27 +200,27 @@ inline void SIGNED_CLAMP(int vt, int mode)
             for (i = 0; i < 8; i++)
                 if (VACC[i].DW & 0x800000000000)
                     if ((VACC[i].DW & 0xFFFF80000000) != 0xFFFF80000000)
-                        VR[vt][i] = -32768;
+                        VD[i] = -32768;
                     else
-                        VR[vt][i] = VACC[i].s[MD];
+                        VD[i] = VACC[i].s[MD];
                 else
                     if ((VACC[i].DW & 0xFFFF80000000) != 0x000000000000)
-                        VR[vt][i] = +32767;
+                        VD[i] = +32767;
                     else
-                        VR[vt][i] = VACC[i].s[MD];
+                        VD[i] = VACC[i].s[MD];
             return;
         case 1: /* sign-clamp accumulator-low (bits 15:0) */
             for (i = 0; i < 8; i++)
                 if (VACC[i].DW & 0x800000000000)
                     if ((VACC[i].DW & 0xFFFF80000000) != 0xFFFF80000000)
-                        VR[vt][i] = 0;
+                        VD[i] = 0;
                     else
-                        VR[vt][i] = VACC[i].s[LO];
+                        VD[i] = VACC[i].s[LO];
                 else
                     if ((VACC[i].DW & 0xFFFF80000000) != 0x000000000000)
-                        VR[vt][i] = ~0;
+                        VD[i] = ~0;
                     else
-                        VR[vt][i] = VACC[i].s[LO];
+                        VD[i] = VACC[i].s[LO];
             return;
         case 2: /* oddified sign-clamp employed by VMACQ and VMULQ */
             for (i = 0; i < 8; i++)
@@ -207,11 +228,11 @@ inline void SIGNED_CLAMP(int vt, int mode)
                 register const signed int result = CLAMP_BASE(i, 17);
 
                 if (result < -32768)
-                    VR[vt][i] = -32768 & ~0x000F;
+                    VD[i] = -32768 & ~0x000F;
                 else if (result > +32767)
-                    VR[vt][i] = +32767 & ~0x000F;
+                    VD[i] = +32767 & ~0x000F;
                 else
-                    VR[vt][i] = result & 0x0000FFF0;
+                    VD[i] = result & 0x0000FFF0;
             }
             return;
     }
@@ -238,7 +259,7 @@ static void res_V(int vd, int rd, int rt, int e)
     rt = rd = 0;
     message("C2\nRESERVED", 2); /* uncertain how to handle reserved, untested */
     for (e = 0; e < 8; e++)
-        VR[vd][e] = 0x0000; /* override behavior (Michael Tedder) */
+        VR_D(e) = 0x0000; /* override behavior (Michael Tedder) */
     return;
 }
 static void res_M(int sa, int rd, int rt, int e)

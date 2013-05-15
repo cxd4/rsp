@@ -26,7 +26,7 @@ void run_task(void)
     register unsigned int inst;
 
 #ifdef WAIT_FOR_CPU_HOST
-    for (rt = 0; rt < 31; rt++)
+    for (rt = 0; rt < 32; rt++)
         MFC0_count[rt] = 0;
 #endif
     while (!(*RSP.SP_STATUS_REG & 0x00000001))
@@ -66,7 +66,13 @@ EX:
 #ifdef PARALLELIZE_VECTOR_TRANSFERS
             SHUFFLE_VECTOR(vt, e); /* *(__int128 *)VC = shuffle(VT, mask(e)); */
 #endif
+#ifdef EMULATE_VECTOR_RESULT_BUFFER
+            memcpy(Result, VR[vd], 16);
+#endif
             SP_COP2_C2[inst %= 64](vd, vs, vt, e);
+#ifdef EMULATE_VECTOR_RESULT_BUFFER
+            memcpy(VR[vd], Result, 16);
+#endif
             continue;
         }
         if (SR[0] != 0x00000000)

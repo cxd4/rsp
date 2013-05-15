@@ -11,6 +11,6 @@ static void VMUDL(int vd, int vs, int vt, int e)
         VACC[i].DW = product >> 16;
     }
     for (i = 0; i < 8; i++) /* Sign-clamp bits 15..0 of ACC to dest. VR. */
-        VR[vd][i] = VACC[i].s[LO]; /* No arithmetic checks needed. */
+        VR_D(i) = VACC[i].s[LO]; /* No arithmetic checks needed. */
     return;
 }

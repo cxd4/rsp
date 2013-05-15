@@ -16,11 +16,11 @@ static void VADD(int vd, int vs, int vt, int e)
         VACC[i].s[LO] = (short)result[i];
     for (i = 0; i < 8; i++)
         if (result[i] > +32767)
-            VR[vd][i] = +32767;
+            VR_D(i) = +32767;
         else if (result[i] < -32768)
-            VR[vd][i] = -32768;
+            VR_D(i) = -32768;
         else
-            VR[vd][i] = (short)result[i];
+            VR_D(i) = (short)result[i];
     VCO = 0x0000; /* Clear the remaining, upper NOTEQUAL bits. */
     return;
 }

@@ -39,7 +39,7 @@ FOUND_MSB:
         DivOut = 0xFFFF0000;
     for (addr = 0; addr < 8; addr++)
         VACC[addr].s[LO] = VR_T(addr);
-    VR[vd][de &= 07] = (short)DivOut;
+    VR_D(de &= 07) = (short)DivOut;
     DPH = 0;
     return;
 }

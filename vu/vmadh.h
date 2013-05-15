@@ -10,6 +10,10 @@ static void VMADH(int vd, int vs, int vt, int e)
         product = VR[vs][i] * VR_T(i);
         VACC[i].DW += product << 16;
     }
-    SIGNED_CLAMP(vd, 0);
+#ifdef EMULATE_VECTOR_RESULT_BUFFER
+    SIGNED_CLAMP(Result, 0);
+#else
+    SIGNED_CLAMP(VR[vd], 0);
+#endif
     return;
 }

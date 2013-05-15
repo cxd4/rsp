@@ -16,7 +16,7 @@ static void VMACU(int vd, int vs, int vt, int e)
         result |= -tmp; /* slice overflow */
         tmp = VACC[i].s[HI] >> 15; /* Zero- or one-extend. */
         result &= ~tmp; /* slice underflow */
-        VR[vd][i] = result;
+        VR_D(i) = result;
     }
     return;
 }
