@@ -419,18 +419,15 @@ EX:
                 continue; /* How are reserved commands conducted on the RCP? */
         }
     }
-    if (*RSP.SP_SEMAPHORE_REG == 0x00000001) /* SP semaphore lock (zilmar) */
-        *RSP.SP_STATUS_REG &= ~0x00000001; /* Guess I need to let emu retask. */
-#ifdef WAIT_FOR_CPU_HOST
-    else if (MFC0_count != 0)
-        *RSP.SP_STATUS_REG &= ~0x00000001; /* CPU restarts with correct SIGs. */
-#endif
-    else
-    {
-        message("Halted RSP CPU loop by means of MTC0.", 2); /* not sure */
-        *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
+    if (*RSP.MI_INTR_REG & 0x00000001) /* interrupt set by MTC0 to break */
         RSP.CheckInterrupts();
-    }
+#ifndef WAIT_FOR_CPU_HOST
+    else if (*RSP.SP_SEMAPHORE_REG != 0x00000000) /* plugin system hack case */
+        {}
+    else
+        message("SP_SET_HALT", 3);
+#endif
+    *RSP.SP_STATUS_REG &= ~0x00000001; /* CPU restarts with the correct SIGs. */
     while (SR[0] != SR[0])
     {
 BRANCH:
