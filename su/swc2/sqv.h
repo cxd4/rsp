@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  SP VU Emulation Table:  Store Quadword from Vector Unit            *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.05.06                                                         *
+* Release:  2013.06.09                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -11,10 +11,10 @@ void SQV(int vt, int element, signed int offset, int base)
     int b;
 
     addr  = SR[base] + (offset <<= 4);
+    if (element != 0x0)
+        goto ILLEGAL_EL;
     b = addr & 0x0000000F; /* experimental; patent says should & 07 */
     addr &= 0x00000FF0; /* World Driver Championship:  on load demo intro */
-    if (element != 0x0) /* We need an explicit `goto` for stupid compilers. */
-        goto ILLEGAL; /* Illegal vector inst but not an invalid N64 RCP inst. */
     switch (b)
     {
         case 00:
@@ -55,7 +55,13 @@ void SQV(int vt, int element, signed int offset, int base)
             message("SQV\nWeird addr.", 3);
             return;
     }
-ILLEGAL:
-    message("SQV\nIllegal element.", 3);
+ILLEGAL_EL: /* "Mia Hamm Soccer 64" SP exception override (Ville Linde) */
+    b = element + 16 - (addr & 0x00F);
+    for (offset = element; offset < b; offset++)
+    {
+        addr &= 0x00000FFF;
+        RSP.DMEM[BES(addr)] = VR_B(vt, offset & 0xF);
+        ++addr;
+    }
     return;
 }
