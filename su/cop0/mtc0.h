@@ -118,16 +118,9 @@ void MTC0(int rt, int rd)
         case 0x8:
             if (*RSP.DPC_BUFBUSY_REG) /* lock hazards not implemented */
                 message("MTC0\nCMD_START", 3);
-            *RSP.DPC_START_REG   = SR[rt];
-            *RSP.DPC_CURRENT_REG = SR[rt];
-            *RSP.DPC_END_REG     = SR[rt]; /* NEW, not in PJ64/MAME */
-            if (SR[rt] & 07) /* All DMA transfers must be 64-bit-aligned. */
-            {
-                message("MTC0\nCMD_START", 1);
-                *RSP.DPC_START_REG   &= 0xFFFFFFF8;
-                *RSP.DPC_CURRENT_REG &= 0xFFFFFFF8;
-                *RSP.DPC_END_REG     &= 0xFFFFFFF8;
-            }
+            *RSP.DPC_START_REG   = SR[rt] & ~07; /* Funnelcube demo--marshall */
+            *RSP.DPC_CURRENT_REG = *RSP.DPC_START_REG;
+            *RSP.DPC_END_REG     = *RSP.DPC_START_REG;
             return;
         case 0x9:
             if (*RSP.DPC_BUFBUSY_REG)
