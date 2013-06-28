@@ -63,9 +63,9 @@ static int MFC0_count[32];
 #define WES(address) (address ^ 00)
 /* Because MIPS and Win32 machines are both 32 bits, no endian update needed. */
 
-// #define VR_B(v, e) (((unsigned char *)VR[v])[e ^ 0x1])
-// #define VR_B(v, e) ((((unsigned char *)(VR + v))[e ^ 0x1]))
-#define VR_B(v, e) (*(unsigned char *)(((unsigned char *)(VR + v)) + (e ^ 0x1)))
+// #define VR_B(v, e) (((unsigned char *)VR[v])[(e) ^ 0x1])
+// #define VR_B(v, e) ((((unsigned char *)(VR+v))[(e) ^ 0x1]))
+#define VR_B(v, e) (*(unsigned char *)(((unsigned char *)(VR+v)) + ((e) ^ 0x1)))
 /* In `vu.h` we have defined `static short VR[32][8]`, a proper two-
  * dimensional array for accurately storing real signal vectors (big endian).
  *
