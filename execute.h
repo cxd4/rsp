@@ -307,10 +307,10 @@ EX:
                         SR[rt] |= RSP.DMEM[addr];
                         continue;
                     case 02:
-                        SR[rt]  = *(short *)(RSP.DMEM + addr - HES(00)) << 16;
+                        SR_S(rt, 0) = *(short *)(RSP.DMEM + addr - HES(0));
                         addr += 0x002 + HES(00);
                         addr &= 0x00000FFF;
-                        SR[rt] |= *(unsigned short *)(RSP.DMEM + addr);
+                        SR_S(rt, 2) = *(short *)(RSP.DMEM + addr);
                         continue;
                     case 03:
                         SR[rt]  = RSP.DMEM[addr - BES(00)] << 24;
@@ -385,10 +385,10 @@ EX:
                         RSP.DMEM[addr] = SR[rt] & 0xFF;
                         continue;
                     case 02:
-                        *(short *)(RSP.DMEM + addr - HES(00)) = SR[rt] >> 16;
+                        *(short *)(RSP.DMEM + addr - HES(00)) = SR_S(rt, 0);
                         addr += 0x002 + HES(00);
                         addr &= 0x00000FFF;
-                        *(short *)(RSP.DMEM + addr) = SR[rt] & 0x0000FFFF;
+                        *(short *)(RSP.DMEM + addr) = SR_S(rt, 2);
                         continue;
                     case 03:
                         RSP.DMEM[addr - BES(00)] = (SR[rt] >> 24) & 0xFF;

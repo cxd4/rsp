@@ -87,6 +87,9 @@ static int MFC0_count[32];
  * If this is made flexible in advance, we can just use this macro to finish.
  */
 
+#define SR_B(s, i) (*(unsigned char *)(((unsigned char *)(SR+s)) + i))
+#define SR_S(s, i) (*(short *)(((unsigned char *)(SR+s)) + HES(i)))
+
 #if (0)
 #define MASK_SA(sa) (sa & 31) /* Force masking in software. */
 #else
