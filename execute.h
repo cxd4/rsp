@@ -371,13 +371,15 @@ EX:
                 addr = (SR[rs &= 31] + imm) & 0x00000FFF;
                 switch (addr & 03)
                 {
+                    register unsigned int word;
+
                     case 00: /* word-aligned */
                         *(int *)(RSP.DMEM + addr) = SR[rt];
                         continue;
                     case 01:
-                        RSP.DMEM[addr + MES(00)] = (SR[rt] >> 24) & 0xFF;
-                        RSP.DMEM[addr + MES(01)] = (SR[rt] >> 16) & 0xFF;
-                        RSP.DMEM[addr + BES(03) - 0x001] = (SR[rt] >> 8) & 0xFF;
+                        word  = (unsigned)(SR[rt]) >> 8;
+                        word |= RSP.DMEM[addr - 0x001 + BES(00)] << 24;
+                        *(int *)(RSP.DMEM + addr - 0x001) = word;
                         addr += 0x003 + BES(00);
                         addr &= 0x00000FFF;
                         RSP.DMEM[addr] = SR[rt] & 0xFF;
@@ -390,11 +392,11 @@ EX:
                         continue;
                     case 03:
                         RSP.DMEM[addr - BES(00)] = (SR[rt] >> 24) & 0xFF;
-                        addr += 0x001 + MES(00);
+                        addr += 0x001;
                         addr &= 0x00000FFF;
-                        RSP.DMEM[addr + HES(00)] = (SR[rt] >> 16) & 0xFF;
-                        RSP.DMEM[addr + 0x001]   = (SR[rt] >>  8) & 0xFF;
-                        RSP.DMEM[addr + HES(02)] = (SR[rt] >>  0) & 0xFF;
+                        word  = (unsigned)(SR[rt]) << 8;
+                        word |= RSP.DMEM[addr];
+                        *(int *)(RSP.DMEM + addr) = word;
                         continue;
                 }
             case 062: /* LWC2 */
