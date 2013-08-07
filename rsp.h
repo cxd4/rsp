@@ -87,6 +87,18 @@ static int MFC0_count[32];
  * If this is made flexible in advance, we can just use this macro to finish.
  */
 
+#if (0)
+#define MASK_SA(sa) (sa & 31) /* Force masking in software. */
+#else
+#define MASK_SA(sa) (sa) /* Let hardware architecture do the mask for us. */
+#endif
+/* This optimization only works for shift amounts on variable data.
+ * Its only use so far is simplifying SLL, SRL, SRA, SLLV, SRLV, and SRAV.
+ *
+ * Basically, Intel and MIPS versions here are both 32 bits, so they ignore
+ * any upper bits of shift amounts past 0b11111 (31 dec) as reserved.
+ */
+
 #include "su/su.h"
 #include "vu/vu.h"
 

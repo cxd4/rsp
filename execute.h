@@ -96,28 +96,25 @@ EX:
                 switch (inst &= 077)
                 {
                     case 000: /* SLL */
-                        imm &= 0x07C0;
                         imm >>= 6; /* sa "shift amount" */
-                        SR[rd] = SR[rt] << imm;
+                        SR[rd] = SR[rt] << MASK_SA(imm);
                         continue;
                     case 002: /* SRL */
-                        imm &= 0x07C0;
                         imm >>= 6; /* sa "shift amount" */
-                        SR[rd] = (unsigned)(SR[rt]) >> imm;
+                        SR[rd] = (unsigned)(SR[rt]) >> MASK_SA(imm);
                         continue;
                     case 003: /* SRA */
-                        imm &= 0x07C0;
                         imm >>= 6; /* sa "shift amount" */
-                        SR[rd] = (signed)(SR[rt]) >> imm;
+                        SR[rd] = (signed)(SR[rt]) >> MASK_SA(imm);
                         continue;
                     case 004: /* SLLV */
-                        SR[rd] = SR[rt] << (SR[rs] & 31);
+                        SR[rd] = SR[rt] << MASK_SA(SR[rs]);
                         continue;
                     case 006: /* SRLV */
-                        SR[rd] = (unsigned)(SR[rt]) >> (SR[rs] & 31);
+                        SR[rd] = (unsigned)(SR[rt]) >> MASK_SA(SR[rs]);
                         continue;
                     case 007: /* SRAV */
-                        SR[rd] = (signed)(SR[rt]) >> (SR[rs] & 31);
+                        SR[rd] = (signed)(SR[rt]) >> MASK_SA(SR[rs]);
                         continue;
                     case 010: /* JR */
                         temp_PC = SR[rs];
