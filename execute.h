@@ -57,6 +57,7 @@ void run_task(void)
  * Ultimately, the PC register and link address stores remain 100% accurate.
  */
 EX:
+     /* if ((inst & 0xFE000000) == 0x4A000000) */
         if (inst >> 25 == 0x25) /* is a VU instruction */
         {
             const int vd = (inst & 0x000007C0) >>  6;
@@ -77,15 +78,7 @@ EX:
         }
         if (SR[0] != 0x00000000)
             message("$0", 0); /* tried to overwrite MIPS GPR $zero */
-        SR[0] ^= SR[0];
-/* I don't want to essay out an entire list of accurate ways we could emulate
- * the MIPS `zero` register's permanence, but let's just remember these keys:
- *
- * 1.  Ensure that the virtual register is constantly fixed to one value.
- * 2.  Save code block size in switch block splits with more code space.
- * 3.  Avoid creating new branch labels and blocks for exiting if rd == 0.
- * #1 means more stable, #2 means faster, and #3 means more accurate + fast.
- */
+        SR[0] = 0x00000000;
         imm = inst & 0x0000FFFF;
         rd = (unsigned short)(imm) >> 11; /* mov ecx, ax; shr ecx, 11 */
         rs = (unsigned)(inst) >> 21; /* In case op != SPECIAL, then rs &= 31. */
@@ -172,55 +165,55 @@ EX:
                     case 000: /* BLTZ */
                         BC = ((signed)SR[rs] < 0);
                         if (!BC) continue;
-                        temp_PC = *RSP.SP_PC_REG + (imm <<= 2);
+                        temp_PC = *RSP.SP_PC_REG + 4*imm;
                         goto BRANCH;
                     case 001: /* BGEZ */
                         BC = ((signed)SR[rs] >= 0);
                         if (!BC) continue;
-                        temp_PC = *RSP.SP_PC_REG + (imm <<= 2);
+                        temp_PC = *RSP.SP_PC_REG + 4*imm;
                         goto BRANCH;
                     case 020: /* BLTZAL */
                         SR[31] = (*RSP.SP_PC_REG + 0x004) & 0x00000FFC;
                         BC = ((signed)SR[rs] < 0);
                         if (!BC) continue;
-                        temp_PC = *RSP.SP_PC_REG + (imm <<= 2);
+                        temp_PC = *RSP.SP_PC_REG + 4*imm;
                         goto BRANCH;
                     case 021: /* BGEZAL */
                         SR[31] = (*RSP.SP_PC_REG + 0x004) & 0x00000FFC;
                         BC = ((signed)SR[rs] >= 0);
                         if (!BC) continue;
-                        temp_PC = *RSP.SP_PC_REG + (imm <<= 2);
+                        temp_PC = *RSP.SP_PC_REG + 4*imm;
                         goto BRANCH;
                     default:
                         message("REGIMM\nRESERVED", 3);
                         continue;
                 }
             case 002: /* J */
-                temp_PC = imm <<= 2;
+                temp_PC = 4*imm;
                 goto BRANCH;
             case 003: /* JAL */
                 SR[31] = (*RSP.SP_PC_REG + 0x004) & 0x00000FFC;
-                temp_PC = imm <<= 2;
+                temp_PC = 4*imm;
                 goto BRANCH;
             case 004: /* BEQ */
                 BC = (SR[rs &= 31] == SR[rt]);
                 if (!BC) continue;
-                temp_PC = *RSP.SP_PC_REG + (imm <<= 2);
+                temp_PC = *RSP.SP_PC_REG + 4*imm;
                 goto BRANCH;
             case 005: /* BNE */
                 BC = (SR[rs &= 31] != SR[rt]);
                 if (!BC) continue;
-                temp_PC = *RSP.SP_PC_REG + (imm <<= 2);
+                temp_PC = *RSP.SP_PC_REG + 4*imm;
                 goto BRANCH;
             case 006: /* BLEZ */
                 BC = ((signed)SR[rs &= 31] <= 0);
                 if (!BC) continue;
-                temp_PC = *RSP.SP_PC_REG + (imm <<= 2);
+                temp_PC = *RSP.SP_PC_REG + 4*imm;
                 goto BRANCH;
             case 007: /* BGTZ */
                 BC = ((signed)SR[rs &= 31] > 0);
                 if (!BC) continue;
-                temp_PC = *RSP.SP_PC_REG + (imm <<= 2);
+                temp_PC = *RSP.SP_PC_REG + 4*imm;
                 goto BRANCH;
             case 010: /* ADDI */
                 SR[rt] = SR[rs &= 31] + (signed short)imm;
