@@ -89,7 +89,7 @@
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
 #define L_TITLE "RSP Interpreter"
-#define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, Gonetz\n"\
+#define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
                 "SP thread examples:  bpoint, zilmar, Ville Linde"
 
 #if defined(EXTERN_COMMAND_LIST_GBI) && defined(EXTERN_COMMAND_LIST_ABI)
