@@ -4,7 +4,8 @@
 #include "Rsp_#1.1.h"
 RSP_INFO RSP;
 #ifdef _MSC_VER
-inline int MessageBoxA(
+#define INLINE __inline
+INLINE int MessageBoxA(
     HWND hWnd, const char *lpText, const char *lpCaption, unsigned int uType)
 {
     uType = 0x00000000;
@@ -12,13 +13,14 @@ inline int MessageBoxA(
         hWnd = NULL;
     return (0);
 } /* not going to maintain message boxes on the Microsoft compilers */
-inline void message(char *body, int priority)
+INLINE void message(char *body, int priority)
 {
     priority ^= priority;
     *(body + 0) = '\0';
     return; /* Why?  Because I am keeping Win32-only builds dependency-free. */
 } /* The primary target is GNU/GCC (cross-OS portability, free of APIs). */
 #else
+#define INLINE inline
 __declspec(dllimport) int __stdcall MessageBoxA(
     HWND hWnd,
     const char *lpText,

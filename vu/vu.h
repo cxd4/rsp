@@ -123,7 +123,7 @@ int sub_mask[16] = {
     0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
 };
 
-inline void SHUFFLE_VECTOR(int vt, int e)
+INLINE void SHUFFLE_VECTOR(int vt, int e)
 {
     register int i, j;
 #if (0 == 0)
@@ -190,7 +190,7 @@ static union ACC {
  * because the 48-bit acc needs to be sign-extended when shifting right here.
  */
 
-inline void SIGNED_CLAMP(short* VD, int mode)
+INLINE void SIGNED_CLAMP(short* VD, int mode)
 {
     register int i;
 #define FORCE_STATIC_CLAMP
