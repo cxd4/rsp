@@ -21,25 +21,16 @@ static void VSAW(int vd, int vs, int vt, int e)
  * Currently this code is safer because &= is less likely to catch oddities.
  * Either way, documentation shows that the switch range is 0:2, not 8:A.
  */
-    switch (e)
+    e = 2 - e;
+    if (e < 0)
     {
-        case 00:
-            for (i = 0; i < 8; i++)
-                VR_D(i) = VACC[i].s[HI];
-            break;
-        case 01:
-            for (i = 0; i < 8; i++)
-                VR_D(i) = VACC[i].s[MD];
-            break;
-        case 02:
-            for (i = 0; i < 8; i++)
-                VR_D(i) = VACC[i].s[LO];
-            break;
-        default:
-            message("VSAR\nInvalid mask.", 2);
-            for (i = 0; i < 8; i++)
-                VR_D(i) = 0x0000; /* override behavior (zilmar) */
+        message("VSAR\nInvalid mask.", 2);
+        for (i = 0; i < 8; i++)
+            VR_D(i) = 0x0000; /* override behavior (zilmar) */
     }
+    else
+        for (i = 0; i < 8; i++)
+            VR_D(i) = VACC[i].s[e];
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
     e ^= 03;
     --e;
