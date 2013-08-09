@@ -187,10 +187,19 @@ static union ACC {
  * because the 48-bit acc needs to be sign-extended when shifting right here.
  */
 #define FORCE_STATIC_CLAMP
+static signed short sclamp[2][2] = {
+    { 0x0000, -0x8000},
+    {+0x7FFF,  0x0000}
+};
+static unsigned short zclamp[2][2] = {
+    { 0x0000, -0x0000},
+    {+0xFFFF,  0x0000}
+};
 
 INLINE void SIGNED_CLAMP(short* VD, int mode)
 {
     register int i;
+
     switch (mode)
     {
         register signed int result;
@@ -201,9 +210,9 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
                 result = *(signed int *)((unsigned char *)(VACC + i) + 2);
 #ifdef FORCE_STATIC_CLAMP
                 VD[i]  = result & 0x0000FFFF;
-                VD[i] &= ~(result + 32768) >> 31; /* min:  0x8000 ^ 0x8000 */
-                VD[i] |= ~(result - 32768) >> 31; /* max:  0x7FFF ^ 0x8000 */
-                VD[i] ^= 32768 & ((result + 32768)>>31 | ~(result - 32768)>>31);
+                VD[i] &= ~(result - -32768) >> 31; /* min:  0x8000 ^ 0x8000 */
+                VD[i] |=  (+32767 - result) >> 31; /* max:  0x7FFF ^ 0x8000 */
+                VD[i] ^= 0x8000 & ((result + 32768)>>31 | (32767 - result)>>31);
 #else
                 VD[i] = (result < -32768)
                       ? -32768 : (result > +32767)
@@ -219,7 +228,7 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
 #ifdef FORCE_STATIC_CLAMP
                 VD[i]  = VACC[i].DW & 0x00000000FFFF;
                 VD[i] &= ~(result - -32768) >> 31;
-                VD[i] |= ~(result - +32768) >> 31;
+                VD[i] |=  (+32767 - result) >> 31;
                 continue;
 #else
                 VD[i] = (result < -32768)
