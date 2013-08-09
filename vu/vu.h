@@ -74,9 +74,6 @@ static short VC[8]; /* vector/scalar coefficient */
  * (partially scalar coefficient) vector register as necessary so that
  * the elements `i`(0..7) of VS can directly match up with 1:1
  * parallelism to the short elements `i`(0..7) of the shuffled VT.
- *
- * Be careful when compiling this with GCC or SSE vector support, as the
- * compiler may produce unstable results that can crash in some opcodes.
  */
 
 #ifdef EMULATE_VECTOR_RESULT_BUFFER
@@ -189,11 +186,11 @@ static union ACC {
  * This algorithm might have a bug if you invoke shifts greater than 16,
  * because the 48-bit acc needs to be sign-extended when shifting right here.
  */
+#define FORCE_STATIC_CLAMP
 
 INLINE void SIGNED_CLAMP(short* VD, int mode)
 {
     register int i;
-#define FORCE_STATIC_CLAMP
     switch (mode)
     {
         register signed int result;
@@ -205,8 +202,8 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
 #ifdef FORCE_STATIC_CLAMP
                 VD[i]  = result & 0x0000FFFF;
                 VD[i] &= ~(result + 32768) >> 31; /* min:  0x8000 ^ 0x8000 */
-                VD[i] |= ~(result - 32767) >> 31; /* max:  0x7FFF ^ 0x8000 */
-                VD[i] ^= 32768 & ((result + 32768)>>31 | ~(result - 32767)>>31);
+                VD[i] |= ~(result - 32768) >> 31; /* max:  0x7FFF ^ 0x8000 */
+                VD[i] ^= 32768 & ((result + 32768)>>31 | ~(result - 32768)>>31);
 #else
                 VD[i] = (result < -32768)
                       ? -32768 : (result > +32767)
@@ -222,7 +219,7 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
 #ifdef FORCE_STATIC_CLAMP
                 VD[i]  = VACC[i].DW & 0x00000000FFFF;
                 VD[i] &= ~(result - -32768) >> 31;
-                VD[i] |= ~(result - +32767) >> 31;
+                VD[i] |= ~(result - +32768) >> 31;
                 continue;
 #else
                 VD[i] = (result < -32768)
