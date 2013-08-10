@@ -81,27 +81,23 @@
 
 /* Choose whether to define, or keep undefined, the above macros. */
 #define MINIMUM_MESSAGE_PRIORITY    1 // show most messages of RSP weirdness
-// #define EXTERN_COMMAND_LIST_GBI // Not really recommended but user preference
-// #define EXTERN_COMMAND_LIST_ABI // Not really significant but user preference
-// #define SEMAPHORE_LOCK_CORRECTIONS // Recommended only for CPUs supporting it
-// #define WAIT_FOR_CPU_HOST // Never use, except with some ROMs on Project64 2.
+#define EXTERN_COMMAND_LIST_GBI
+#define EXTERN_COMMAND_LIST_ABI
+#define SEMAPHORE_LOCK_CORRECTIONS
+#define WAIT_FOR_CPU_HOST
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
-#define L_TITLE "RSP Interpreter"
+static unsigned char conf[32];
+char filename[16] = "rsp_conf.bin";
+/*
+ * The name of the config file is subject to change.
+ * On InitiateRSP, plugin checks if a file named after the game code in the
+ * ROM header of the loaded ROM exists.  If so, load the settings per-ROM.
+ */
+
+#define L_TITLE "Iconoclast's RSP Interpreter"
 #define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
                 "SP thread examples:  bpoint, zilmar, Ville Linde"
 
-#if defined(EXTERN_COMMAND_LIST_GBI) && defined(EXTERN_COMMAND_LIST_ABI)
-#define L_NAME "Iconoclast's SP Interpreter (HLE)"
-#elif defined(EXTERN_COMMAND_LIST_GBI)
-#define L_NAME "Iconoclast's SP Interpreter (MLE)"
-#elif defined(EXTERN_COMMAND_LIST_ABI)
-#define L_NAME "Iconoclast's SP Interpreter (LLE)"
-#elif defined(SEMAPHORE_LOCK_CORRECTIONS) || defined(WAIT_FOR_CPU_HOST)
-#define L_NAME "Iconoclast's SP Interpreter (PJ642)"
-#elif defined(SP_EXECUTE_LOG) || defined(VU_EMULATE_SCALAR_ACCUMULATOR_READ)
-#define L_NAME "Iconoclast's SP Interpreter (debug)"
-#else
-#define L_NAME "Iconoclast's SP Interpreter"
-#endif
+#define L_NAME "Simple SP Interpreter"

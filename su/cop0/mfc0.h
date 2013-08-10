@@ -22,6 +22,8 @@ void MFC0(int rt, int rd)
         case 0x4:
             SR[rt] = *RSP.SP_STATUS_REG;
 #ifdef WAIT_FOR_CPU_HOST
+            if (CFG_WAIT_FOR_CPU_HOST == 0)
+                return;
             ++MFC0_count[rt];
             if (MFC0_count[rt] > 07)
                 *RSP.SP_STATUS_REG |= 0x00000001; /* Let OS restart the task. */
@@ -36,6 +38,8 @@ void MFC0(int rt, int rd)
         case 0x7:
             SR[rt] = *RSP.SP_SEMAPHORE_REG;
 #ifdef SEMAPHORE_LOCK_CORRECTIONS
+            if (CFG_MEND_SEMAPHORE_LOCK == 0)
+                return;
             *RSP.SP_SEMAPHORE_REG = 0x00000001;
             *RSP.SP_STATUS_REG |= 0x00000001; /* temporary bit to break CPU */
             return; /* Break the SP task (zilmar). */

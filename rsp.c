@@ -30,6 +30,13 @@ EXPORT void CALL DllConfig(HWND hParent)
     hParent = NULL;
     return;
 }
+#else
+EXPORT void CALL DllConfig(HWND hParent)
+{
+    system("sp_cfgui.exe");
+    update_conf();
+    return;
+}
 #endif
 EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
 {
@@ -43,6 +50,8 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
     { /* Simulation barrier to redirect processing externally. */
 #ifdef EXTERN_COMMAND_LIST_GBI
         case 0x00000001:
+            if (CFG_HLE_GFX == 0)
+                break;
             if (*(unsigned int *)(RSP.DMEM + 0xFF0) == 0x00000000)
                 break; /* Resident Evil 2 */
             if (RSP.ProcessDList == NULL) {/*branch next*/} else
@@ -62,6 +71,8 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
 #endif
 #ifdef EXTERN_COMMAND_LIST_ABI
         case 0x00000002: /* OSTask.type == M_AUDTASK */
+            if (CFG_HLE_AUD == 0)
+                break;
             if (RSP.ProcessAList == 0) {} else
                 RSP.ProcessAList();
             *RSP.SP_STATUS_REG |= 0x00000203;
@@ -72,25 +83,6 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
             }
             return 0;
 #endif
-    }
-#endif
-#if (defined EXTERN_COMMAND_LIST_GBI && defined EXTERN_COMMAND_LIST_ABI)
-    {
-        const char digits[16] = {
-            '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-        };
-        const unsigned int task = *(unsigned int *)(RSP.DMEM + 0xFC0);
-        char task_hex[9] = "";
-
-        task_hex[00] = digits[(task & 0xF0000000) >> 28];
-        task_hex[01] = digits[(task & 0x0F000000) >> 24];
-        task_hex[02] = digits[(task & 0x00F00000) >> 20];
-        task_hex[03] = digits[(task & 0x000F0000) >> 16];
-        task_hex[04] = digits[(task & 0x0000F000) >> 12];
-        task_hex[05] = digits[(task & 0x00000F00) >>  8];
-        task_hex[06] = digits[(task & 0x000000F0) >>  4];
-        task_hex[07] = digits[(task & 0x0000000F) >>  0];
-        MessageBoxA(NULL, task_hex, "OSTask.type", 0x00000000);
     }
 #endif
     run_task();
