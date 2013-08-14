@@ -113,14 +113,14 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
         *CycleCount = 0x00000000;
     RSP = Rsp_Info;
     *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF;
+#ifdef SP_EXECUTE_LOG
+    output_log = fopen("simd_log.bin", "ab");
+#endif
     if (RSP.DMEM == RSP.IMEM) /* usually dummy RSP data, not to start ROM */
         return; /* DMA is not executed just because plugin initiates. */
     else
         while (RSP.IMEM != RSP.DMEM + 4096)
             message("Virtual host map noncontiguity.", 3);
-#ifdef SP_EXECUTE_LOG
-    output_log = fopen("simd_log.bin", "ab");
-#endif
     return;
 }
 EXPORT void CALL InitiateRSPDebugger(DEBUG_INFO DebugInfo)
