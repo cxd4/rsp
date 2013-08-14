@@ -26,8 +26,9 @@ void run_task(void)
     register unsigned int inst;
 
 #ifdef WAIT_FOR_CPU_HOST
-    for (rt = 0; rt < 32; rt++)
-        MFC0_count[rt] = 0;
+    if (CFG_WAIT_FOR_CPU_HOST != 0)
+        for (rt = 0; rt < 32; rt++)
+            MFC0_count[rt] = 0;
 #endif
     while (!(*RSP.SP_STATUS_REG & 0x00000001))
     { /* Explicitly speaking, it must == 0x0, though the object is NOT(HALT). */
@@ -411,14 +412,22 @@ EX:
                 continue; /* How are reserved commands conducted on the RCP? */
         }
     }
-    if (*RSP.MI_INTR_REG & 0x00000001) /* interrupt set by MTC0 to break */
+/*
+ * If we have reached this point in the program, it means that the SP task
+ * was terminated in a way other than executing BREAK.  From an accuracy
+ * point of view, this is highly unusual, but there are a few possibilities.
+ */
+    if (*RSP.MI_INTR_REG & 0x00000001) /* 1.  interrupt set by MTC0 to break */
         RSP.CheckInterrupts();
-#ifndef WAIT_FOR_CPU_HOST
-    else if (*RSP.SP_SEMAPHORE_REG != 0x00000000) /* plugin system hack case */
+    else if (CFG_WAIT_FOR_CPU_HOST != 0) /* 2.  plugin system hack to re-sync */
         {}
-    else
+    else if (*RSP.SP_SEMAPHORE_REG != 0x00000000) /* 3.  semaphore lock fixes */
+        {}
+    else /* ??? unknown, possibly external intervention from CPU memory map */
+    {
         message("SP_SET_HALT", 3);
-#endif
+        return;
+    }
     *RSP.SP_STATUS_REG &= ~0x00000001; /* CPU restarts with the correct SIGs. */
     while (SR[0] != SR[0])
     {

@@ -61,7 +61,6 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
         message("SP_STATUS_HALT", 3);
         return 0x00000000;
     }
-#if defined(EXTERN_COMMAND_LIST_GBI) || defined(EXTERN_COMMAND_LIST_ABI)
     switch (*(unsigned int *)(RSP.DMEM + 0xFC0))
     { /* Simulation barrier to redirect processing externally. */
 #ifdef EXTERN_COMMAND_LIST_GBI
@@ -100,7 +99,6 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
             return 0;
 #endif
     }
-#endif
     run_task();
     return (cycles);
 }

@@ -42,10 +42,8 @@ void MFC0(int rt, int rd)
                 return;
             *RSP.SP_SEMAPHORE_REG = 0x00000001;
             *RSP.SP_STATUS_REG |= 0x00000001; /* temporary bit to break CPU */
-            return; /* Break the SP task (zilmar). */
-#else
-            return; /* old method, inaccurate */
 #endif
+            return;
         case 0x8:
             SR[rt] = *RSP.DPC_START_REG;
             return;
