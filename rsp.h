@@ -6,22 +6,11 @@ RSP_INFO RSP;
 
 #ifdef _MSC_VER
 #define INLINE __inline
-INLINE int MessageBoxA(
-    HWND hWnd, const char *lpText, const char *lpCaption, unsigned int uType)
-{
-    uType = 0x00000000;
-    if (*(lpText + 0) == *(lpCaption + 0)) /* unused variables */
-        hWnd = NULL;
-    return (0);
-} /* not going to maintain message boxes on the Microsoft compilers */
-INLINE void message(char *body, int priority)
-{
-    priority ^= priority;
-    *(body + 0) = '\0';
-    return; /* Why?  Because I am keeping Win32-only builds dependency-free. */
-} /* The primary target is GNU/GCC (cross-OS portability, free of APIs). */
 #else
 #define INLINE inline
+#endif
+
+#ifdef WINUSERAPI
 __declspec(dllimport) int __stdcall MessageBoxA(
     HWND hWnd,
     const char *lpText,
@@ -34,13 +23,42 @@ const unsigned int type_index[4] = {
     0x00000030, /* MB_ICONEXCLAMATION -- might be missing RSP support */
     0x00000010  /* MB_ICONHAND -- definite error or problem in emulator */
 };
-void message(char *body, int priority)
+__attribute__((noinline)) void message(const char* body, int priority)
 {
     priority &= 03;
     if (priority < MINIMUM_MESSAGE_PRIORITY)
         return;
     MessageBoxA(NULL, body, NULL, type_index[priority]);
     return;
+}
+#else
+__attribute__((noinline)) void message(const char* body, int priority)
+{ /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
+    char argv[4096] = "CMD /D /S /Q /T:0E /K \"ECHO ";
+    int i = 0;
+    int j = strlen(argv);
+
+    priority &= 03;
+    if (priority < MINIMUM_MESSAGE_PRIORITY)
+        return;
+    while (body[i] != '\0')
+    {
+        if (body[i] == '\n')
+        {
+            argv[j++] = '&';
+            argv[j++] = '&';
+            argv[j++] = 'E';
+            argv[j++] = 'C';
+            argv[j++] = 'H';
+            argv[j++] = 'O';
+            argv[j++] = ' ';
+            ++i;
+            continue;
+        }
+        argv[j++] = body[i++];
+    }
+    strcat(argv, "\"");
+    system(argv);
 }
 #endif
 

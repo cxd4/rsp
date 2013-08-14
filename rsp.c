@@ -8,11 +8,18 @@
 
 EXPORT void CALL CloseDLL(void)
 {
+    RomClosed();
     return;
 }
+const char DLL_about[] =
+    "RSP Interpreter by Iconoclast&&ECHO."\
+    "&&ECHO "\
+    "Thanks for test RDP:  Jabo, ziggy, and angrylion\n"\
+    "RSP driver examples:  bpoint, zilmar, and Ville Linde\n"\
+    "Helpful shenanigans:  MarathonMan, dsx, and mudlord";
 EXPORT void CALL DllAbout(HWND hParent)
 {
-    MessageBoxA(hParent, L_ABOUT, L_TITLE, 0x00000040);
+    message(DLL_about, 3);
     return;
 }
 #ifdef SP_EXECUTE_LOG
@@ -102,7 +109,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
     PluginInfo -> Version = 0x0101; /* zilmar #1.1 (only standard RSP spec) */
     PluginInfo -> Type = PLUGIN_TYPE_RSP;
 strcpy(/* Not meant to be a CRT dependency--should optimize to QWORD moves. */
-    PluginInfo -> Name, L_NAME);
+    PluginInfo -> Name, DLL_name);
     PluginInfo -> NormalMemory = 0;
     PluginInfo -> MemoryBswaped = 1;
     return;

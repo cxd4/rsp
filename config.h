@@ -88,11 +88,7 @@
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
-#define L_TITLE "RSP Interpreter by Iconoclast"
-#define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
-                "SP thread examples:  bpoint, zilmar, Ville Linde"
-
-#define L_NAME "Iconoclast's SP Interpreter"
+const char* DLL_name = "Iconoclast's SP Interpreter";
 
 static unsigned char conf[32];
 #define CFG_FILE    "rsp_conf.bin"
