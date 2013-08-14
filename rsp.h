@@ -44,66 +44,26 @@ void message(char *body, int priority)
 }
 #endif
 
-#define CFG_HLE         (conf[0x00])
-#define CFG_HLE_GFX     ((CFG_HLE >> 0) & 1)
-#define CFG_HLE_AUD     ((CFG_HLE >> 1) & 1)
-#define CFG_HLE_VID     ((CFG_HLE >> 2) & 1) /* reserved/unused */
-#define CFG_HLE_JPG     ((CFG_HLE >> 3) & 1) /* reserved/unused */
-#define CFG_HLE_005     (0) /* I have no idea what (OSTask.type == 5) is. */
-#define CFG_HLE_HVQ     ((CFG_HLE >> 5) & 1) /* reserved/unused */
-#define CFG_HLE_HVQM    ((CFG_HLE >> 6) & 1) /* reserved/unused */
-#define CFG_HLE_UNK     ((CFG_HLE >> 7) & 1) /* anything else, reserved */
-/*
- * Most of the point behind this config system is to let users use HLE video
- * or audio plugins.  The other task types are used less than 1% of the time
- * and only in a few games.  They require simulation from within the RSP
- * internally, which I have no intention to ever support.  Some good research
- * on a few of these special task types was done by Hacktarux in the MUPEN64
- * HLE RSP plugin, so consider using that instead for complete HLE.
- */
-
-/*
- * Anything between 0x01 and 0x0F of the config file, I have not yet found a
- * use for.  That section of bits is currently all reserved for new settings.
- */
-
-#define CFG_WAIT_FOR_CPU_HOST   (*(int *)(conf + 0x10) != 0x00000000)
-#define CFG_MEND_SEMAPHORE_LOCK (*(int *)(conf + 0x14) != 0x00000000)
-#define CFG_RESERVED            (*(int *)(conf + 0x18) != 0x00000000)
-#define CFG_CHECKSUM            (*(unsigned int *)(conf + 0x1C) != 0x00000000)
-
 void update_conf(void)
 {
     FILE* stream;
+    unsigned char checksum;
     register int i, test;
-    register unsigned int checksum;
 
-    stream = fopen(filename, "rb");
+    stream = fopen(CFG_FILE, "rb");
     if (stream == NULL)
-    {
+    { /* try GetModulePath or whatever to correct the path? */
         message("Failed to read config.", 3);
         return;
     }
     for (i = 0; i < 32; i++)
     {
         test = fgetc(stream);
-        if (test == EOF)
-        {
-            message("Config file too small.", 3);
-            memset(conf, 0x00, 32);
-            return;
-        }
         conf[i] = (unsigned char)(test);
-    }
-    if (test != EOF)
-    {
-        message("Config file too large.", 3);
-        memset(conf, 0x00, 32);
-        return;
     }
     /* my own little checksum code, not really useful :P */
     checksum = 0x00000000;
-    for (i = 0; i < 32; i++)
+    for (i = 0; i < 31; i++)
         checksum = checksum
                  + !!(conf[i] & 0x80)
                  + !!(conf[i] & 0x40)

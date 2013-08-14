@@ -33,7 +33,16 @@ EXPORT void CALL DllConfig(HWND hParent)
 #else
 EXPORT void CALL DllConfig(HWND hParent)
 {
-    system("sp_cfgui.exe");
+    FILE* test;
+    int cond;
+
+    test = fopen("sp_cfgui.exe", "rb");
+    cond = (test == NULL);
+    fclose(test);
+    if (cond)
+        system("../../sp_cfgui.exe"); /* bug in Project64 2.x */
+    else
+        system("sp_cfgui.exe");
     update_conf();
     return;
 }

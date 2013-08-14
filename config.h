@@ -88,16 +88,44 @@
 // #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 // #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
 
+#define L_TITLE "RSP Interpreter by Iconoclast"
+#define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
+                "SP thread examples:  bpoint, zilmar, Ville Linde"
+
+#define L_NAME "Iconoclast's SP Interpreter"
+
 static unsigned char conf[32];
-char filename[16] = "rsp_conf.bin";
+#define CFG_FILE    "rsp_conf.bin"
 /*
  * The name of the config file is subject to change.
  * On InitiateRSP, plugin checks if a file named after the game code in the
  * ROM header of the loaded ROM exists.  If so, load the settings per-ROM.
  */
 
-#define L_TITLE "Iconoclast's RSP Interpreter"
-#define L_ABOUT "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
-                "SP thread examples:  bpoint, zilmar, Ville Linde"
+#define CFG_HLE         (conf[0x00])
+#define CFG_HLE_GFX     ((CFG_HLE >> 0) & 1)
+#define CFG_HLE_AUD     ((CFG_HLE >> 1) & 1)
+#define CFG_HLE_VID     ((CFG_HLE >> 2) & 1) /* reserved/unused */
+#define CFG_HLE_JPG     ((CFG_HLE >> 3) & 1) /* reserved/unused */
+#define CFG_HLE_005     (0) /* I have no idea what (OSTask.type == 5) is. */
+#define CFG_HLE_HVQ     ((CFG_HLE >> 5) & 1) /* reserved/unused */
+#define CFG_HLE_HVQM    ((CFG_HLE >> 6) & 1) /* reserved/unused */
+#define CFG_HLE_UNK     ((CFG_HLE >> 7) & 1) /* anything else, reserved */
+/*
+ * Most of the point behind this config system is to let users use HLE video
+ * or audio plugins.  The other task types are used less than 1% of the time
+ * and only in a few games.  They require simulation from within the RSP
+ * internally, which I have no intention to ever support.  Some good research
+ * on a few of these special task types was done by Hacktarux in the MUPEN64
+ * HLE RSP plugin, so consider using that instead for complete HLE.
+ */
 
-#define L_NAME "Simple SP Interpreter"
+/*
+ * Anything between 0x01 and 0x0F of the config file, I have not yet found a
+ * use for.  That section of bits is currently all reserved for new settings.
+ */
+
+#define CFG_WAIT_FOR_CPU_HOST       (*(int *)(conf + 0x10))
+#define CFG_MEND_SEMAPHORE_LOCK     (*(int *)(conf + 0x14))
+#define CFG_RESERVED                (*(int *)(conf + 0x18))
+#define CFG_CHECKSUM                (*(conf + 0x1F))
