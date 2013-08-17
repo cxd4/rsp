@@ -62,7 +62,7 @@ void SP_DMA_READ(void)
 
 void MTC0(int rt, int rd)
 {
-    switch (rd)
+    switch (rd &= 0xF) /* exception override:  MAME r10933 (2010.12.31) */
     {
         case 0x0:
             *RSP.SP_MEM_ADDR_REG = SR[rt] & 0xFFFFFFF8;
@@ -117,17 +117,14 @@ void MTC0(int rt, int rd)
             return;
         case 0x8:
             if (*RSP.DPC_BUFBUSY_REG) /* lock hazards not implemented */
-                message("MTC0\nCMD_START", 3);
+                message("MTC0\nCMD_START", 0);
             *RSP.DPC_START_REG   = SR[rt] & ~07; /* Funnelcube demo--marshall */
             *RSP.DPC_CURRENT_REG = *RSP.DPC_START_REG;
             *RSP.DPC_END_REG     = *RSP.DPC_START_REG;
             return;
         case 0x9:
             if (*RSP.DPC_BUFBUSY_REG)
-            {
-                message("MTC0\nCMD_END", 3);
-                return; /* lock hazards not implemented */
-            }
+                message("MTC0\nCMD_END", 0);
             *RSP.DPC_END_REG = SR[rt] & 0xFFFFFFF8;
             if (RSP.ProcessRdpList == NULL) return; /* zilmar GFX #1.2 */
             RSP.ProcessRdpList();
@@ -150,8 +147,8 @@ void MTC0(int rt, int rd)
          /* *RSP.DPC_BUFBUSY_REG  &= -((SR[rt] & 0x00000100) == 0x00000000); */
             *RSP.DPC_CLOCK_REG    &= -((SR[rt] & 0x00000200) == 0x00000000);
             return;
-        case 0xC: /* ??? is this read-only or not, hard to tell */
-            message("MTC0\nCMD_CLOCK", 2);
+        case 0xC:
+            message("MTC0\nCMD_CLOCK", 0);
             *RSP.DPC_CLOCK_REG = SR[rt];
             return; /* Doc appendix says this is RW; elsewhere it says R. */
         case 0xD: /* read-only register, cannot directly write using MTC0 */

@@ -1,6 +1,6 @@
 void MFC0(int rt, int rd)
 {
-    switch (rd)
+    switch (rd &= 0xF) /* exception override:  MAME r10933 (2010.12.31) */
     {
         case 0x0:
             SR[rt] = *RSP.SP_MEM_ADDR_REG;
