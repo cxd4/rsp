@@ -1,9 +1,5 @@
 void MFC0(int rt, int rd)
 {
-/*
-    if (rt == 0)
-        return; // zero permanence already handled in main CPU loop
-*/
     switch (rd)
     {
         case 0x0:
@@ -29,11 +25,11 @@ void MFC0(int rt, int rd)
                 *RSP.SP_STATUS_REG |= 0x00000001; /* Let OS restart the task. */
 #endif
             return;
-        case 0x5: /* if (*RSP.SP_DMA_FULL_REG != 0x00000000), check the flag? */
+        case 0x5: /* SR[rt] = !!(SP_STATUS_REG & SP_STATUS_DMAFULL) */
             SR[rt] = *RSP.SP_DMA_FULL_REG;
             return;
-        case 0x6: /* if (*RSP.SP_DMA_BUSY_REG != 0x00000000), check the flag? */
-            SR[rt] = *RSP.SP_DMA_FULL_REG;
+        case 0x6: /* SR[rt] = !!(SP_STATUS_REG & SP_STATUS_DMABUSY) */
+            SR[rt] = *RSP.SP_DMA_BUSY_REG;
             return;
         case 0x7:
             SR[rt] = *RSP.SP_SEMAPHORE_REG;
@@ -55,10 +51,7 @@ void MFC0(int rt, int rd)
             return;
         case 0xB:
             if (*RSP.DPC_STATUS_REG & 0x00000600) /* end/start valid ? */
-            { /* CP0 register locking/unlocking not tested yet. */
-                message("MFC0\nCMD_STATUS", 2);
-                *RSP.DPC_STATUS_REG &= ~0x00000600;
-            }
+                message("MFC0\nCMD_STATUS", 0);
             SR[rt] = *RSP.DPC_STATUS_REG;
             return;
         case 0xC:
