@@ -79,6 +79,8 @@ void MTC0(int rt, int rd)
             SP_DMA_WRITE();
             return;
         case 0x4:
+            if (*RSP.SP_STATUS_REG & 0xFE000040)
+                message("MTC0\nSP_STATUS", 2);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) <<  0);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000002) <<  0);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000004) <<  1);
@@ -86,7 +88,7 @@ void MTC0(int rt, int rd)
             *RSP.MI_INTR_REG |=  ((SR[rt] & 0x00000010) >> 4); /* SP_SET_INTR */
             *RSP.SP_STATUS_REG |= (SR[rt] & 0x00000010) >> 4; /* int set halt */
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000020) <<  5);
-            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5);
+         /* *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5); */
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000080) <<  6);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000100) <<  6);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000200) <<  7);
