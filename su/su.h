@@ -2595,4 +2595,78 @@ static void (*EX_SCALAR[64][64])(void) = {
     }
 };
 
+#define OFF_FUNCTION     0
+#define OFF_SA           6
+#define OFF_E            7
+#define OFF_RD          11
+#define OFF_RT          16
+#define OFF_RS          21
+#define OFF_OPCODE      26
+const int sub_op_table[64] = {
+    OFF_FUNCTION, /* SPECIAL */
+    OFF_RT, /* REGIMM */
+    OFF_OPCODE, /* J */
+    OFF_OPCODE, /* JAL */
+    OFF_OPCODE, /* BEQ */
+    OFF_OPCODE, /* BNE */
+    OFF_OPCODE, /* BLEZ */
+    OFF_OPCODE, /* BGTZ */
+    OFF_OPCODE, /* ADDI */
+    OFF_OPCODE, /* ADDIU */
+    OFF_OPCODE, /* SLTI */
+    OFF_OPCODE, /* SLTIU */
+    OFF_OPCODE, /* ANDI */
+    OFF_OPCODE, /* ORI */
+    OFF_OPCODE, /* XORI */
+    OFF_OPCODE, /* LUI */
+    OFF_RS, /* COP0 */
+    OFF_RS,
+    OFF_RS, /* COP2 */
+    OFF_RS,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE, /* LB */
+    OFF_OPCODE, /* LH */
+    OFF_OPCODE,
+    OFF_OPCODE, /* LW */
+    OFF_OPCODE, /* LBU */
+    OFF_OPCODE, /* LHU */
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE, /* SB */
+    OFF_OPCODE, /* SH */
+    OFF_OPCODE,
+    OFF_OPCODE, /* SW */
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_RD, /* LWC2 */
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_RD, /* SWC2 */
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE,
+    OFF_OPCODE
+};
+
 #endif
