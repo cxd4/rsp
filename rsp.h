@@ -115,30 +115,6 @@ static int MFC0_count[32];
 #define WES(address) (address ^ 00)
 /* Because MIPS and Win32 machines are both 32 bits, no endian update needed. */
 
-// #define VR_B(v, e) (((unsigned char *)VR[v])[(e) ^ 0x1])
-// #define VR_B(v, e) ((((unsigned char *)(VR+v))[(e) ^ 0x1]))
-#define VR_B(v, e) (*(unsigned char *)(((unsigned char *)(VR+v)) + ((e) ^ 0x1)))
-/* In `vu.h` we have defined `static short VR[32][8]`, a proper two-
- * dimensional array for accurately storing real signal vectors (big endian).
- *
- * The weakness to this is that it fixates all VR indexing to 16-bit shorts.
- * We can still use "pointer" indirection if we need to target by octet.
- */
-#define VR_S(v, e) (*(short *)((unsigned char *)(*(VR + v)) + ((e + 01) & ~01)))
-/* Say we are emulating:  `LSV $v0[0x0], 0x000($0)`.
- * We can accurately use a proper vector file:  `VR[0][00] = *(short *)addr`.
- *
- * What about:  `LSV $v0[0x1], 0x000($0)`?
- *
- * That is what the macro above is for.  `VR_S(0, 0x1) = *(short *)addr`.
- * With this we can span across the vector register element indexing barrier.
- */
-#define VR_H(v, e) (*(short *)((unsigned char *)(*(VR + v)) + e))
-/* The VR_S macro above is more stable but slower.
- * In some cases, we may as well adjust the elemental offset, if it is odd.
- * If this is made flexible in advance, we can just use this macro to finish.
- */
-
 #define SR_B(s, i) (*(unsigned char *)(((unsigned char *)(SR+s)) + i))
 #define SR_S(s, i) (*(short *)(((unsigned char *)(SR+s)) + HES(i)))
 

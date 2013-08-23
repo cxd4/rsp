@@ -55,8 +55,8 @@ static const int ei[16][8] = {
  * For ?WC2 we may need to do byte-precision access just as directly.
  * This is ammended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
-static short VR[32][8];
-static short VC[8]; /* vector/scalar coefficient */
+short VR[32][8];
+short VC[8]; /* vector/scalar coefficient */
 
 /* #define EMULATE_VECTOR_RESULT_BUFFER */
 /*
@@ -262,13 +262,13 @@ unsigned char VCE; /* vector compare extension register */
  * vector control register indexing pointer table
  * This is particularly useful for directly executing CFC2 and CTC2.
  */
-static const void* vCR_old[4] = {
+const void* vCR_old[4] = {
     &VCO,
     &VCC,
     &VCE,
     &VCE /* Invalid vector control register.  (There are only three.) */
 };
-static signed short* vCR[2] = {
+signed short* vCR[2] = {
     &VCO,
     &VCC
 };
