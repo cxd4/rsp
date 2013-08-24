@@ -169,14 +169,14 @@ void disassemble(unsigned long IW)
                 sprintf(disasm, "%s:%08X", opcode, IW);
             return;
         case 03:
-            strcpy(opcode, mnemonics_COP0[rt]);
+            strcpy(opcode, mnemonics_COP0[rs]);
             if ((rs & 033) != 000)
                 sprintf(disasm, "%s:%08X", opcode, IW); /* RESERVED */
             else /* M?C0 */
                 sprintf(disasm, "%s $%u, $c%u", opcode, rt, rd & 0xF);
             return;
         case 04:
-            strcpy(opcode, mnemonics_COP2[rt]);
+            strcpy(opcode, mnemonics_COP2[rs]);
             if (opcode[0] == 'M') /* M?C2 */
                 sprintf(disasm, "%s $%u, $v%u[0x%X]", opcode, rt, rd, sa >> 1);
             else if (opcode[0] == 'C') /* C?C2 */
