@@ -101,6 +101,7 @@ void update_conf(void)
 }
 
 static int temp_PC;
+static int stage;
 #ifdef WAIT_FOR_CPU_HOST
 static int MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
@@ -133,18 +134,15 @@ static int MFC0_count[32];
 #include "su/su.h"
 #include "vu/vu.h"
 
-#ifdef SP_EXECUTE_LOG
 extern void step_SP_commands(unsigned long inst);
 extern void export_SP_memory(void);
 extern void trace_RSP_registers(void);
 static FILE *output_log;
-#endif
 
 /* Allocate the RSP CPU loop to its own functional space. */
 extern void run_task(void);
 #include "execute.h"
 
-#ifdef SP_EXECUTE_LOG
 void step_SP_commands(unsigned long inst)
 {
     if (output_log)
@@ -381,6 +379,5 @@ void trace_RSP_registers(void)
     fclose(out);
     return;
 }
-#endif
 
 #endif

@@ -80,10 +80,7 @@ union {
         unsigned int op:  6;
     } R;
     struct {
-        union {
-            unsigned imm:  16;
-            signed offset:  16;
-        };
+        unsigned int imm:  16;
         unsigned int rt:  5;
         unsigned int rs:  5;
         unsigned int op:  6;
@@ -109,26 +106,25 @@ static void BREAK(void) /* 000000 ----- ----- ----- ----- 001101 */
 }
 
 /*** Scalar, Jump and Branch Operations ***/
-#if (0)
-#define LINK_OFF    0x008
-#else
+#undef  STATIC_PC_HACK
+#ifdef  STATIC_PC_HACK
 #define LINK_OFF    0x004
+#else
+#define LINK_OFF    0x008
 #endif
 INLINE void B(signed int off18) /* MIPS assembly idiom "Unconditional Branch" */
 {
-    if (SR[0] == SR[0])
-    { /* B is a pseudo-op-code for `BEQ $0, $0, offset`:  "if (0 == 0)" */
+    if (SR[0] == SR[0]) /* B is a pseudo-op-code for `BEQ $0, $0, offset`. */
+    {
         temp_PC = *RSP.SP_PC_REG + off18;
-        inst.W = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
-        *RSP.SP_PC_REG = temp_PC & 0x00000FFC;
+        stage = 1;
     }
     return;
 }
 static void J(void) /* 000010 iiiiiiiiiiiiiiiiiiiiiiiiii */
 {
-    temp_PC = 4*inst.W;
-    inst.W = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
-    *RSP.SP_PC_REG = temp_PC & 0x00000FFC;
+    temp_PC = 4*inst.W; /* end result:  4*(inst.J.target) & 0xFFC */
+    stage = 1;
     return;
 }
 static void JAL(void) /* 000011 iiiiiiiiiiiiiiiiiiiiiiiiii */
@@ -140,8 +136,7 @@ static void JAL(void) /* 000011 iiiiiiiiiiiiiiiiiiiiiiiiii */
 static void JR(void) /* 000000 sssss ----- ----- ----- 001000 */
 {
     temp_PC = SR[inst.R.rs];
-    inst.W = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
-    *RSP.SP_PC_REG = temp_PC & 0x00000FFC;
+    stage = 1;
     return;
 }
 static void JALR(void) /* 000000 sssss ----- ddddd ----- 001001 */
@@ -153,49 +148,55 @@ static void JALR(void) /* 000000 sssss ----- ddddd ----- 001001 */
 static void BEQ(void) /* 000100 sssss ttttt iiiiiiiiiiiiiiii */
 {
     const int BC = (SR[inst.I.rs] == SR[inst.I.rt]);
+    const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*inst.I.offset);
+        B(4*offset);
     return;
 }
 static void BNE(void) /* 000101 sssss ttttt iiiiiiiiiiiiiiii */
 {
     const int BC = (SR[inst.I.rs] != SR[inst.I.rt]);
+    const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*inst.I.offset);
+        B(4*offset);
     return;
 }
 static void BLEZ(void) /* 000110 sssss 00000 iiiiiiiiiiiiiiii */
 {
     const int BC = ((signed)(SR[inst.I.rs]) <= 0);
+    const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*inst.I.offset);
+        B(4*offset);
     return;
 }
 static void BGTZ(void) /* 000111 sssss 00000 iiiiiiiiiiiiiiii */
 {
     const int BC = ((signed)(SR[inst.I.rs])  > 0);
+    const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*inst.I.offset);
+        B(4*offset);
     return;
 }
 static void BLTZ(void) /* 000001 sssss 00000 iiiiiiiiiiiiiiii */
 {
     const int BC = ((signed)(SR[inst.I.rs])  < 0);
+    const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*inst.I.offset);
+        B(4*offset);
     return;
 }
 static void BGEZ(void) /* 000001 sssss 00001 iiiiiiiiiiiiiiii */
 {
     const int BC = ((signed)(SR[inst.I.rs]) >= 0);
+    const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*inst.I.offset);
+        B(4*offset);
     return;
 }
 static void BLTZAL(void) /* 000001 sssss 10000 iiiiiiiiiiiiiiii */
@@ -256,12 +257,12 @@ static void ADD(void) /* 000000 sssss ttttt ddddd ----- 100000 */
 } /* There is no overflow trap on the RSP.  Use ADDU. */
 static void ADDI(void) /* 001000 sssss ttttt iiiiiiiiiiiiiiii */
 {
-    SR[inst.I.rt] = SR[inst.I.rs] + inst.I.offset;
+    SR[inst.I.rt] = SR[inst.I.rs] + (signed short)(inst.I.imm);
     return;
 } /* There is no overflow trap on the RSP.  Use ADDIU. */
 static void ADDIU(void) /* 001001 sssss ttttt iiiiiiiiiiiiiiii */
 {
-    SR[inst.I.rt] = SR[inst.I.rs] + inst.I.offset;
+    SR[inst.I.rt] = SR[inst.I.rs] + (signed short)(inst.I.imm);
     return;
 }
 static void ADDU(void) /* 000000 sssss ttttt ddddd ----- 100001 */
@@ -286,7 +287,7 @@ static void SLT(void) /* 000000 sssss ttttt ddddd ----- 101010 */
 }
 static void SLTI(void) /* 001010 sssss ttttt iiiiiiiiiiiiiiii */
 {
-    SR[inst.I.rt] = ((signed)(SR[inst.I.rs]) < inst.I.offset);
+    SR[inst.I.rt] = ((signed)(SR[inst.I.rs]) < (signed short)(inst.I.imm));
     return;
 }
 static void SLTIU(void) /* 001011 sssss ttttt iiiiiiiiiiiiiiii */
@@ -345,8 +346,9 @@ static void LB(void) /* 100000 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const int rd = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + 1*inst.I.offset) & 0x00000FFF;
+    addr = (SR[inst.I.rs] + 1*offset) & 0x00000FFF;
     SR[rd] = *(signed char *)(RSP.DMEM + BES(addr));
     return;
 }
@@ -354,8 +356,9 @@ static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const int rd = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + 2*inst.I.offset) & 0x00000FFF;
+    addr = (SR[inst.I.rs] + 2*offset) & 0x00000FFF;
     if (addr%4 == 0x003)
     {
         SR[rd]  = RSP.DMEM[addr - BES(0x000)] << 8;
@@ -371,8 +374,9 @@ static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const int rd = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + 4*inst.I.offset) & 0x00000FFF;
+    addr = (SR[inst.I.rs] + 4*offset) & 0x00000FFF;
     if (addr & 0x001) /* cannot execute it accurately */
     {
         SR[rd] =
@@ -396,8 +400,9 @@ static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const int rd = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + 1*inst.I.offset) & 0x00000FFF;
+    addr = (SR[inst.I.rs] + 1*offset) & 0x00000FFF;
     SR[rd] = RSP.DMEM[BES(addr)];
     return;
 }
@@ -405,8 +410,9 @@ static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const int rd = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + 2*inst.I.offset) & 0x00000FFF;
+    addr = (SR[inst.I.rs] + 2*offset) & 0x00000FFF;
     if (addr%4 == 0x003)
     {
         SR[rd]  = RSP.DMEM[addr - BES(0x000)] << 8;
@@ -421,8 +427,9 @@ static void SB(void) /* 101000 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const int rd = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + 1*inst.I.offset) & 0x00000FFF;
+    addr = (SR[inst.I.rs] + 1*offset) & 0x00000FFF;
     RSP.DMEM[BES(addr)] = (unsigned char)(SR[rd]);
     return;
 }
@@ -430,8 +437,9 @@ static void SH(void) /* 101001 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const int rd = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + 2*inst.I.offset) & 0x00000FFF;
+    addr = (SR[inst.I.rs] + 2*offset) & 0x00000FFF;
     if (addr%4 == 0x003)
     {
         RSP.DMEM[addr - BES(0x000)] = (unsigned char)(SR[rd] >> 8);
@@ -446,8 +454,9 @@ static void SW(void) /* 101011 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const int rd = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + 4*inst.I.offset) & 0x00000FFF;
+    addr = (SR[inst.I.rs] + 4*offset) & 0x00000FFF;
     if (addr & 0x001)
     {
         register int i;
@@ -725,17 +734,17 @@ extern unsigned char VCE;
 static void MFC2(void)
 {
     const int rt = inst.R.rt;
-    const int vd = inst.R.rd;
+    const int vs = inst.R.rd;
     const int e = inst.R.sa >> 1;
 
     if (e == 0xF)
         goto WRAP; /* Various games do this, actually. */
-    SR[rt] = VR_S(vd, e);
+    SR[rt] = VR_S(vs, e);
     SR[rt] = (signed short)(SR[rt]);
     return;
 WRAP:
 /////// to-do:  test SR_B for non-shifted byte masks
-    SR[rt] = (VR_B(vd, 0xF) << 8) | VR_B(vd, 0x0);
+    SR[rt] = (VR_B(vs, 0xF) << 8) | VR_B(vs, 0x0);
     SR[rt] = (signed short)(SR[rt]);
     return;
 }
