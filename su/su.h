@@ -328,7 +328,7 @@ static void ORI(void) /* 001101 sssss ttttt iiiiiiiiiiiiiiii */
 }
 static void XORI(void) /* 001110 sssss ttttt iiiiiiiiiiiiiiii */
 {
-    SR[inst.I.rt] = SR[inst.I.rs] & inst.I.imm;
+    SR[inst.I.rt] = SR[inst.I.rs] ^ inst.I.imm;
     return;
 }
 static void LUI(void) /* 001111 ----- ttttt iiiiiiiiiiiiiiii */
