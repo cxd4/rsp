@@ -106,17 +106,13 @@ static void BREAK(void) /* 000000 ----- ----- ----- ----- 001101 */
 }
 
 /*** Scalar, Jump and Branch Operations ***/
-#undef  STATIC_PC_HACK
-#ifdef  STATIC_PC_HACK
-#define LINK_OFF    0x004
-#else
+#define SLOT_OFF    0x004
 #define LINK_OFF    0x008
-#endif
 INLINE void B(signed int off18) /* MIPS assembly idiom "Unconditional Branch" */
 {
     if (SR[0] == SR[0]) /* B is a pseudo-op-code for `BEQ $0, $0, offset`. */
     {
-        temp_PC = *RSP.SP_PC_REG + off18;
+        temp_PC = *RSP.SP_PC_REG + off18 + SLOT_OFF;
         stage = 1;
     }
     return;
