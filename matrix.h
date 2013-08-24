@@ -129,7 +129,7 @@ void disassemble(unsigned long IW)
             if (op & 32) /* op > 31:  scalar loads and stores */
                 sprintf(disasm, "%s $%u, %i($%u)", opcode, rt, offset, rs);
             else if (op & 8) /* 16 > op > 8:  arithmetic/logical immediate op */
-                if (op == 8) /* LUI does not encode rs. */
+                if (op == 0xF) /* LUI does not encode rs. */
                     sprintf(disasm, "%s $%u, 0x%04X", opcode, rt, imm);
                 else
                     sprintf(disasm, "%s $%u, $%u, 0x%04X", opcode, rt, rs, imm);
