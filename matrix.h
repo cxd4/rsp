@@ -1,5 +1,5 @@
 /******************************************************************************\
-* Project:  RSP Jump Table Emulator and Disassembler                          *
+* Project:  RSP Disassembler                                                   *
 * Authors:  Iconoclast                                                         *
 * Release:  2013.08.24                                                         *
 * License:  none (public domain)                                               *
@@ -72,6 +72,13 @@ reserved_,reserved_,reserved_,reserved_,reserved_,"VSAW   ",reserved_,reserved_,
 "VRCP   ","VRCPL  ","VRCPH  ","VMOV   ","VRSQ   ","VRSQL  ","VRSQH  ","VNOP   ",
 reserved_,reserved_,reserved_,reserved_,reserved_,reserved_,reserved_,reserved_
 };
+
+/*
+ * This is a dynamic-style disassembler.  If it was really coded entirely for
+ * speed then the instruction decoding fetching would be more static,
+ * but this was mostly written to be accurate and small on size, not fastest.
+ */
+
 static const char tokens_CR_V[4][4] = {
     "vco",
     "vcc",
