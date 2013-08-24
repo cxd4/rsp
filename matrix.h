@@ -98,15 +98,22 @@ static const char* computational_elements[16] = {
  *     3.  e==0x1 is impossible to set in the assembler; "[]" is just for debug.
  */
 
-void disassemble(unsigned long inst)
+void disassemble(unsigned long IW)
 {
     register int ID;
-    const int op = (inst >> 26);
+    unsigned short imm = (IW & 0x0000FFFF);
+    signed long offset = -(IW & 0x00008000) | imm;
+    const int func = IW % 64;
+    const int sa = (IW >>  6) & 31;
+    const int rd = (IW & 0x0000FFFF) >> 11;
+    const int rt = (IW >> 16) & 31;
+    const int rs = (IW >> 21) & 31;
+    const int op = (IW >> 26);
 
     if ((op & ~001) == 000) /* SPECIAL/REGIMM */
         ID = op + 1;
     else if ((op & 075) == 020) /* COPz */
-        ID = (op & 002) ? 04 + 3*!!(inst & 0x02000000) : 03;
+        ID = (op & 002) ? 04 + 3*!!(IW & 0x02000000) : 03;
     else if ((op & 067) == 062) /* ?WC2 */
         ID = 05 + !!(op & 010);
     else
@@ -116,13 +123,6 @@ void disassemble(unsigned long inst)
     switch (ID)
     {
         char opcode[8];
-        const unsigned short imm = (inst & 0x0000FFFF);
-        const signed long offset = -(inst & 0x00008000) | imm;
-        const int func = inst % 64;
-        const int sa = (inst >>  6) & 31;
-        const int rd = (inst & 0x0000FFFF) >> 11;
-        const int rt = (inst >> 16) & 31;
-        const int rs = (inst >> 21) & 31;
 
         case 00:
             strcpy(opcode, mnemonics_PRIMARY[op]);
@@ -139,9 +139,9 @@ void disassemble(unsigned long inst)
                 else /* BEQ, BNE */
                     sprintf(disasm, "%s $%u, $%u, %i", opcode, rs, rt, offset);
             else if (op & 2) /* J and JAL */
-                sprintf(disasm, "%s 0x%07X", opcode, inst%0x04000000 << 2);
+                sprintf(disasm, "%s 0x%07X", opcode, IW%0x04000000 << 2);
             else /* RESERVED */
-                sprintf(disasm, "%s:%08X", opcode, inst);
+                sprintf(disasm, "%s:%08X", opcode, IW);
             return;
         case 01:
             strcpy(opcode, mnemonics_SPECIAL[func]);
@@ -159,19 +159,19 @@ void disassemble(unsigned long inst)
             else if (func == 015) /* BREAK */
                 strcpy(disasm, opcode); /* sprintf "BREAK" + secret code mask */
             else /* RESERVED */
-                sprintf(disasm, "%s:%08X", opcode, inst);
+                sprintf(disasm, "%s:%08X", opcode, IW);
             return;
         case 02:
             strcpy(opcode, mnemonics_REGIMM[rt]);
             if ((rt & 016) == 000) /* BLTZ[AL] and BGEZ[AL] */
                 sprintf(disasm, "%s $%u, %i", opcode, rs, offset);
             else /* RESERVED */
-                sprintf(disasm, "%s:%08X", opcode, inst);
+                sprintf(disasm, "%s:%08X", opcode, IW);
             return;
         case 03:
             strcpy(opcode, mnemonics_COP0[rt]);
             if ((rs & 033) != 000)
-                sprintf(disasm, "%s:%08X", opcode, inst); /* RESERVED */
+                sprintf(disasm, "%s:%08X", opcode, IW); /* RESERVED */
             else /* M?C0 */
                 sprintf(disasm, "%s $%u, $c%u", opcode, rt, rd & 0xF);
             return;
@@ -182,28 +182,28 @@ void disassemble(unsigned long inst)
             else if (opcode[0] == 'C') /* C?C2 */
                 sprintf(disasm, "%s $%u, $%s", opcode, rt, tokens_CR_V[rd % 4]);
             else /* RESERVED */
-                sprintf(disasm, "%s:%08X", opcode, inst);
+                sprintf(disasm, "%s:%08X", opcode, IW);
             return;
         case 05:
             strcpy(opcode, mnemonics_LWC2[rd]);
             if (opcode[0] != 'L')
-                sprintf(disasm, "%s:%08X", opcode, inst); /* RESERVED */
+                sprintf(disasm, "%s:%08X", opcode, IW); /* RESERVED */
             else
                 sprintf(disasm, "%s $v%u[0x%X], %i($%u)", opcode, rt, sa >> 1,
-                    -(inst & 0x00000040) | func, rs);
+                    -(IW & 0x00000040) | func, rs);
             return;
         case 06:
             strcpy(opcode, mnemonics_SWC2[rd]);
             if (opcode[0] != 'S')
-                sprintf(disasm, "%s:%08X", opcode, inst); /* RESERVED */
+                sprintf(disasm, "%s:%08X", opcode, IW); /* RESERVED */
             else
                 sprintf(disasm, "%s $v%u[0x%X], %i($%u)", opcode, rt, sa >> 1,
-                    -(inst & 0x00000040) | func, rs);
+                    -(IW & 0x00000040) | func, rs);
             return;
         case 07:
             strcpy(opcode, mnemonics_C2[func]);
             if (opcode[0] != 'V')
-                sprintf(disasm, "%s:%08X", opcode, inst); /* RESERVED */
+                sprintf(disasm, "%s:%08X", opcode, IW); /* RESERVED */
             else if (func == 067) /* VNOP */
                 strcpy(disasm, opcode);
             else if (func >= 060) /* VRCP?, VRSQ?, and VMOV */
