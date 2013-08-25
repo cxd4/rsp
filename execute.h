@@ -3,6 +3,7 @@
 
 #include "su/su.h"
 #include "vu/vu.h"
+#include "matrix.h"
 
 /*
  * Treat the RSP CPU as a permanent loop til MTC0/BREAK set SP_STATUS_HALT.
@@ -32,30 +33,18 @@ void run_task(void)
     while (!(*RSP.SP_STATUS_REG & 0x00000001))
     { /* Explicitly speaking, it must == 0x0, though the object is NOT(HALT). */
         inst.W = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
-        if (*RSP.SP_STATUS_REG & 0x00000020) // SP_STATUS_SSTEP by debugger.
-        {
-            message("Omitted SP debug interface.", 0); /*
-            if (rsp.step_count) // from MAME / Ville Linde
-                --rsp.step_count;
-            else
-            {
-                *RSP.SP_STATUS_REG |= 0x00000002;
-                message("SP_STATUS_BROKE", 3);
-            } */
-        }
+#if (0)
+        { char shit[4096];
+			disassemble(inst.W);
+			sprintf(shit, "RSP message:\n%s\nIW:  %08X\nIMEM:  %03X", disasm,
+				inst.W, *RSP.SP_PC_REG);
+            trace_RSP_registers();
+			message(shit, 1);
+		}
+#endif
 #ifdef SP_EXECUTE_LOG
         step_SP_commands(inst.W);
 #endif
-        *RSP.SP_PC_REG += 0x004;
-        *RSP.SP_PC_REG &= 0x00000FFC;
-/* This is the fastest method of maintaining the correct PC.
- * It is not the most accurate because PC slot checks happen after cycle EX.
- *
- * Be warned that this modifies the implemented solutions to emulating the
- * branch and jump operations.  For instance, to emulate BAL or JAL, we
- * increment the PC only by += 0x004, not by += 0x008 like the doc says.
- * Ultimately, the PC register and link address stores remain 100% accurate.
- */
 EX:
      /* if ((inst & 0xFE000000) == 0x4A000000) */
         if (inst.W >> 25 == 0x25) /* is a VU instruction */
@@ -74,23 +63,32 @@ EX:
 #ifdef EMULATE_VECTOR_RESULT_BUFFER
             memcpy(VR[vd], Result, 16);
 #endif
+        }
+        else
+        {
+            if (SR[0] != 0x00000000)
+                message("$0", 0); /* tried to overwrite MIPS GPR $zero */
+            SR[0] = 0x00000000;
+            EX_SCALAR[inst.J.op][(inst.W >> sub_op_table[inst.J.op]) & 077]();
+        }
+        if (stage == 2) /* branch phase of scheduler */
+        {
+            *RSP.SP_PC_REG = temp_PC & 0xFFC;
+            stage = 0;
             continue;
         }
-        if (SR[0] != 0x00000000)
-            message("$0", 0); /* tried to overwrite MIPS GPR $zero */
-        SR[0] = 0x00000000;
-        EX_SCALAR[inst.J.op][(inst.W >> sub_op_table[inst.J.op]) & 077]();
+        *RSP.SP_PC_REG += 0x004;
+        *RSP.SP_PC_REG &= 0x00000FFC;
+        stage <<= 1; /* stage <-- 1<<1:  next IW in branch delay slot */
+        continue;
     }
-/*
- * If we have reached this point in the program, it means that the SP task
- * was terminated in a way other than executing BREAK.  From an accuracy
- * point of view, this is highly unusual, but there are a few possibilities.
- */
-    if (*RSP.MI_INTR_REG & 0x00000001) /* 1.  interrupt set by MTC0 to break */
+    if (*RSP.SP_STATUS_REG & 0x00000002) /* normal exit, from executing BREAK */
+        return;
+    else if (*RSP.MI_INTR_REG & 0x00000001) /* interrupt set by MTC0 to break */
         RSP.CheckInterrupts();
-    else if (CFG_WAIT_FOR_CPU_HOST != 0) /* 2.  plugin system hack to re-sync */
+    else if (CFG_WAIT_FOR_CPU_HOST != 0) /* plugin system hack to re-sync */
         {}
-    else if (*RSP.SP_SEMAPHORE_REG != 0x00000000) /* 3.  semaphore lock fixes */
+    else if (*RSP.SP_SEMAPHORE_REG != 0x00000000) /* semaphore lock fixes */
         {}
     else /* ??? unknown, possibly external intervention from CPU memory map */
     {
