@@ -573,8 +573,6 @@ static void MTC0(void)
             SP_DMA_WRITE();
             return;
         case 0x4:
-            if (*RSP.SP_STATUS_REG & 0xFE000040)
-                message("MTC0\nSP_STATUS", 2);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) <<  0);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000002) <<  0);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000004) <<  1);
@@ -582,7 +580,8 @@ static void MTC0(void)
             *RSP.MI_INTR_REG |=  ((SR[rt] & 0x00000010) >> 4); /* SP_SET_INTR */
             *RSP.SP_STATUS_REG |= (SR[rt] & 0x00000010) >> 4; /* int set halt */
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000020) <<  5);
-         /* *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5); */
+            stage |= SR[rt] & 0x00000040; /// fix this shit???
+            *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000080) <<  6);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000100) <<  6);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000200) <<  7);
@@ -782,19 +781,33 @@ static void C2(void)
 }
 
 /*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
-void LBV(void)
-{ /* size of a zero-extended ASCII character octet, in bytes */
+INLINE void LS_Group_I(int direction, int length)
+{ /* Group I vector loads and stores, as defined in SGI's patent. */
     register unsigned long addr;
-    const int vt   = inst.R.rt;
-    const int e    = inst.R.sa >> 1;
+    register int i;
+    register int e = (inst.R.sa >> 1) & 0xF;
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + 1*offset) & 0x00000FFF;
-    VR_B(vt, e) = RSP.DMEM[BES(addr)];
+    addr = (SR[inst.R.rs] + length*offset);
+    if (direction == 0) /* "Load %s to Vector Unit" */
+        for (i = 0; i < length && e < 16; i++)
+            VR_B(inst.R.rt, e+i | 0x0) = RSP.DMEM[BES(addr+i & 0xFFF)];
+    else /* "Store %s from Vector Unit" */
+        for (i = 0; i < length; i++)
+            RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
+    return;
+}
+void LBV(void)
+{
+    LS_Group_I(0, sizeof(unsigned char));
     return;
 }
 void LSV(void)
-{ /* standard sizeof(short) bytes */
+{
+#if (1)
+    LS_Group_I(0, sizeof(short) > 2 ? 2 : sizeof(short));
+    return;
+#else
     register unsigned long addr;
     const int vt   = inst.R.rt;
     const int e    = inst.R.sa >> 1;
@@ -809,9 +822,14 @@ void LSV(void)
     }
     VR_S(vt, e) = *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004));
     return;
+#endif
 }
 void LLV(void)
-{ /* standard sizeof(long) bytes */
+{
+#if (1)
+    LS_Group_I(0, sizeof(long) > 4 ? 4 : sizeof(long));
+    return;
+#else
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
@@ -827,9 +845,14 @@ void LLV(void)
     addr = (addr + 0x002) & 0x00000FFF; /* F3DLX 1.23:  addr%4 is 0x002. */
     VR_S(vt, e+0x2) = *(short *)(RSP.DMEM + addr - HES(0x000)*(1 - addr%0x004));
     return;
+#endif
 }
 void LDV(void)
-{ /* standard sizeof(long long) bytes */
+{
+#if (1)
+    LS_Group_I(0, sizeof(long long) > 8 ? 8 : sizeof(long long));
+    return;
+#else
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
@@ -909,148 +932,82 @@ void LDV(void)
             VR_S(vt, e+0x6) = *(short *)(RSP.DMEM + addr + 0x005);
             return;
     }
+#endif
 }
-void LQV(void)
-{ /* size of a RSP vector register */
+void SBV(void)
+{
+    LS_Group_I(1, sizeof(unsigned char));
+    return;
+}
+void SSV(void)
+{
+#if (1)
+    LS_Group_I(1, sizeof(short) > 2 ? 2 : sizeof(short));
+    return;
+#else
     register unsigned long addr;
-    register int b;
+    int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const int e  = inst.R.sa >> 1; /* Boss Game Studios audio illegal els */
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
-    if (addr & 0x001)
+    addr = (SR[inst.R.rs] + 2*offset) & 0x00000FFF;
+    if (addr%0x004 == 0x003)
     {
-        message("LQV\nOdd addr.", 3);
+        message("SSV\nWeird addr.", 3);
         return;
     }
-    b = addr & 0x0000000F;
-    addr &= ~0x0000000F;
-    switch (b/2) /* mistake in SGI patent regarding LQV */
+    if (e == 0xF)
     {
-        case 0x0/2:
-            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0xC) = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0xE) = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x2/2:
-            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0xC) = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x4/2:
-            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x6/2:
-            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x8/2: /* "Resident Evil 2" cinematics and Boss Game Studios */
-            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xA/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xC/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xE/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
+        message("SSV\nIllegal element.", 3);
+        return;
     }
+    *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e);
+    return;
+#endif
 }
-void LRV(void)
-{ /* size of the rest of the vector register not handled by LQV */
+void SLV(void)
+{
+#if (1)
+    LS_Group_I(1, sizeof(long) > 4 ? 4 : sizeof(long));
+    return;
+#else
     register unsigned long addr;
-    register int b;
     const int vt = inst.R.rt;
-    const int e  = inst.R.sa >> 1; /* Boss Game Studios audio illegal els */
+    const int e  = inst.R.sa >> 1;
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
-    if (e != 0x0)
-    {
-        message("LRV\nIllegal element.", 3);
-        return;
-    }
+    addr = (SR[inst.R.rs] + 4*offset) & 0x00000FFF;
     if (addr & 0x001)
     {
-        message("LRV\nOdd addr.", 3);
+        message("SLV\nOdd addr.", 3);
         return;
     }
-    b = addr & 0x0000000F;
-    addr &= ~0x0000000F;
-    switch (b/2)
+    if (e > 0xC)
     {
-        case 0xE/2:
-            VR[vt][01] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt][02] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt][03] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt][04] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            return;
-        case 0xC/2:
-            VR[vt][02] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt][03] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt][04] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            return;
-        case 0xA/2:
-            VR[vt][03] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt][04] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            return;
-        case 0x8/2:
-            VR[vt][04] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            return;
-        case 0x6/2:
-            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            return;
-        case 0x4/2:
-            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            return;
-        case 0x2/2:
-            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            return;
-        case 0x0/2:
-            return;
+        message("SLV\nIllegal element.", 3);
+        return;
     }
+    *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e+0x0);
+    addr += 0x002;
+    addr &= 0x00000FFF; /* F3DLX 0.95:  "Mario Kart 64" */
+    *(short *)(RSP.DMEM + addr - HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e+0x2);
+    return;
+#endif
 }
+void SDV(void)
+{
+#if (1)
+    LS_Group_I(1, sizeof(long long) > 8 ? 8 : sizeof(long long));
+    return;
+#else
+    0 = 0 / 0;
+#endif
+}
+
+/*
+ * Group II vector loads and stores:
+ * PV and UV (As of RCP implementation, XV and ZV are reserved opcodes.)
+ */
 void LPV(void)
 {
     register unsigned long addr;
@@ -1287,322 +1244,6 @@ void LUV(void)
             return;
     }
 }
-void LHV(void)
-{
-    register unsigned long addr;
-    const int vt = inst.R.rt;
-    const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-
-    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
-    if (e != 0x0)
-    {
-        message("LHV\nIllegal element.", 3);
-        return;
-    }
-    if (addr & 0x0000000E)
-    {
-        message("LHV\nIllegal addr.", 3);
-        return;
-    }
-    addr ^= MES(00);
-    VR[vt][07] = RSP.DMEM[addr + HES(0x00E)] << 7;
-    VR[vt][06] = RSP.DMEM[addr + HES(0x00C)] << 7;
-    VR[vt][05] = RSP.DMEM[addr + HES(0x00A)] << 7;
-    VR[vt][04] = RSP.DMEM[addr + HES(0x008)] << 7;
-    VR[vt][03] = RSP.DMEM[addr + HES(0x006)] << 7;
-    VR[vt][02] = RSP.DMEM[addr + HES(0x004)] << 7;
-    VR[vt][01] = RSP.DMEM[addr + HES(0x002)] << 7;
-    VR[vt][00] = RSP.DMEM[addr + HES(0x000)] << 7;
-    return;
-}
-void LFV(void)
-{ /* Dummy implementation only:  Do any games execute this? */
-    char debugger[24] = "LFV\t$v00[X], 0x000($00)";
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-    const char digits[16] = {
-        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-    };
-
-    debugger[006] |= inst.R.rt / 10;
-    debugger[007] |= inst.R.rt % 10;
-    debugger[011]  = digits[inst.R.sa >> 1];
-    debugger[017]  = digits[(offset >> 8) & 0xF];
-    debugger[020]  = digits[(offset >> 4) & 0xF];
-    debugger[021]  = digits[(offset >> 0) & 0xF];
-    debugger[024] |= inst.R.rs / 10;
-    debugger[025] |= inst.R.rs % 10;
-    message(debugger, 3);
-    return;
-}
-void LTV(void)
-{ /* Warning:  N64 has hacked LTV behavior from normal SGI one.  (STV is OK.) */
-    register unsigned long addr;
-    const int vt = inst.R.rt;
-    const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-
-    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
-    if (addr & 0x00F)
-    {
-        message("LTV\nIllegal addr.", 3);
-        return;
-    }
-    if (vt & 07)
-    {
-        message("LTV\nUncertain case!", 3);
-        return; /* For LTV I am not sure; for STV I have an idea. */
-    }
-    if (e & 1)
-    {
-        message("LTV\nIllegal element.", 3);
-        return;
-    }
-    switch (e/2)
-    {
-        case 0x0/2:
-            VR[vt+0][00] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][01] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][02] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][03] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][04] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][05] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][06] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][07] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x2/2:
-            VR[vt+0][07] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][00] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][01] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][02] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][03] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][04] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][05] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][06] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x4/2:
-            VR[vt+0][06] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][07] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][00] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][01] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][02] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][03] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][04] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][05] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x6/2:
-            VR[vt+0][05] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][06] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][07] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][00] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][01] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][02] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][03] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][04] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x8/2:
-            VR[vt+0][04] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][05] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][06] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][07] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][00] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][01] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][02] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][03] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xA/2:
-            VR[vt+0][03] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][04] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][05] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][06] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][07] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][00] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][01] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][02] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xC/2:
-            VR[vt+0][02] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][03] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][04] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][05] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][06] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][07] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][00] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][01] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xE/2:
-            VR[vt+0][01] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][02] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][03] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][04] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][05] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][06] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][07] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][00] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-    }
-}
-void SBV(void)
-{
-    register int i;
-    register unsigned long addr;
-    int e = inst.R.sa >> 1;
-    const int length = sizeof(unsigned char);
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
-    for (i = 0; i < length; i++)
-        RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
-    return;
-}
-void SSV(void)
-{
-    register int i;
-    register unsigned long addr;
-    int e = inst.R.sa >> 1;
-    const int vt = inst.R.rt;
-    const int length = sizeof(short) > 2 ? 2 : sizeof(short);
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
-#if (0)
-    for (i = 0; i < length; i++)
-        RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
-#else
-    if (e == 0xF)
-    {
-        message("SSV\nIllegal element.", 3);
-        return;
-    }
-    if (addr%0x004 == 0x003)
-    {
-        message("SSV\nWeird addr.", 3);
-        return;
-    }
-    *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e);
-#endif
-    return;
-}
-void SLV(void)
-{
-    register unsigned long addr;
-    const int vt = inst.R.rt;
-    const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-
-    addr = (SR[inst.R.rs] + 4*offset) & 0x00000FFF;
-    if (e > 0xC)
-    {
-        message("SLV\nIllegal element.", 3);
-        return;
-    }
-    if (addr & 0x001)
-    {
-        message("SLV\nOdd addr.", 3);
-        return;
-    }
-    *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e+0x0);
-    addr += 0x002;
-    addr &= 0x00000FFF; /* F3DLX 0.95:  "Mario Kart 64" */
-    *(short *)(RSP.DMEM + addr - HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e+0x2);
-    return;
-}
-void SDV(void)
-{
-    register int i;
-    register unsigned long addr;
-    int e = inst.R.sa >> 1;
-    const int vt = inst.R.rt;
-    const int length = sizeof(long long) > 8 ? 8 : sizeof(long long);
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
-    for (i = 0; i < length; i++)
-    { /* Audio microcode for "Tetrisphere" will use every unaligned addr. */
-        RSP.DMEM[BES(addr)] = VR_B(vt, e);
-        addr = (addr + 0x001) & 0xFFF;
-        e = (e + 0x1) & 0xF; /* Nonzero, illegal elements used in Boss audio. */
-    }
-    return;
-}
-void SQV(void)
-{
-    register int i;
-    register unsigned long addr;
-    const int e = inst.R.sa >> 1;
-    const int length = sizeof(VR);
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
-    for (i = 0; i + addr%length < length; i++)
-        RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
-    return; /* "Mia Hamm Soccer 64" SP exception override (Ville Linde) */
-}
-void SRV(void)
-{
-    register int b;
-    register unsigned long addr;
-    const int e = inst.R.sa >> 1;
-    const int vt = inst.R.rt;
-    const int length = sizeof(VR);
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
-
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
-    b = addr & 0x0000000F;
-    addr &= ~0x0000000F;
-    if (e != 0x0)
-    {
-        message("SRV\nIllegal element.", 3);
-        return;
-    }
-    switch (b/2)
-    {
-        case 0xE/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][01];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][02];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][03];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][04];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt][07];
-            return;
-        case 0xC/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][02];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][03];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][04];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][05];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt][07];
-            return;
-        case 0xA/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][03];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][04];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][05];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][06];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][07];
-            return;
-        case 0x8/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][04];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][05];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][06];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][07];
-            return;
-        case 0x6/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][05];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][06];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][07];
-            return;
-        case 0x4/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][06];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][07];
-            return;
-        case 0x2/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][07];
-            return;
-        case 0x0/2:
-            return;
-    }
-}
 void SPV(void)
 {
     register int b;
@@ -1764,6 +1405,59 @@ void SUV(void)
             return;
     }
 }
+
+/*
+ * Group III vector loads and stores:
+ * HV, FV, and AV (As of RCP implementation, AV opcodes are reserved.)
+ */
+void LHV(void)
+{
+    register unsigned long addr;
+    const int vt = inst.R.rt;
+    const int e  = inst.R.sa >> 1;
+    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
+    if (e != 0x0)
+    {
+        message("LHV\nIllegal element.", 3);
+        return;
+    }
+    if (addr & 0x0000000E)
+    {
+        message("LHV\nIllegal addr.", 3);
+        return;
+    }
+    addr ^= MES(00);
+    VR[vt][07] = RSP.DMEM[addr + HES(0x00E)] << 7;
+    VR[vt][06] = RSP.DMEM[addr + HES(0x00C)] << 7;
+    VR[vt][05] = RSP.DMEM[addr + HES(0x00A)] << 7;
+    VR[vt][04] = RSP.DMEM[addr + HES(0x008)] << 7;
+    VR[vt][03] = RSP.DMEM[addr + HES(0x006)] << 7;
+    VR[vt][02] = RSP.DMEM[addr + HES(0x004)] << 7;
+    VR[vt][01] = RSP.DMEM[addr + HES(0x002)] << 7;
+    VR[vt][00] = RSP.DMEM[addr + HES(0x000)] << 7;
+    return;
+}
+void LFV(void)
+{ /* Dummy implementation only:  Do any games execute this? */
+    char debugger[24] = "LFV\t$v00[X], 0x000($00)";
+    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const char digits[16] = {
+        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+    };
+
+    debugger[006] |= inst.R.rt / 10;
+    debugger[007] |= inst.R.rt % 10;
+    debugger[011]  = digits[inst.R.sa >> 1];
+    debugger[017]  = digits[(offset >> 8) & 0xF];
+    debugger[020]  = digits[(offset >> 4) & 0xF];
+    debugger[021]  = digits[(offset >> 0) & 0xF];
+    debugger[024] |= inst.R.rs / 10;
+    debugger[025] |= inst.R.rs % 10;
+    message(debugger, 3);
+    return;
+}
 void SHV(void)
 {
     register unsigned long addr;
@@ -1821,6 +1515,342 @@ void SFV(void)
             return;
         default:
             message("SFV\nIllegal element.", 3);
+            return;
+    }
+}
+
+/*
+ * Group IV vector loads and stores:
+ * QV and RV
+ */
+void LQV(void)
+{ /* size of a RSP vector register */
+    register unsigned long addr;
+    register int b;
+    const int vt = inst.R.rt;
+    const int e  = inst.R.sa >> 1; /* Boss Game Studios audio illegal els */
+    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
+    if (addr & 0x001)
+    {
+        message("LQV\nOdd addr.", 3);
+        return;
+    }
+    b = addr & 0x0000000F;
+    addr &= ~0x0000000F;
+    switch (b/2) /* mistake in SGI patent regarding LQV */
+    {
+        case 0x0/2:
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0xC) = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0xE) = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0x2/2:
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0xC) = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0x4/2:
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0xA) = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0x6/2:
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0x8) = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0x8/2: /* "Resident Evil 2" cinematics and Boss Game Studios */
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0x6) = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0xA/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0x4) = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0xC/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0x2) = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0xE/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
+            VR_S(vt,e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+    }
+}
+void LRV(void)
+{ /* size of the rest of the vector register not handled by LQV */
+    register unsigned long addr;
+    register int b;
+    const int vt = inst.R.rt;
+    const int e  = inst.R.sa >> 1; /* Boss Game Studios audio illegal els */
+    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
+    if (e != 0x0)
+    {
+        message("LRV\nIllegal element.", 3);
+        return;
+    }
+    if (addr & 0x001)
+    {
+        message("LRV\nOdd addr.", 3);
+        return;
+    }
+    b = addr & 0x0000000F;
+    addr &= ~0x0000000F;
+    switch (b/2)
+    {
+        case 0xE/2:
+            VR[vt][01] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt][02] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt][03] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt][04] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            return;
+        case 0xC/2:
+            VR[vt][02] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt][03] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt][04] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            return;
+        case 0xA/2:
+            VR[vt][03] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt][04] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            return;
+        case 0x8/2:
+            VR[vt][04] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            return;
+        case 0x6/2:
+            VR[vt][05] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            return;
+        case 0x4/2:
+            VR[vt][06] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            return;
+        case 0x2/2:
+            VR[vt][07] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            return;
+        case 0x0/2:
+            return;
+    }
+}
+void SQV(void)
+{
+    register int i;
+    register unsigned long addr;
+    const int e = inst.R.sa >> 1;
+    const int length = sizeof(VR);
+    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+
+    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
+    for (i = 0; i + addr%length < length; i++)
+        RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
+    return; /* "Mia Hamm Soccer 64" SP exception override (Ville Linde) */
+}
+void SRV(void)
+{
+    register int b;
+    register unsigned long addr;
+    const int e = inst.R.sa >> 1;
+    const int vt = inst.R.rt;
+    const int length = sizeof(VR);
+    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+
+    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
+    b = addr & 0x0000000F;
+    addr &= ~0x0000000F;
+    if (e != 0x0)
+    {
+        message("SRV\nIllegal element.", 3);
+        return;
+    }
+    switch (b/2)
+    {
+        case 0xE/2:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][01];
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][02];
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][03];
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][04];
+            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][05];
+            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt][06];
+            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt][07];
+            return;
+        case 0xC/2:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][02];
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][03];
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][04];
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][05];
+            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][06];
+            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt][07];
+            return;
+        case 0xA/2:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][03];
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][04];
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][05];
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][06];
+            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][07];
+            return;
+        case 0x8/2:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][04];
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][05];
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][06];
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][07];
+            return;
+        case 0x6/2:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][05];
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][06];
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][07];
+            return;
+        case 0x4/2:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][06];
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][07];
+            return;
+        case 0x2/2:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][07];
+            return;
+        case 0x0/2:
+            return;
+    }
+}
+
+/*
+ * Group V vector loads and stores
+ * TV and SWV (As of RCP implementation, LTWV opcode was undesired.)
+ */
+void LTV(void)
+{ /* Warning:  N64 has bugged LTV behavior from normal SGI one.  (STV is OK.) */
+    register unsigned long addr;
+    const int vt = inst.R.rt;
+    const int e  = inst.R.sa >> 1;
+    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
+    if (addr & 0x00F)
+    {
+        message("LTV\nIllegal addr.", 3);
+        return;
+    }
+    if (vt & 07)
+    {
+        message("LTV\nUncertain case!", 3);
+        return; /* For LTV I am not sure; for STV I have an idea. */
+    }
+    if (e & 1)
+    {
+        message("LTV\nIllegal element.", 3);
+        return;
+    }
+    switch (e/2)
+    {
+        case 0x0/2:
+            VR[vt+0][00] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt+1][01] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt+2][02] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt+3][03] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt+4][04] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt+5][05] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt+6][06] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR[vt+7][07] = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0x2/2:
+            VR[vt+0][07] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt+1][00] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt+2][01] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt+3][02] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt+4][03] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt+5][04] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt+6][05] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR[vt+7][06] = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0x4/2:
+            VR[vt+0][06] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt+1][07] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt+2][00] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt+3][01] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt+4][02] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt+5][03] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt+6][04] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR[vt+7][05] = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0x6/2:
+            VR[vt+0][05] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt+1][06] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt+2][07] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt+3][00] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt+4][01] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt+5][02] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt+6][03] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR[vt+7][04] = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0x8/2:
+            VR[vt+0][04] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt+1][05] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt+2][06] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt+3][07] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt+4][00] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt+5][01] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt+6][02] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR[vt+7][03] = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0xA/2:
+            VR[vt+0][03] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt+1][04] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt+2][05] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt+3][06] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt+4][07] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt+5][00] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt+6][01] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR[vt+7][02] = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0xC/2:
+            VR[vt+0][02] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt+1][03] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt+2][04] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt+3][05] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt+4][06] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt+5][07] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt+6][00] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR[vt+7][01] = *(short *)(RSP.DMEM + addr + HES(0x00E));
+            return;
+        case 0xE/2:
+            VR[vt+0][01] = *(short *)(RSP.DMEM + addr + HES(0x000));
+            VR[vt+1][02] = *(short *)(RSP.DMEM + addr + HES(0x002));
+            VR[vt+2][03] = *(short *)(RSP.DMEM + addr + HES(0x004));
+            VR[vt+3][04] = *(short *)(RSP.DMEM + addr + HES(0x006));
+            VR[vt+4][05] = *(short *)(RSP.DMEM + addr + HES(0x008));
+            VR[vt+5][06] = *(short *)(RSP.DMEM + addr + HES(0x00A));
+            VR[vt+6][07] = *(short *)(RSP.DMEM + addr + HES(0x00C));
+            VR[vt+7][00] = *(short *)(RSP.DMEM + addr + HES(0x00E));
             return;
     }
 }
