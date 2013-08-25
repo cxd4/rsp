@@ -573,14 +573,16 @@ static void MTC0(void)
             SP_DMA_WRITE();
             return;
         case 0x4:
+            if (*RSP.SP_STATUS_REG & 0xFE000000)
+                message("MTC0\nSP_STATUS", 2);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) <<  0);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000002) <<  0);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000004) <<  1);
             *RSP.MI_INTR_REG &= ~((SR[rt] & 0x00000008) >> 3); /* SP_CLR_INTR */
             *RSP.MI_INTR_REG |=  ((SR[rt] & 0x00000010) >> 4); /* SP_SET_INTR */
             *RSP.SP_STATUS_REG |= (SR[rt] & 0x00000010) >> 4; /* int set halt */
+            //stage |= SR[rt] & 0x00000040; /// fix this shit???
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000020) <<  5);
-            stage |= SR[rt] & 0x00000040; /// fix this shit???
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5);
             *RSP.SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000080) <<  6);
             *RSP.SP_STATUS_REG |=  (!!(SR[rt] & 0x00000100) <<  6);
@@ -790,7 +792,7 @@ INLINE void LS_Group_I(int direction, int length)
 
     addr = (SR[inst.R.rs] + length*offset);
     if (direction == 0) /* "Load %s to Vector Unit" */
-        for (i = 0; i < length && e < 16; i++)
+        for (i = 0; i < length; i++)
             VR_B(inst.R.rt, e+i | 0x0) = RSP.DMEM[BES(addr+i & 0xFFF)];
     else /* "Store %s from Vector Unit" */
         for (i = 0; i < length; i++)
@@ -1250,10 +1252,9 @@ void SPV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const int length = sizeof(long long) > 8 ? 8 : sizeof(long long);
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
+    addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
     b = addr & 07;
     addr &= ~07;
     if (e != 0x0)
@@ -1365,10 +1366,9 @@ void SUV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const int length = sizeof(long long) > 8 ? 8 : sizeof(long long);
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
+    addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
     b = addr & 07;
     addr &= ~07;
     if (e != 0x0)
@@ -1463,10 +1463,9 @@ void SHV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const int length = 16;
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     if (addr & 0x0000000E)
     {
         message("LHV\nIllegal addr.", 3);
@@ -1493,10 +1492,9 @@ void SFV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const int length = 16;
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     addr &= 0x00000FF3;
     addr ^= BES(00);
     switch (e)
@@ -1524,7 +1522,7 @@ void SFV(void)
  * QV and RV
  */
 void LQV(void)
-{ /* size of a RSP vector register */
+{
     register unsigned long addr;
     register int b;
     const int vt = inst.R.rt;
@@ -1596,7 +1594,7 @@ void LQV(void)
     }
 }
 void LRV(void)
-{ /* size of the rest of the vector register not handled by LQV */
+{
     register unsigned long addr;
     register int b;
     const int vt = inst.R.rt;
@@ -1669,11 +1667,10 @@ void SQV(void)
     register int i;
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
-    const int length = sizeof(VR);
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
-    for (i = 0; i + addr%length < length; i++)
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
+    for (i = 0; i + addr%16 < 16; i++)
         RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
     return; /* "Mia Hamm Soccer 64" SP exception override (Ville Linde) */
 }
@@ -1683,10 +1680,9 @@ void SRV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const int length = sizeof(VR);
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     b = addr & 0x0000000F;
     addr &= ~0x0000000F;
     if (e != 0x0)
