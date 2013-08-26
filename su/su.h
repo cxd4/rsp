@@ -794,8 +794,8 @@ static void MFC2(void)
     SR[rt] = (signed short)(SR[rt]);
     return;
 WRAP:
-/////// to-do:  test SR_B for non-shifted byte masks
-    SR[rt] = (VR_B(vs, 0xF) << 8) | VR_B(vs, 0x0);
+    SR_B(rt, 2) = VR_B(vs, 0xF);
+    SR_B(rt, 3) = VR_B(vs, 0x0);
     SR[rt] = (signed short)(SR[rt]);
     return;
 }
