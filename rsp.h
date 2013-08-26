@@ -107,30 +107,6 @@ static int MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
-#define BES(address) (address ^ 03)
-/* Do a swap on the byte endian on a 32-bit segment boundary. */
-#define HES(address) (address ^ 02)
-/* Do a swap on the halfword endian on a 32-bit segment boundary. */
-#define MES(address) (address ^ 01)
-/* Do a mixed endian swap, intermediating between byte and halfword bounds. */
-#define WES(address) (address ^ 00)
-/* Because MIPS and Win32 machines are both 32 bits, no endian update needed. */
-
-#define SR_B(s, i) (*(unsigned char *)(((unsigned char *)(SR+s)) + i))
-#define SR_S(s, i) (*(short *)(((unsigned char *)(SR+s)) + HES(i)))
-
-#if (0)
-#define MASK_SA(sa) (sa & 31) /* Force masking in software. */
-#else
-#define MASK_SA(sa) (sa) /* Let hardware architecture do the mask for us. */
-#endif
-/* This optimization only works for shift amounts on variable data.
- * Its only use so far is simplifying SLL, SRL, SRA, SLLV, SRLV, and SRAV.
- *
- * Basically, Intel and MIPS versions here are both 32 bits, so they ignore
- * any upper bits of shift amounts past 0b11111 (31 dec) as reserved.
- */
-
 #include "su/su.h"
 #include "vu/vu.h"
 

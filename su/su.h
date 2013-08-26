@@ -338,137 +338,191 @@ static void LUI(void) /* 001111 ----- ttttt iiiiiiiiiiiiiiii */
 }
 
 /*** Scalar, Load and Store Operations ***/
+#if (0)
+#define ENDIAN   0 /* can do N64 CPU big endian */
+#else
+#define ENDIAN  ~0
+#endif
+#define BES(address) (address ^ ENDIAN&03)
+#define HES(address) (address ^ ENDIAN&02)
+#define MES(address) (address ^ ENDIAN&01)
+#define WES(address) (address ^ ENDIAN&00)
+#define SR_B(s, i) (*(unsigned char *)(((unsigned char *)(SR + s)) + BES(i)))
+#define SR_S(s, i) (*(short *)(((unsigned char *)(SR + s)) + HES(i)))
+#define SE(x, b)    (-(x & (1 << b)) | (x & ~(~0 << b)))
+#define ZE(x, b)    (-(x & (0 << b)) | (x & ~(~0 << b)))
 static void LB(void) /* 100000 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
-    const int rd = inst.I.rt;
     const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-    SR[rd] = *(signed char *)(RSP.DMEM + BES(addr));
+    addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
+    SR[inst.I.rt] = SE(RSP.DMEM[addr], 7);
     return;
 }
 static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
-    const int rd = inst.I.rt;
+    const int rt = inst.I.rt;
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
+#if (0)
+    SR_B(rt, 2) = RSP.DMEM[BES(addr)];
+    addr = (addr + 0x001) & 0xFFF;
+    SR_B(rt, 3) = RSP.DMEM[BES(addr)];
+#else
     if (addr%4 == 0x003)
     {
-        SR[rd]  = RSP.DMEM[addr - BES(0x000)] << 8;
+        SR_B(rt, 2) = RSP.DMEM[addr - BES(0x000)];
         addr = (addr + 0x001) & 0xFFF;
-        SR[rd] |= RSP.DMEM[addr + BES(0x000)];
-        SR[rd] = (signed short)(SR[rd]);
-        return;
+        SR_B(rt, 3) = RSP.DMEM[addr + BES(0x000)];
     }
-    SR[rd] = *(signed short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
+    else
+        SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
+#endif
+    SR[rt] = SE(SR[rt], 15);
     return;
 }
 static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
-    const int rd = inst.I.rt;
+    const int rt = inst.I.rt;
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
+#if (1)
+    SR_B(rt, 0) = RSP.DMEM[BES(addr)];
+    addr = (addr + 0x001) & 0xFFF;
+    SR_B(rt, 1) = RSP.DMEM[BES(addr)];
+    addr = (addr + 0x001) & 0xFFF;
+    SR_B(rt, 2) = RSP.DMEM[BES(addr)];
+    addr = (addr + 0x001) & 0xFFF;
+    SR_B(rt, 3) = RSP.DMEM[BES(addr)];
+#else
     if (addr & 0x001) /* cannot execute it accurately */
     {
-        SR[rd] =
-            RSP.DMEM[BES(addr+0x000 & 0xFFF)]<<24
-          | RSP.DMEM[BES(addr+0x001 & 0xFFF)]<<16
-          | RSP.DMEM[BES(addr+0x002 & 0xFFF)]<< 8
-          | RSP.DMEM[BES(addr+0x003 & 0xFFF)]<< 0;
+        SR_B(rt, 0) = RSP.DMEM[BES(addr)];
+        addr = (addr + 0x001) & 0xFFF;
+        SR_B(rt, 1) = RSP.DMEM[BES(addr)];
+        addr = (addr + 0x001) & 0xFFF;
+        SR_B(rt, 2) = RSP.DMEM[BES(addr)];
+        addr = (addr + 0x001) & 0xFFF;
+        SR_B(rt, 3) = RSP.DMEM[BES(addr)];
         return;
     }
     if (addr & 0x002) /* sometimes happens, can emulate half-accurate */
     {
-        SR_S(rd, 0) = *(short *)(RSP.DMEM + addr - HES(0x000));
+        SR_S(rt, 0) = *(short *)(RSP.DMEM + addr - HES(0x000));
         addr = (addr + 0x002) & 0xFFF;
-        SR_S(rd, 2) = *(short *)(RSP.DMEM + addr + HES(0x000));
+        SR_S(rt, 2) = *(short *)(RSP.DMEM + addr + HES(0x000));
         return;
     }
-    SR[rd] = *(long *)(RSP.DMEM + addr); /* can emulate completely accurate */
+    SR[rt] = *(long *)(RSP.DMEM + addr); /* can emulate completely accurate */
+#endif
     return;
 }
 static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
-    const int rd = inst.I.rt;
     const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-    SR[rd] = RSP.DMEM[BES(addr)];
+    addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
+    SR[inst.I.rt] = ZE(RSP.DMEM[addr], 7);
     return;
 }
 static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
-    const int rd = inst.I.rt;
+    const int rt = inst.I.rt;
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
+#if (1)
+    SR_B(rt, 2) = RSP.DMEM[BES(addr)];
+    addr = (addr + 0x001) & 0xFFF;
+    SR_B(rt, 3) = RSP.DMEM[BES(addr)];
+#else
     if (addr%4 == 0x003)
     {
-        SR[rd]  = RSP.DMEM[addr - BES(0x000)] << 8;
+        SR[rt]  = RSP.DMEM[addr - BES(0x000)] << 8;
         addr = (addr + 0x001) & 0xFFF;
-        SR[rd] |= RSP.DMEM[addr + BES(0x000)];
+        SR[rt] |= RSP.DMEM[addr + BES(0x000)];
         return;
     }
-    SR[rd] = *(unsigned short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
+    SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
+#endif
+    SR[rt] = ZE(SR[rt], 15);
     return;
 }
 static void SB(void) /* 101000 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
-    const int rd = inst.I.rt;
     const signed int offset = (signed short)(inst.I.imm);
 
-    addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-    RSP.DMEM[BES(addr)] = (unsigned char)(SR[rd]);
+    addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
+    RSP.DMEM[addr] = (unsigned char)(SR[inst.I.rt]);
     return;
 }
 static void SH(void) /* 101001 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
-    const int rd = inst.I.rt;
+    const int rt = inst.I.rt;
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
+#if (1)
+    RSP.DMEM[BES(addr)] = SR_B(rt, 2);
+    addr = (addr + 0x001) & 0xFFF;
+    RSP.DMEM[BES(addr)] = SR_B(rt, 3);
+#else
     if (addr%4 == 0x003)
     {
-        RSP.DMEM[addr - BES(0x000)] = (unsigned char)(SR[rd] >> 8);
+        RSP.DMEM[addr - BES(0x000)] = (unsigned char)(SR[rt] >> 8);
         addr = (addr + 0x001) & 0xFFF;
-        RSP.DMEM[addr + BES(0x000)] = (unsigned char)(SR[rd] >> 0);
+        RSP.DMEM[addr + BES(0x000)] = (unsigned char)(SR[rt] >> 0);
         return;
     }
-    *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
+    *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1)) = (short)(SR[rt]);
+#endif
     return;
 }
 static void SW(void) /* 101011 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
-    const int rd = inst.I.rt;
+    const int rt = inst.I.rt;
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
+#if (1)
+    RSP.DMEM[BES(addr)] = SR_B(rt, 0);
+    addr = (addr + 0x001) & 0xFFF;
+    RSP.DMEM[BES(addr)] = SR_B(rt, 1);
+    addr = (addr + 0x001) & 0xFFF;
+    RSP.DMEM[BES(addr)] = SR_B(rt, 2);
+    addr = (addr + 0x001) & 0xFFF;
+    RSP.DMEM[BES(addr)] = SR_B(rt, 3);
+#else
     if (addr & 0x001)
     {
-        register int i;
-
-        for (i = 0; i < 4; i++)
-            RSP.DMEM[BES(addr+i & 0xFFF)] = (unsigned char)(SR[rd] >> 24-8*i);
+        RSP.DMEM[BES(addr)] = SR_B(rt, 0);
+        addr = (addr + 0x001) & 0xFFF;
+        RSP.DMEM[BES(addr)] = SR_B(rt, 1);
+        addr = (addr + 0x001) & 0xFFF;
+        RSP.DMEM[BES(addr)] = SR_B(rt, 2);
+        addr = (addr + 0x001) & 0xFFF;
+        RSP.DMEM[BES(addr)] = SR_B(rt, 3);
         return;
     }
     if (addr & 0x002)
     {
-        *(short *)(RSP.DMEM + addr - HES(0x000)) = SR_S(rd, 0);
+        *(short *)(RSP.DMEM + addr - HES(0x000)) = SR_S(rt, 0);
         addr = (addr + 0x002) & 0xFFF;
-        *(short *)(RSP.DMEM + addr + HES(0x000)) = SR_S(rd, 2);
+        *(short *)(RSP.DMEM + addr + HES(0x000)) = SR_S(rt, 2);
         return;
     }
-    *(long *)(RSP.DMEM + addr) = SR[rd];
+    *(long *)(RSP.DMEM + addr) = SR[rt];
+#endif
     return;
 }
 
