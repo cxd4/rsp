@@ -1670,7 +1670,7 @@ void SQV(void)
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
-    for (i = 0; i + addr%16 < 16; i++)
+    for (i = 0; i < 16 - addr%16; i++)
         RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
     return; /* "Mia Hamm Soccer 64" SP exception override (Ville Linde) */
 }
@@ -1870,13 +1870,13 @@ void SWV(void)
 }
 void STV(void)
 {
+    register int i;
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
-    int vt = inst.R.rt; ///fixme???
-    const int length = 16;
+    const int vt = inst.R.rt;
     const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
 
-    addr = (SR[inst.R.rs] + length*offset) & 0x00000FFF;
+    addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     if (addr & 0x00F)
     {
         message("STV\nIllegal addr.", 3);
@@ -1885,7 +1885,7 @@ void STV(void)
     if (vt & 07)
     {
         message("STV\nUncertain case!", 2);
-        vt &= 030;
+        return; /* vt &= 030; */
     }
     if (e & 1)
     {
@@ -1893,6 +1893,11 @@ void STV(void)
         return;
     }
     addr &= ~0x0000000F;
+#if (0)
+    for (i = 0; i < 16; i++)
+        *(short *)(RSP.DMEM + addr + HES(2*i)) = VR[vt + e/2%8][i];
+    return;
+#endif
     switch (e/2)
     {
         case 0x0/2:
