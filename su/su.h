@@ -343,10 +343,10 @@ static void LUI(void) /* 001111 ----- ttttt iiiiiiiiiiiiiiii */
 #else
 #define ENDIAN  ~0
 #endif
-#define BES(address) (address ^ ENDIAN&03)
-#define HES(address) (address ^ ENDIAN&02)
-#define MES(address) (address ^ ENDIAN&01)
-#define WES(address) (address ^ ENDIAN&00)
+#define BES(address) ((address) ^ ((ENDIAN) & 03))
+#define HES(address) ((address) ^ ((ENDIAN) & 02))
+#define MES(address) ((address) ^ ((ENDIAN) & 01))
+#define WES(address) ((address) ^ ((ENDIAN) & 00))
 #define SR_B(s, i) (*(unsigned char *)(((unsigned char *)(SR + s)) + BES(i)))
 #define SR_S(s, i) (*(short *)(((unsigned char *)(SR + s)) + HES(i)))
 #define SE(x, b)    (-(x & (1 << b)) | (x & ~(~0 << b)))
@@ -779,8 +779,8 @@ void SP_DMA_WRITE(void)
 extern short VR[32][8];
 extern signed short* vCR[2];
 extern unsigned char VCE;
-#define VR_B(v, e) (*(unsigned char *)(((unsigned char *)(VR + v)) + MES(e)))
-#define VR_S(v, e) (*(short *)((unsigned char *)(*(VR + v)) + ((e + 01) & ~01)))
+#define VR_B(v, e)  (*(unsigned char *)(((unsigned char *)(VR + v)) + MES(e)))
+#define VR_S(v, e)  (*(short *)((unsigned char *)(*(VR + v)) + ((e + 1) & ~1)))
 // to-do:  check this stupid thing for (unsigned char *)(VR+v) like above?
 static void MFC2(void)
 {
