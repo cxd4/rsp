@@ -11,7 +11,7 @@ extern "C" {
 #define PLUGIN_TYPE_CONTROLLER      4
 
 struct HWND__ {int unused;};
-typedef struct HWND__ *HWND; /* Use void pointers on GCC or old Windows. */
+typedef struct HWND__ *HWND;
 struct HINSTANCE__ {int unused;};
 typedef struct HINSTANCE__ *HINSTANCE;
 struct HMENU__ {int unused;};
@@ -27,14 +27,14 @@ typedef struct {
     /* If DLL supports memory these memory options then set them to TRUE or FALSE
        if it does not support it */
     int NormalMemory;   /* a normal BYTE array */ 
-    int MemoryBswaped;  /* a normal BYTE array where the memory has been pre
-                              bswap on a dword (32 bits) boundry */
+    int MemoryBswaped;  /* a normal BYTE array where the memory has been pre-
+                              byte-swapped on a DWORD (32 bits) boundary */
 } PLUGIN_INFO;
 
 typedef struct {
     HINSTANCE hInst;
-    int MemoryBswaped;    /* If this is set to TRUE, then the memory has been pre
-                              bswap on a dword (32 bits) boundry */
+    int MemoryBswaped;    /* If this is set to TRUE, then the memory has been
+                              pre-byte-swapped on a DWORD (32 bits) boundary */
     unsigned char *RDRAM;
     unsigned char *DMEM;
     unsigned char *IMEM;
@@ -87,7 +87,7 @@ typedef struct {
     /* Menu */
     /* Items should have an ID between 5001 and 5100 */
     HMENU hRSPMenu;
-    void (*ProcessMenuItem) ( int ID );
+    void (*ProcessMenuItem)(int ID);
 
     /* Break Points */
     int UseBPoints;
@@ -100,10 +100,9 @@ typedef struct {
     void (*RefreshBpoints) (HWND hList);
     void (*RemoveBpoint)   (HWND hList, int index);
     void (*RemoveAllBpoint)(void);
-    
+
     /* RSP command Window */
     void (*Enter_RSP_Commands_Window)(void);
-
 } RSPDEBUG_INFO;
 
 typedef struct {
@@ -128,7 +127,7 @@ typedef struct {
 /******************************************************************
   Function: CloseDLL
   Purpose:  This function is called when the emulator is closing
-            down allowing the dll to de-initialise.
+            down allowing the DLL to de-initialise.
   input:    none
   output:   none
 *******************************************************************/ 
@@ -146,7 +145,7 @@ EXPORT void CALL DllAbout(HWND hParent);
 /******************************************************************
   Function: DllConfig
   Purpose:  This function is optional function that is provided
-            to allow the user to configure the dll
+            to allow the user to configure the DLL
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/
@@ -155,7 +154,7 @@ EXPORT void CALL DllConfig(HWND hParent);
 /******************************************************************
   Function: DllTest
   Purpose:  This function is optional function that is provided
-            to allow the user to test the dll
+            to allow the user to test the DLL
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/ 
@@ -163,22 +162,22 @@ EXPORT void CALL DllTest(HWND hParent);
 
 /******************************************************************
   Function: DoRspCycles
-  Purpose:  This function is to allow the RSP to run in parrel with
-            the r4300 switching control back to the r4300 once the
-            function ends.
-  input:    The number of cylces that is meant to be executed
+  Purpose:  This function is to allow the RSP to run in parallel
+            with the r4300 switching control back to the r4300 once
+            the function ends.
+  input:    The number of cycles that is meant to be executed
   output:   The number of cycles that was executed. This value can
-            be greater than the number of cycles that the RSP 
+            be greater than the number of cycles that the RSP
             should have performed.
-            (this value is ignored if the RSP is stoped)
+            (this value is ignored if the RSP is stopped)
 *******************************************************************/ 
 EXPORT unsigned int CALL DoRspCycles(unsigned int Cycles);
 
 /******************************************************************
   Function: GetDllInfo
   Purpose:  This function allows the emulator to gather information
-            about the dll by filling in the PluginInfo structure.
-  input:    a pointer to a PLUGIN_INFO stucture that needs to be
+            about the DLL by filling in the PluginInfo structure.
+  input:    a pointer to a PLUGIN_INFO structure that needs to be
             filled by the function. (see def above)
   output:   none
 *******************************************************************/ 
@@ -187,9 +186,9 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo);
 /******************************************************************
   Function: GetRspDebugInfo
   Purpose:  This function allows the emulator to gather information
-            about the debug capabilities of the dll by filling in
+            about the debug capabilities of the DLL by filling in
             the DebugInfo structure.
-  input:    a pointer to a RSPDEBUG_INFO stucture that needs to be
+  input:    a pointer to a RSPDEBUG_INFO structure that needs to be
             filled by the function. (see def above)
   output:   none
 *******************************************************************/ 
@@ -212,7 +211,7 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount);
   Function: InitiateRSPDebugger
   Purpose:  This function is called when the DLL is started to give
             information from the emulator that the n64 RSP 
-            interface needs to intergrate the debugger with the
+            interface needs to integrate the debugger with the
             rest of the emulator.
   input:    DebugInfo is passed to this function which is defined
             above.
@@ -232,4 +231,4 @@ EXPORT void CALL RomClosed(void);
 }
 #endif
 
-#endif // __RSP_1_1_H__
+#endif

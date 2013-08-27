@@ -19,6 +19,7 @@ const char DLL_about[] =
     "Helpful shenanigans:  MarathonMan, dsx, and mudlord";
 EXPORT void CALL DllAbout(HWND hParent)
 {
+    hParent = NULL;
     message(DLL_about, 3);
     return;
 }
@@ -43,6 +44,7 @@ EXPORT void CALL DllConfig(HWND hParent)
     FILE* test;
     int cond;
 
+    hParent = NULL;
     test = fopen("sp_cfgui.exe", "rb");
     cond = (test == NULL);
     fclose(test);

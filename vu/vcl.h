@@ -2,7 +2,7 @@
 
 static void VCL(int vd, int vs, int vt, int e)
 {
-    const register unsigned short VCC_old = VCC;
+    register const unsigned short VCC_old = VCC;
     int ge, le;
     register int i;
 

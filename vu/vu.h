@@ -120,7 +120,7 @@ int sub_mask[16] = {
     0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
 };
 
-INLINE void SHUFFLE_VECTOR(int vt, int e)
+void SHUFFLE_VECTOR(int vt, int e)
 {
     register int i, j;
 #if (0 == 0)
@@ -198,7 +198,7 @@ static unsigned short zclamp[2][2] = {
 };
 */
 
-INLINE void SIGNED_CLAMP(short* VD, int mode)
+void SIGNED_CLAMP(short* VD, int mode)
 {
     register int i;
 
@@ -279,7 +279,7 @@ static void res_V(int vd, int rd, int rt, int e)
 {
     rt = rd = 0;
     message("C2\nRESERVED", 2); /* uncertain how to handle reserved, untested */
-    for (e = 0; e < 8; e++)
+    for (e = rt; e < 8; e++)
         VR_D(e) = 0x0000; /* override behavior (Michael Tedder) */
     return;
 }

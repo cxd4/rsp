@@ -8,10 +8,8 @@ static void VSAW(int vd, int vs, int vt, int e)
 
     for (i = 0; i < 8; i++)
         result[i] = VR[vs][i];
-#else
-    vs = 0;
 #endif
-    vt = 0;
+    vs = vt = 0;
 /* Even though `vt` is ignored in VSAR, according to official sources as well
  * as reversing, lots of games seem to specify it as nonzero, possibly to
  * avoid register stalling or other VU hazards.  Not really certain why yet.
@@ -25,11 +23,11 @@ static void VSAW(int vd, int vs, int vt, int e)
     if (e < 0)
     {
         message("VSAR\nInvalid mask.", 2);
-        for (i = 0; i < 8; i++)
+        for (i = vs; i < 8; i++)
             VR_D(i) = 0x0000; /* override behavior (zilmar) */
     }
     else
-        for (i = 0; i < 8; i++)
+        for (i = vs; i < 8; i++)
             VR_D(i) = VACC[i].s[e];
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
     e ^= 03;
