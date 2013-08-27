@@ -3,7 +3,9 @@
 
 static int DivIn = 0; /* buffered numerator of division read from vector file */
 static int DivOut = 0; /* global division result set by VRCP/VRCPL/VRSQ/VRSQH */
+#if (0)
 static int MovIn; /* We do not emulate this register (obsolete, for VMOV). */
+#endif
 
 static int DPH;
 /*

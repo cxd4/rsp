@@ -21,23 +21,28 @@
  */
 void run_task(void)
 {
-    int imm, rs, rt, rd;
-    int BC;
-    unsigned int addr; /* scalar loads, stores:  LB, LH, LW, LBU, LHU, SH, SW */
-
 #ifdef WAIT_FOR_CPU_HOST
+    register int i;
+
     if (CFG_WAIT_FOR_CPU_HOST != 0)
-        for (rt = 0; rt < 32; rt++)
-            MFC0_count[rt] = 0;
+        for (i = 0; i < 32; i++)
+            MFC0_count[i] = 0;
 #endif
     while (!(*RSP.SP_STATUS_REG & 0x00000001))
     { /* Explicitly speaking, it must == 0x0, though the object is NOT(HALT). */
         inst.W = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
 #if (0)
         { char shit[4096];
+if (inst.J.op != 062 && inst.J.op != 072)
+    goto EX;
+
+if (inst.R.rd < 04) goto EX; // no Group I movs
+if (inst.R.rd == 04) goto EX; // no LQV, no SQV
+if (inst.R.rd == 05 && inst.R.op == 062) goto EX; // no LRV
+if (inst.R.rd == 07) goto EX; // no LUV, no SUV
 			disassemble(inst.W);
-			sprintf(shit, "RSP message:\n%s\nIW:  %08X\nIMEM:  %03X", disasm,
-				inst.W, *RSP.SP_PC_REG);
+			sprintf(shit, "RSP message:\n%s\nIW:  %08X\nPC:  %03X", disasm,
+				inst.W, *RSP.SP_PC_REG & 0xFFF);
             trace_RSP_registers();
 			message(shit, 1);
 		}

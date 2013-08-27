@@ -777,7 +777,7 @@ void SP_DMA_WRITE(void)
 
 /*** Scalar, Coprocessor Operations (vector unit) ***/
 extern short VR[32][8];
-extern signed short* vCR[2];
+extern unsigned short* vCR[2];
 extern unsigned char VCE;
 #define VR_B(v, e)  (*(unsigned char *)(((unsigned char *)(VR + v)) + MES(e)))
 #define VR_S(v, e)  (*(short *)((unsigned char *)(*(VR + v)) + ((e + 1) & ~1)))
@@ -816,7 +816,7 @@ static void CFC2(void)
         SR[inst.R.rt] = VCE; /* This transfer is not sign-extended. */
         return;
     }
-    SR[inst.R.rt] = *(signed short *)vCR[inst.R.rd & 1];
+    SR[inst.R.rt] = *(signed short *)(vCR[inst.R.rd & 1]);
     return;
 }
 static void CTC2(void)
@@ -847,10 +847,10 @@ INLINE void LS_Group_I(int direction, int length)
     addr = (SR[inst.R.rs] + length*offset);
     if (direction == 0) /* "Load %s to Vector Unit" */
         for (i = 0; i < length; i++)
-            VR_B(inst.R.rt, e+i | 0x0) = RSP.DMEM[BES(addr+i & 0xFFF)];
+            VR_B(inst.R.rt, (e + i) | 0x0) = RSP.DMEM[BES((addr + i) & 0xFFF)];
     else /* "Store %s from Vector Unit" */
         for (i = 0; i < length; i++)
-            RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
+            RSP.DMEM[BES((addr + i) & 0xFFF)] = VR_B(inst.R.rt, (e + i) & 0xF);
     return;
 }
 void LBV(void)
@@ -1725,7 +1725,7 @@ void SQV(void)
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     for (i = 0; i < 16 - addr%16; i++)
-        RSP.DMEM[BES(addr+i & 0xFFF)] = VR_B(inst.R.rt, e+i & 0xF);
+        RSP.DMEM[BES((addr + i) & 0xFFF)] = VR_B(inst.R.rt, (e + i) & 0xF);
     return; /* "Mia Hamm Soccer 64" SP exception override (Ville Linde) */
 }
 void SRV(void)
@@ -1924,7 +1924,9 @@ void SWV(void)
 }
 void STV(void)
 {
+#if (0)
     register int i;
+#endif
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;

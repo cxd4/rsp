@@ -191,10 +191,12 @@ static signed short sclamp[2][2] = {
     { 0x0000, -0x8000},
     {+0x7FFF,  0x0000}
 };
+/*
 static unsigned short zclamp[2][2] = {
     { 0x0000, -0x0000},
     {+0xFFFF,  0x0000}
 };
+*/
 
 INLINE void SIGNED_CLAMP(short* VD, int mode)
 {
@@ -268,7 +270,7 @@ const void* vCR_old[4] = {
     &VCE,
     &VCE /* Invalid vector control register.  (There are only three.) */
 };
-signed short* vCR[2] = {
+unsigned short* vCR[2] = {
     &VCO,
     &VCC
 };

@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  RSP Disassembler                                                   *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.08.24                                                         *
+* Release:  2013.08.26                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -98,11 +98,12 @@ static const char* computational_elements[16] = {
  *     3.  e==0x1 is impossible to set in the assembler; "[]" is just for debug.
  */
 
-void disassemble(unsigned long IW)
+void disassemble(unsigned int IW)
 {
     register int ID;
     unsigned short imm = (IW & 0x0000FFFF);
-    signed long offset = -(IW & 0x00008000) | imm;
+    const signed int offset = -(IW & 0x00008000) | imm;
+    const unsigned int target = IW%0x04000000 << 2;
     const int func = IW % 64;
     const int sa = (IW >>  6) & 31;
     const int rd = (IW & 0x0000FFFF) >> 11;
@@ -139,7 +140,7 @@ void disassemble(unsigned long IW)
                 else /* BEQ, BNE */
                     sprintf(disasm, "%s $%u, $%u, %i", opcode, rs, rt, offset);
             else if (op & 2) /* J and JAL */
-                sprintf(disasm, "%s 0x%07X", opcode, IW%0x04000000 << 2);
+                sprintf(disasm, "%s 0x%07X", opcode, target);
             else /* RESERVED */
                 sprintf(disasm, "%s:%08X", opcode, IW);
             return;
