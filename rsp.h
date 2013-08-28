@@ -226,12 +226,14 @@ void trace_RSP_registers(void)
         fprintf(
             out,
            " $v%i:  [%04hX][%04hX][%04hX][%04hX][%04hX][%04hX][%04hX][%04hX]\n",
+            i,
             VR[i][00], VR[i][01], VR[i][02], VR[i][03],
             VR[i][04], VR[i][05], VR[i][06], VR[i][07]);
     for (i = 10; i < 32; i++) /* decimals "10" and higher with two characters */
         fprintf(
             out,
             "$v%i:  [%04hX][%04hX][%04hX][%04hX][%04hX][%04hX][%04hX][%04hX]\n",
+            i,
             VR[i][00], VR[i][01], VR[i][02], VR[i][03],
             VR[i][04], VR[i][05], VR[i][06], VR[i][07]);
     fprintf(out, "\n");
