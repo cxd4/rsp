@@ -90,6 +90,7 @@ union {
         unsigned int op:  6;
     } J;
     unsigned W:  32;
+    signed SW:  32;
 } inst;
 
 /*** Scalar, Special Operations ***/
@@ -841,7 +842,7 @@ void LS_Group_I(int direction, int length)
     register unsigned long addr;
     register int i;
     register int e = (inst.R.sa >> 1) & 0xF;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + length*offset);
     if (direction == 0) /* "Load %s to Vector Unit" */
@@ -866,7 +867,7 @@ void LSV(void)
     register unsigned long addr;
     const int vt   = inst.R.rt;
     const int e    = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 2*offset) & 0x00000FFF;
     if (addr%0x004 == 0x003)
@@ -888,7 +889,7 @@ void LLV(void)
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 4*offset) & 0x00000FFF;
     if (addr%0x004 & 0x001)
@@ -911,7 +912,7 @@ void LDV(void)
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
     switch (addr & 07)
@@ -1003,7 +1004,7 @@ void SSV(void)
     register unsigned long addr;
     int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 2*offset) & 0x00000FFF;
     if (addr%0x004 == 0x003)
@@ -1029,7 +1030,7 @@ void SLV(void)
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 4*offset) & 0x00000FFF;
     if (addr & 0x001)
@@ -1069,7 +1070,7 @@ void LPV(void)
     register int b;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1; /* Boss Game Studios audio illegal els */
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
     if (e != 0x0)
@@ -1183,7 +1184,7 @@ void LUV(void)
     register int b;
     const int vt = inst.R.rt;
     int e  = inst.R.sa >> 1; /* fixme >.< */
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
     if (e != 0x0)
@@ -1305,7 +1306,7 @@ void SPV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
     b = addr & 07;
@@ -1419,7 +1420,7 @@ void SUV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
     b = addr & 07;
@@ -1468,7 +1469,7 @@ void LHV(void)
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     if (e != 0x0)
@@ -1495,7 +1496,7 @@ void LHV(void)
 void LFV(void)
 { /* Dummy implementation only:  Do any games execute this? */
     char debugger[24] = "LFV\t$v00[X], 0x000($00)";
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
     const char digits[16] = {
         '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
     };
@@ -1516,7 +1517,7 @@ void SHV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     if (addr & 0x0000000E)
@@ -1545,7 +1546,7 @@ void SFV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     addr &= 0x00000FF3;
@@ -1580,7 +1581,7 @@ void LQV(void)
     register int b;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1; /* Boss Game Studios audio illegal els */
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     if (addr & 0x001)
@@ -1652,7 +1653,7 @@ void LRV(void)
     register int b;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1; /* Boss Game Studios audio illegal els */
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     if (e != 0x0)
@@ -1720,7 +1721,7 @@ void SQV(void)
     register unsigned int i;
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     for (i = 0; i < 16 - addr%16; i++)
@@ -1733,7 +1734,7 @@ void SRV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     b = addr & 0x0000000F;
@@ -1801,7 +1802,7 @@ void LTV(void)
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     if (addr & 0x00F)
@@ -1906,7 +1907,7 @@ void LTV(void)
 void SWV(void)
 { /* Dummy implementation only:  Do any games execute this? */
     char debugger[24] = "SWV\t$v00[X], 0x000($00)";
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
     const char digits[16] = {
         '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
     };
@@ -1929,7 +1930,7 @@ void STV(void)
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const signed int offset = -(inst.W & 0x00000040) | inst.R.func;
+    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
     if (addr & 0x00F)
