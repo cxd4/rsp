@@ -340,7 +340,7 @@ static void LUI(void) /* 001111 ----- ttttt iiiiiiiiiiiiiiii */
 
 /*** Scalar, Load and Store Operations ***/
 #if (0)
-#define ENDIAN   0 /* can do N64 CPU big endian */
+#define ENDIAN   0
 #else
 #define ENDIAN  ~0
 #endif
@@ -351,14 +351,14 @@ static void LUI(void) /* 001111 ----- ttttt iiiiiiiiiiiiiiii */
 #define SR_B(s, i) (*(unsigned char *)(((unsigned char *)(SR + s)) + BES(i)))
 #define SR_S(s, i) (*(short *)(((unsigned char *)(SR + s)) + HES(i)))
 #define SE(x, b)    (-(x & (1 << b)) | (x & ~(~0 << b)))
-#define ZE(x, b)    (-(x & (0 << b)) | (x & ~(~0 << b)))
+#define ZE(x, b)    (+(x & (1 << b)) | (x & ~(~0 << b)))
 static void LB(void) /* 100000 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
-    SR[inst.I.rt] = SE(RSP.DMEM[addr], 7);
+    SR[inst.I.rt] = (signed char)(RSP.DMEM[addr]);
     return;
 }
 static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
@@ -382,7 +382,7 @@ static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
     else
         SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
 #endif
-    SR[rt] = SE(SR[rt], 15);
+    SR[rt] = (signed short)(SR[rt]);
     return;
 }
 static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
@@ -429,7 +429,7 @@ static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
-    SR[inst.I.rt] = ZE(RSP.DMEM[addr], 7);
+    SR[inst.I.rt] = (unsigned char)(RSP.DMEM[addr]);
     return;
 }
 static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
@@ -453,7 +453,7 @@ static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
     }
     SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
 #endif
-    SR[rt] = ZE(SR[rt], 15);
+    SR[rt] = (unsigned short)(SR[rt]);
     return;
 }
 static void SB(void) /* 101000 sssss ttttt iiiiiiiiiiiiiiii */
@@ -847,10 +847,10 @@ void LS_Group_I(int direction, int length)
     addr = (SR[inst.R.rs] + length*offset);
     if (direction == 0) /* "Load %s to Vector Unit" */
         for (i = 0; i < length; i++)
-            VR_B(inst.R.rt, (e + i) | 0x0) = RSP.DMEM[BES((addr + i) & 0xFFF)];
+            VR_B(inst.R.rt, (e + i) | 0x0) = RSP.DMEM[BES(addr + i) & 0xFFF];
     else /* "Store %s from Vector Unit" */
         for (i = 0; i < length; i++)
-            RSP.DMEM[BES((addr + i) & 0xFFF)] = VR_B(inst.R.rt, (e + i) & 0xF);
+            RSP.DMEM[BES(addr + i) & 0xFFF] = VR_B(inst.R.rt, (e + i) & 0xF);
     return;
 }
 void LBV(void)
