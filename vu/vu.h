@@ -23,7 +23,7 @@
  *     * Not accurate.  (Real H/W decodes all of the elements iteratively.)
  *     * Colossal boost in program size, cutting down command cache memory.
  *     * Using branch frames for performing at least one conditional jump.
- *     * Even if element = 0x0, it's still 8 un-merged, separate data movs.
+ *     * Even if element = 0x0, it's still 8 un-merged, separate data moves.
  *     * Faster only for large-cache processors.  (RSP is very small-cache.)
  *     * Difficult to read.
  *     * Pointless to try to optimize that way when SSSE3 could be applied.
@@ -53,7 +53,7 @@ static const int ei[16][8] = {
  * The correct way to accurately store these is using big-endian vectors.
  *
  * For ?WC2 we may need to do byte-precision access just as directly.
- * This is ammended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
+ * This is amended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
 short VR[32][8];
 short VC[8]; /* vector/scalar coefficient */
