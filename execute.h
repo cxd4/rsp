@@ -5,20 +5,6 @@
 #include "vu/vu.h"
 #include "matrix.h"
 
-/*
- * Treat the RSP CPU as a permanent loop til MTC0/BREAK set SP_STATUS_HALT.
- *
- * Any N64 game will end the SP task by executing BREAK directly, not asking
- * MTC0 to set the HALT bit without executing a BREAK.  Thus, we could get a
- * very small (tested ~1-1.5 VI/s) speed boost by making the `while` RSP loop
- * an unconditional, permanent loop escapable only once BREAK gets executed,
- * but this detriments from strict accuracy because MTC0/SSTEP could set it.
- *
- * The bulk of speed-up to the loop has already come from having no code
- * after the execute phase.  Immediately after any RSP operation in the body,
- * the loop jumps to the beginning via the standard `continue;` statement, in
- * the absence of any trailing code outside the switches but ending the body.
- */
 void run_task(void)
 {
 #ifdef WAIT_FOR_CPU_HOST
@@ -28,25 +14,10 @@ void run_task(void)
         for (i = 0; i < 32; i++)
             MFC0_count[i] = 0;
 #endif
+
     while (!(*RSP.SP_STATUS_REG & 0x00000001))
     { /* Explicitly speaking, it must == 0x0, though the object is NOT(HALT). */
         inst.W = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
-#if (0)
-        { char shit[4096];
-if (inst.J.op != 062 && inst.J.op != 072)
-    goto EX;
-
-if (inst.R.rd < 04) goto EX; // no Group I movs
-if (inst.R.rd == 04) goto EX; // no LQV, no SQV
-if (inst.R.rd == 05 && inst.R.op == 062) goto EX; // no LRV
-if (inst.R.rd == 07) goto EX; // no LUV, no SUV
-			disassemble(inst.W);
-			sprintf(shit, "RSP message:\n%s\nIW:  %08X\nPC:  %03X", disasm,
-				inst.W, *RSP.SP_PC_REG & 0xFFF);
-            trace_RSP_registers();
-			message(shit, 1);
-		}
-#endif
 #ifdef SP_EXECUTE_LOG
         step_SP_commands(inst.W);
 #endif
