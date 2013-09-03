@@ -392,7 +392,7 @@ static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (1)
+#if (0)
     SR_B(rt, 0) = RSP.DMEM[BES(addr)];
     addr = (addr + 0x001) & 0xFFF;
     SR_B(rt, 1) = RSP.DMEM[BES(addr)];
@@ -439,7 +439,7 @@ static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (1)
+#if (0)
     SR_B(rt, 2) = RSP.DMEM[BES(addr)];
     addr = (addr + 0x001) & 0xFFF;
     SR_B(rt, 3) = RSP.DMEM[BES(addr)];
@@ -472,16 +472,16 @@ static void SH(void) /* 101001 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (1)
+#if (0)
     RSP.DMEM[BES(addr)] = SR_B(rt, 2);
     addr = (addr + 0x001) & 0xFFF;
     RSP.DMEM[BES(addr)] = SR_B(rt, 3);
 #else
     if (addr%4 == 0x003)
     {
-        RSP.DMEM[addr - BES(0x000)] = (unsigned char)(SR[rt] >> 8);
+        RSP.DMEM[addr - BES(0x000)] = SR_B(rt, 2);
         addr = (addr + 0x001) & 0xFFF;
-        RSP.DMEM[addr + BES(0x000)] = (unsigned char)(SR[rt] >> 0);
+        RSP.DMEM[addr + BES(0x000)] = SR_B(rt, 3);
         return;
     }
     *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1)) = (short)(SR[rt]);
@@ -495,7 +495,7 @@ static void SW(void) /* 101011 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (1)
+#if (0)
     RSP.DMEM[BES(addr)] = SR_B(rt, 0);
     addr = (addr + 0x001) & 0xFFF;
     RSP.DMEM[BES(addr)] = SR_B(rt, 1);
@@ -842,7 +842,7 @@ void LS_Group_I(int direction, int length)
     register unsigned long addr;
     register int i;
     register int e = (inst.R.sa >> 1) & 0xF;
-    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
+    const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + length*offset);
     if (direction == 0) /* "Load %s to Vector Unit" */
@@ -860,14 +860,14 @@ void LBV(void)
 }
 void LSV(void)
 {
-#if (1)
+#if (0)
     LS_Group_I(0, sizeof(short) > 2 ? 2 : sizeof(short));
     return;
 #else
     register unsigned long addr;
     const int vt   = inst.R.rt;
     const int e    = inst.R.sa >> 1;
-    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
+    const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 2*offset) & 0x00000FFF;
     if (addr%0x004 == 0x003)
@@ -876,20 +876,21 @@ void LSV(void)
         /* LBV(); */
         return;
     }
-    VR_S(vt, e) = *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004));
+    VR_S(vt, e) = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%0x004 - 1));
     return;
 #endif
 }
 void LLV(void)
 {
-#if (1)
+#if (0)
     LS_Group_I(0, sizeof(long) > 4 ? 4 : sizeof(long));
     return;
 #else
+    int correction;
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
+    const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 4*offset) & 0x00000FFF;
     if (addr%0x004 & 0x001)
@@ -897,22 +898,23 @@ void LLV(void)
         message("LLV\nOdd addr.", 3);
         return;
     }
-    VR_S(vt, e+0x0) = *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004));
+    correction = HES(0x000)*(addr%0x004 - 1);
+    VR_S(vt, e+0x0) = *(short *)(RSP.DMEM + addr - correction);
     addr = (addr + 0x002) & 0x00000FFF; /* F3DLX 1.23:  addr%4 is 0x002. */
-    VR_S(vt, e+0x2) = *(short *)(RSP.DMEM + addr - HES(0x000)*(1 - addr%0x004));
+    VR_S(vt, e+0x2) = *(short *)(RSP.DMEM + addr + correction);
     return;
 #endif
 }
 void LDV(void)
 {
-#if (1)
+#if (0)
     LS_Group_I(0, 8);
     return;
 #else
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
+    const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
     switch (addr & 07)
@@ -997,14 +999,14 @@ void SBV(void)
 }
 void SSV(void)
 {
-#if (1)
+#if (0)
     LS_Group_I(1, sizeof(short) > 2 ? 2 : sizeof(short));
     return;
 #else
     register unsigned long addr;
     int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
-    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
+    const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 2*offset) & 0x00000FFF;
     if (addr%0x004 == 0x003)
@@ -1017,20 +1019,21 @@ void SSV(void)
         message("SSV\nIllegal element.", 3);
         return;
     }
-    *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e);
+    *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%0x004 - 1)) = VR_S(vt, e);
     return;
 #endif
 }
 void SLV(void)
 {
-#if (1)
+#if (0)
     LS_Group_I(1, sizeof(long) > 4 ? 4 : sizeof(long));
     return;
 #else
+    int correction;
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
-    const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
+    const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 4*offset) & 0x00000FFF;
     if (addr & 0x001)
@@ -1043,10 +1046,11 @@ void SLV(void)
         message("SLV\nIllegal element.", 3);
         return;
     }
-    *(short *)(RSP.DMEM + addr + HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e+0x0);
+    correction = HES(0x000)*(addr%0x004 - 1);
+    *(short *)(RSP.DMEM + addr - correction) = VR_S(vt, e+0x0);
     addr += 0x002;
     addr &= 0x00000FFF; /* F3DLX 0.95:  "Mario Kart 64" */
-    *(short *)(RSP.DMEM + addr - HES(0x000)*(1 - addr%0x004)) = VR_S(vt, e+0x2);
+    *(short *)(RSP.DMEM + addr + correction) = VR_S(vt, e+0x2);
     return;
 #endif
 }
