@@ -107,21 +107,27 @@ static void BREAK(void) /* 000000 ----- ----- ----- ----- 001101 */
 }
 
 /*** Scalar, Jump and Branch Operations ***/
-#define SLOT_OFF    0x004
-#define LINK_OFF    0x008
-void B(signed int off18) /* MIPS assembly idiom "Unconditional Branch" */
+#ifdef EMULATE_STATIC_PC
+#define BASE_OFF    0x000
+#else
+#define BASE_OFF    0x004
+#endif
+
+#define SLOT_OFF    (BASE_OFF + 0x000)
+#define LINK_OFF    (BASE_OFF + 0x004)
+void set_PC(int address)
 {
-    if (SR[0] == SR[0]) /* B is a pseudo-op-code for `BEQ $0, $0, offset`. */
-    {
-        temp_PC = *RSP.SP_PC_REG + off18 + SLOT_OFF;
-        stage = 1;
-    }
+#ifdef EMULATE_STATIC_PC
+    *RSP.SP_PC_REG = 0x04001000 + (address & 0xFFC);
+#else
+    temp_PC        = 0x04001000 | (address & 0xFFC);
+#endif
+    stage = 1;
     return;
 }
 static void J(void) /* 000010 iiiiiiiiiiiiiiiiiiiiiiiiii */
 {
-    temp_PC = 4*inst.W; /* end result:  4*(inst.J.target) & 0xFFC */
-    stage = 1;
+    set_PC(4*inst.J.target);
     return;
 }
 static void JAL(void) /* 000011 iiiiiiiiiiiiiiiiiiiiiiiiii */
@@ -132,8 +138,7 @@ static void JAL(void) /* 000011 iiiiiiiiiiiiiiiiiiiiiiiiii */
 }
 static void JR(void) /* 000000 sssss ----- ----- ----- 001000 */
 {
-    temp_PC = SR[inst.R.rs];
-    stage = 1;
+    set_PC(SR[inst.R.rs]);
     return;
 }
 static void JALR(void) /* 000000 sssss ----- ddddd ----- 001001 */
@@ -148,7 +153,7 @@ static void BEQ(void) /* 000100 sssss ttttt iiiiiiiiiiiiiiii */
     const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*offset);
+        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BNE(void) /* 000101 sssss ttttt iiiiiiiiiiiiiiii */
@@ -157,7 +162,7 @@ static void BNE(void) /* 000101 sssss ttttt iiiiiiiiiiiiiiii */
     const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*offset);
+        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BLEZ(void) /* 000110 sssss 00000 iiiiiiiiiiiiiiii */
@@ -166,7 +171,7 @@ static void BLEZ(void) /* 000110 sssss 00000 iiiiiiiiiiiiiiii */
     const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*offset);
+        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BGTZ(void) /* 000111 sssss 00000 iiiiiiiiiiiiiiii */
@@ -175,7 +180,7 @@ static void BGTZ(void) /* 000111 sssss 00000 iiiiiiiiiiiiiiii */
     const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*offset);
+        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BLTZ(void) /* 000001 sssss 00000 iiiiiiiiiiiiiiii */
@@ -184,7 +189,7 @@ static void BLTZ(void) /* 000001 sssss 00000 iiiiiiiiiiiiiiii */
     const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*offset);
+        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BGEZ(void) /* 000001 sssss 00001 iiiiiiiiiiiiiiii */
@@ -193,7 +198,7 @@ static void BGEZ(void) /* 000001 sssss 00001 iiiiiiiiiiiiiiii */
     const int offset = (signed short)(inst.I.imm);
 
     if (BC)
-        B(4*offset);
+        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BLTZAL(void) /* 000001 sssss 10000 iiiiiiiiiiiiiiii */

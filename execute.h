@@ -7,22 +7,31 @@
 
 void run_task(void)
 {
-#ifdef WAIT_FOR_CPU_HOST
+    register int PC;
     register int i;
 
     if (CFG_WAIT_FOR_CPU_HOST != 0)
         for (i = 0; i < 32; i++)
             MFC0_count[i] = 0;
+    PC = *RSP.SP_PC_REG & 0x00000FFC;
+    while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
+    {
+        inst.W = *(unsigned int *)(RSP.IMEM + PC);
+#ifdef EMULATE_STATIC_PC
+        if (stage != 0) /* stage == 1 */
+        {
+            PC = *RSP.SP_PC_REG & 0x00000FFC;
+            --stage;
+        }
+        else
+        {
+            PC = (PC + 0x004) & 0xFFC;
+            *RSP.SP_PC_REG = 0x04001000 + PC;
+        }
 #endif
-
-    while (!(*RSP.SP_STATUS_REG & 0x00000001))
-    { /* Explicitly speaking, it must == 0x0, though the object is NOT(HALT). */
-        inst.W = *(unsigned int *)(RSP.IMEM + *RSP.SP_PC_REG);
 #ifdef SP_EXECUTE_LOG
         step_SP_commands(inst.W);
 #endif
-EX:
-     /* if ((inst & 0xFE000000) == 0x4A000000) */
         if (inst.W >> 25 == 0x25) /* is a VU instruction */
         {
             const int vd = inst.R.sa;
@@ -47,16 +56,21 @@ EX:
             SR[0] = 0x00000000;
             EX_SCALAR[inst.J.op][(inst.W >> sub_op_table[inst.J.op]) & 077]();
         }
+#ifndef EMULATE_STATIC_PC
         if (stage == 2) /* branch phase of scheduler */
         {
-            *RSP.SP_PC_REG = temp_PC & 0xFFC;
-            stage = 0;
-            continue;
+            stage = 0*stage;
+            PC = temp_PC & 0x00000FFC;
+            *RSP.SP_PC_REG = temp_PC;
         }
-        *RSP.SP_PC_REG += 0x004;
-        *RSP.SP_PC_REG &= 0x00000FFC;
-        stage <<= 1; /* stage <-- 1<<1:  next IW in branch delay slot */
+        else
+        {
+            stage = 2*stage; /* next IW in branch delay slot? */
+            PC = (PC + 0x004) & 0xFFC;
+            *RSP.SP_PC_REG = 0x04001000 + PC;
+        }
         continue;
+#endif
     }
     if (*RSP.SP_STATUS_REG & 0x00000002) /* normal exit, from executing BREAK */
         return;

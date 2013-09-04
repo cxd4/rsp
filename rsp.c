@@ -119,7 +119,7 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
         *CycleCount = 0x00000000;
     RSP = Rsp_Info;
-    *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF;
+    *RSP.SP_PC_REG = 0x04001000 & ~0x00000FFF;
 #ifdef SP_EXECUTE_LOG
     output_log = fopen("simd_log.bin", "ab");
 #endif
