@@ -858,12 +858,12 @@ void LS_Group_I(int direction, int length)
             RSP.DMEM[BES(addr + i) & 0xFFF] = VR_B(inst.R.rt, (e + i) & 0xF);
     return;
 }
-void LBV(void)
+static void LBV(void)
 {
     LS_Group_I(0, sizeof(unsigned char));
     return;
 }
-void LSV(void)
+static void LSV(void)
 {
 #if (0)
     LS_Group_I(0, sizeof(short) > 2 ? 2 : sizeof(short));
@@ -885,7 +885,7 @@ void LSV(void)
     return;
 #endif
 }
-void LLV(void)
+static void LLV(void)
 {
 #if (0)
     LS_Group_I(0, sizeof(long) > 4 ? 4 : sizeof(long));
@@ -910,7 +910,7 @@ void LLV(void)
     return;
 #endif
 }
-void LDV(void)
+static void LDV(void)
 {
 #if (0)
     LS_Group_I(0, 8);
@@ -997,12 +997,12 @@ void LDV(void)
     }
 #endif
 }
-void SBV(void)
+static void SBV(void)
 {
     LS_Group_I(1, sizeof(unsigned char));
     return;
 }
-void SSV(void)
+static void SSV(void)
 {
 #if (0)
     LS_Group_I(1, sizeof(short) > 2 ? 2 : sizeof(short));
@@ -1028,7 +1028,7 @@ void SSV(void)
     return;
 #endif
 }
-void SLV(void)
+static void SLV(void)
 {
 #if (0)
     LS_Group_I(1, sizeof(long) > 4 ? 4 : sizeof(long));
@@ -1059,7 +1059,7 @@ void SLV(void)
     return;
 #endif
 }
-void SDV(void)
+static void SDV(void)
 {
 #if (1)
     LS_Group_I(1, 8);
@@ -1073,7 +1073,7 @@ void SDV(void)
  * Group II vector loads and stores:
  * PV and UV (As of RCP implementation, XV and ZV are reserved opcodes.)
  */
-void LPV(void)
+static void LPV(void)
 {
     register unsigned long addr;
     register int b;
@@ -1187,7 +1187,7 @@ void LPV(void)
             return;
     }
 }
-void LUV(void)
+static void LUV(void)
 {
     register unsigned long addr;
     register int b;
@@ -1309,7 +1309,7 @@ void LUV(void)
             return;
     }
 }
-void SPV(void)
+static void SPV(void)
 {
     register int b;
     register unsigned long addr;
@@ -1423,7 +1423,7 @@ void SPV(void)
             return;
     }
 }
-void SUV(void)
+static void SUV(void)
 {
     register int b;
     register unsigned long addr;
@@ -1473,7 +1473,7 @@ void SUV(void)
  * Group III vector loads and stores:
  * HV, FV, and AV (As of RCP implementation, AV opcodes are reserved.)
  */
-void LHV(void)
+static void LHV(void)
 {
     register unsigned long addr;
     const int vt = inst.R.rt;
@@ -1502,7 +1502,7 @@ void LHV(void)
     VR[vt][00] = RSP.DMEM[addr + HES(0x000)] << 7;
     return;
 }
-void LFV(void)
+static void LFV(void)
 { /* Dummy implementation only:  Do any games execute this? */
     char debugger[24] = "LFV\t$v00[X], 0x000($00)";
     const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
@@ -1521,7 +1521,7 @@ void LFV(void)
     message(debugger, 3);
     return;
 }
-void SHV(void)
+static void SHV(void)
 {
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
@@ -1550,7 +1550,7 @@ void SHV(void)
     RSP.DMEM[addr + HES(0x000)] = (unsigned char)(VR[vt][00] >> 7);
     return;
 }
-void SFV(void)
+static void SFV(void)
 {
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
@@ -1584,7 +1584,7 @@ void SFV(void)
  * Group IV vector loads and stores:
  * QV and RV
  */
-void LQV(void)
+static void LQV(void)
 {
     register unsigned long addr;
     register int b;
@@ -1656,7 +1656,7 @@ void LQV(void)
             return;
     }
 }
-void LRV(void)
+static void LRV(void)
 {
     register unsigned long addr;
     register int b;
@@ -1725,7 +1725,7 @@ void LRV(void)
             return;
     }
 }
-void SQV(void)
+static void SQV(void)
 {
     register unsigned int i;
     register unsigned long addr;
@@ -1737,7 +1737,7 @@ void SQV(void)
         RSP.DMEM[BES((addr + i) & 0xFFF)] = VR_B(inst.R.rt, (e + i) & 0xF);
     return; /* "Mia Hamm Soccer 64" SP exception override (Ville Linde) */
 }
-void SRV(void)
+static void SRV(void)
 {
     register int b;
     register unsigned long addr;
@@ -1806,7 +1806,7 @@ void SRV(void)
  * Group V vector loads and stores
  * TV and SWV (As of RCP implementation, LTWV opcode was undesired.)
  */
-void LTV(void)
+static void LTV(void)
 { /* Warning:  N64 has bugged LTV behavior from normal SGI one.  (STV is OK.) */
     register unsigned long addr;
     const int vt = inst.R.rt;
@@ -1913,7 +1913,7 @@ void LTV(void)
             return;
     }
 }
-void SWV(void)
+static void SWV(void)
 { /* Dummy implementation only:  Do any games execute this? */
     char debugger[24] = "SWV\t$v00[X], 0x000($00)";
     const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
@@ -1931,7 +1931,7 @@ void SWV(void)
     message(debugger, 3);
     return;
 }
-void STV(void)
+static void STV(void)
 {
 #if (0)
     register int i;
