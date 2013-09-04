@@ -388,6 +388,15 @@ static void LUI(void) /* 001111 ----- ttttt iiiiiiiiiiiiiiii */
 #define SR_S(s, i) (*(short *)(((unsigned char *)(SR + s)) + HES(i)))
 #define SE(x, b)    (-(x & (1 << b)) | (x & ~(~0 << b)))
 #define ZE(x, b)    (+(x & (1 << b)) | (x & ~(~0 << b)))
+
+static union {
+    unsigned char B[4];
+    signed char SB[4];
+    unsigned short H[2];
+    signed short SH[2];
+    unsigned W:  32;
+} SR_temp;
+
 static void LB(void) /* 100000 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
@@ -423,6 +432,7 @@ static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
     SR[0] = 0x00000000;
     return;
 }
+extern void ULW(int rd, unsigned long addr);
 static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
@@ -430,35 +440,12 @@ static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (0)
-    SR_B(rt, 0) = RSP.DMEM[BES(addr)];
-    addr = (addr + 0x001) & 0xFFF;
-    SR_B(rt, 1) = RSP.DMEM[BES(addr)];
-    addr = (addr + 0x001) & 0xFFF;
-    SR_B(rt, 2) = RSP.DMEM[BES(addr)];
-    addr = (addr + 0x001) & 0xFFF;
-    SR_B(rt, 3) = RSP.DMEM[BES(addr)];
-#else
-    if (addr & 0x001) /* cannot execute it accurately */
+    if (addr & 0x00000003)
     {
-        SR_B(rt, 0) = RSP.DMEM[BES(addr)];
-        addr = (addr + 0x001) & 0xFFF;
-        SR_B(rt, 1) = RSP.DMEM[BES(addr)];
-        addr = (addr + 0x001) & 0xFFF;
-        SR_B(rt, 2) = RSP.DMEM[BES(addr)];
-        addr = (addr + 0x001) & 0xFFF;
-        SR_B(rt, 3) = RSP.DMEM[BES(addr)];
+        ULW(rt, addr); /* Address Error exception:  RSP bypass MIPS pseudo-op */
         return;
     }
-    if (addr & 0x002) /* sometimes happens, can emulate half-accurate */
-    {
-        SR_S(rt, 0) = *(short *)(RSP.DMEM + addr - HES(0x000));
-        addr = (addr + 0x002) & 0xFFF;
-        SR_S(rt, 2) = *(short *)(RSP.DMEM + addr + HES(0x000));
-        return;
-    }
-    SR[rt] = *(long *)(RSP.DMEM + addr); /* can emulate completely accurate */
-#endif
+    SR[rt] = *(long *)(RSP.DMEM + addr);
     SR[0] = 0x00000000;
     return;
 }
@@ -529,6 +516,7 @@ static void SH(void) /* 101001 sssss ttttt iiiiiiiiiiiiiiii */
 #endif
     return;
 }
+extern void USW(int rs, unsigned long addr);
 static void SW(void) /* 101011 sssss ttttt iiiiiiiiiiiiiiii */
 {
     register unsigned long addr;
@@ -536,35 +524,12 @@ static void SW(void) /* 101011 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (0)
-    RSP.DMEM[BES(addr)] = SR_B(rt, 0);
-    addr = (addr + 0x001) & 0xFFF;
-    RSP.DMEM[BES(addr)] = SR_B(rt, 1);
-    addr = (addr + 0x001) & 0xFFF;
-    RSP.DMEM[BES(addr)] = SR_B(rt, 2);
-    addr = (addr + 0x001) & 0xFFF;
-    RSP.DMEM[BES(addr)] = SR_B(rt, 3);
-#else
-    if (addr & 0x001)
+    if (addr & 0x00000003)
     {
-        RSP.DMEM[BES(addr)] = SR_B(rt, 0);
-        addr = (addr + 0x001) & 0xFFF;
-        RSP.DMEM[BES(addr)] = SR_B(rt, 1);
-        addr = (addr + 0x001) & 0xFFF;
-        RSP.DMEM[BES(addr)] = SR_B(rt, 2);
-        addr = (addr + 0x001) & 0xFFF;
-        RSP.DMEM[BES(addr)] = SR_B(rt, 3);
-        return;
-    }
-    if (addr & 0x002)
-    {
-        *(short *)(RSP.DMEM + addr - HES(0x000)) = SR_S(rt, 0);
-        addr = (addr + 0x002) & 0xFFF;
-        *(short *)(RSP.DMEM + addr + HES(0x000)) = SR_S(rt, 2);
+        USW(rt, addr); /* Address Error exception:  RSP bypass MIPS pseudo-op */
         return;
     }
     *(long *)(RSP.DMEM + addr) = SR[rt];
-#endif
     return;
 }
 
@@ -2089,6 +2054,87 @@ static void STV(void)
     }
 }
 
+/*** Modern pseudo-operations (not real instructions, but nice shortcuts) ***/
+/*
+ * cannot implement the following pseudo-instructions due to 2-D table limit:
+ *
+ * B       `BEQ     $zero, $zero, offset`  "Unconditional Branch"
+ * BAL     `BGEZAL  $zero, offset`         "Branch and Link"
+ * NOT     `NOR     rd, rs, $zero`         "Not"
+ * LA      [like LI but with label token]  "Load Address"
+ * LI      `ORI     rd, $at, imm_lo`       "Load Immediate" (LUI $at, imm_hi)
+ * MOVE    `ADD     rd, src, $zero`        "Move"
+ * NEGU    `SUB     rd, $zero, src`        "Negate without Overflow"
+ */
+static void NOP(void)
+{ /* "No Operation" */
+    SR[0] = SR[0] << 0;
+    return;
+}
+static void BEQZ(void)
+{ /* "Branch on Equal to Zero" */
+    const int BC = (SR[inst.I.rs] == 0);
+    const int offset = (signed short)(inst.I.imm);
+
+    if (BC == 0)
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
+    return;
+}
+static void BNEZ(void)
+{ /* "Branch on Not Equal to Zero" */
+    const int BC = (SR[inst.I.rs] != 0);
+    const int offset = (signed short)(inst.I.imm);
+
+    if (BC == 0)
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
+    return;
+}
+void ULW(int rd, unsigned long addr)
+{ /* "Unaligned Load Word" */
+    if (addr & 0x00000001)
+    {
+        SR_temp.B[03] = RSP.DMEM[BES(addr)];
+        addr = (addr + 0x001) & 0xFFF;
+        SR_temp.B[02] = RSP.DMEM[BES(addr)];
+        addr = (addr + 0x001) & 0xFFF;
+        SR_temp.B[01] = RSP.DMEM[BES(addr)];
+        addr = (addr + 0x001) & 0xFFF;
+        SR_temp.B[00] = RSP.DMEM[BES(addr)];
+    }
+    else /* addr & 0x00000002 */
+    {
+        SR_temp.H[01] = *(short *)(RSP.DMEM + addr - HES(0x000));
+        addr = (addr + 0x002) & 0xFFF;
+        SR_temp.H[00] = *(short *)(RSP.DMEM + addr + HES(0x000));
+    }
+    SR[rd] = SR_temp.W;
+    SR[0] = 0x00000000;
+    return;
+}
+void USW(int rs, unsigned long addr)
+{ /* "Unaligned Store Word" */
+    SR_temp.W = SR[rs];
+    if (addr & 0x00000001)
+    {
+        RSP.DMEM[BES(addr)] = SR_temp.B[03];
+        addr = (addr + 0x001) & 0xFFF;
+        RSP.DMEM[BES(addr)] = SR_temp.B[02];
+        addr = (addr + 0x001) & 0xFFF;
+        RSP.DMEM[BES(addr)] = SR_temp.B[01];
+        addr = (addr + 0x001) & 0xFFF;
+        RSP.DMEM[BES(addr)] = SR_temp.B[00];
+    }
+    else /* addr & 0x00000002 */
+    {
+        *(short *)(RSP.DMEM + addr - HES(0x000)) = SR_temp.H[01];
+        addr = (addr + 0x002) & 0xFFF;
+        *(short *)(RSP.DMEM + addr + HES(0x000)) = SR_temp.H[00];
+    }
+    return;
+}
+
 static void (*EX_SCALAR[64][64])(void) = {
     { /* SPECIAL */
         SLL    ,res_S  ,SRL    ,SRA    ,SLLV   ,res_S  ,SRLV   ,SRAV   ,
@@ -2132,21 +2178,21 @@ static void (*EX_SCALAR[64][64])(void) = {
         JAL    ,JAL    ,JAL    ,JAL    ,JAL    ,JAL    ,JAL    ,JAL
     },
     { /* Branch on Equal */
+        BEQZ   ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
         BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
         BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
         BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
-        BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
-        BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
+        BEQZ   ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
         BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
         BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,
         BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ    ,BEQ
     },
     { /* Branch on Not Equal */
+        BNEZ   ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
         BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
         BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
         BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
-        BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
-        BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
+        BNEZ   ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
         BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
         BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,
         BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE
@@ -2749,8 +2795,8 @@ const int sub_op_table[64] = {
     OFF_RT, /* REGIMM */
     OFF_OPCODE, /* J */
     OFF_OPCODE, /* JAL */
-    OFF_OPCODE, /* BEQ */
-    OFF_OPCODE, /* BNE */
+    OFF_RT, /* BEQ (if rt is 0, treat as pseudo-operation BEQZ) */
+    OFF_RT, /* BNE (if rt is 0, treat as pseudo-operation BNEZ) */
     OFF_OPCODE, /* BLEZ */
     OFF_OPCODE, /* BGTZ */
     OFF_OPCODE, /* ADDI */
