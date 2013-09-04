@@ -2058,7 +2058,6 @@ static void STV(void)
 /*
  * cannot implement the following pseudo-instructions due to 2-D table limit:
  *
- * B       `BEQ     $zero, $zero, offset`  "Unconditional Branch"
  * BAL     `BGEZAL  $zero, offset`         "Branch and Link"
  * NOT     `NOR     rd, rs, $zero`         "Not"
  * LA      [like LI but with label token]  "Load Address"
@@ -2069,6 +2068,16 @@ static void STV(void)
 static void NOP(void)
 { /* "No Operation" */
     SR[0] = SR[0] << 0;
+    return;
+}
+static void B(void)
+{ /* "Unconditional Branch" */
+    const int BC = (SR[0] == SR[0]);
+    const int offset = (signed short)(inst.I.imm);
+
+    if (BC == 0) /* impossible */
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BEQZ(void)
@@ -2198,21 +2207,21 @@ static void (*EX_SCALAR[64][64])(void) = {
         BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE    ,BNE
     },
     { /* Branch on Less Than or Equal to Zero */
+        B      ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
         BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
         BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
         BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
-        BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
-        BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
+        B      ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
         BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
         BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,
         BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ   ,BLEZ
     },
     { /* Branch on Greater Than Zero */
+        NOP    ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
         BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
         BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
         BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
-        BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
-        BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
+        NOP    ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
         BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
         BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,
         BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ   ,BGTZ
@@ -2797,8 +2806,8 @@ const int sub_op_table[64] = {
     OFF_OPCODE, /* JAL */
     OFF_RT, /* BEQ (if rt is 0, treat as pseudo-operation BEQZ) */
     OFF_RT, /* BNE (if rt is 0, treat as pseudo-operation BNEZ) */
-    OFF_OPCODE, /* BLEZ */
-    OFF_OPCODE, /* BGTZ */
+    OFF_RS, /* BLEZ (if rs is 0, then 0 <= 0 is B) */
+    OFF_RS, /* BGTZ (if rs is 0, then 0 > 0 is NOP) */
     OFF_OPCODE, /* ADDI */
     OFF_OPCODE, /* ADDIU */
     OFF_OPCODE, /* SLTI */
