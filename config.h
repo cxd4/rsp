@@ -18,11 +18,11 @@
 #define EXTERN_COMMAND_LIST_ABI
 #define SEMAPHORE_LOCK_CORRECTIONS
 #define WAIT_FOR_CPU_HOST
+#define EMULATE_STATIC_PC
 
 #if (0)
 #define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
-#define EMULATE_STATIC_PC // faster, possibly more accurate, not certain
 #endif
 
 const char* DLL_name = "Iconoclast's SP Interpreter";
