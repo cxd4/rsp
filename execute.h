@@ -51,9 +51,10 @@ void run_task(void)
         }
         else
         {
+#if (0)
             if (SR[0] != 0x00000000)
-                message("$0", 0); /* tried to overwrite MIPS GPR $zero */
-            SR[0] = 0x00000000;
+                message("$0", 3); /* tried to overwrite MIPS GPR $zero */
+#endif
             EX_SCALAR[inst.W >> 26][inst.W>>sub_op_table[inst.W >> 26] & 077]();
         }
 #ifndef EMULATE_STATIC_PC

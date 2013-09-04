@@ -144,6 +144,7 @@ static void JR(void) /* 000000 sssss ----- ----- ----- 001000 */
 static void JALR(void) /* 000000 sssss ----- ddddd ----- 001001 */
 {
     SR[inst.R.rd] = (*RSP.SP_PC_REG + LINK_OFF) & 0x00000FFC;
+    SR[0] = 0x00000000;
     JR();
     return;
 }
@@ -229,31 +230,37 @@ static void BGEZAL(void) /* 000001 sssss 10001 iiiiiiiiiiiiiiii */
 static void SLL(void) /* 000000 ----- ttttt ddddd aaaaa 000000 */
 {
     SR[inst.R.rd] = SR[inst.R.rt] << MASK_SA(inst.W >> 6);
+    SR[0] = 0x00000000;
     return;
 }
 static void SRL(void) /* 000000 ----- ttttt ddddd aaaaa 000010 */
 {
     SR[inst.R.rd] = (unsigned)(SR[inst.R.rt]) >> MASK_SA(inst.W >> 6);
+    SR[0] = 0x00000000;
     return;
 }
 static void SRA(void) /* 000000 ----- ttttt ddddd aaaaa 000011 */
 {
     SR[inst.R.rd] = (signed)(SR[inst.R.rt]) >> MASK_SA(inst.W >> 6);
+    SR[0] = 0x00000000;
     return;
 }
 static void SLLV(void) /* 000000 sssss ttttt ddddd ----- 000100 */
 {
     SR[inst.R.rd] = SR[inst.R.rt] << MASK_SA(SR[inst.W >> 21]);
+    SR[0] = 0x00000000;
     return;
 }
 static void SRLV(void) /* 000000 sssss ttttt ddddd ----- 000110 */
 {
     SR[inst.R.rd] = (unsigned)(SR[inst.R.rt]) >> MASK_SA(SR[inst.W >> 21]);
+    SR[0] = 0x00000000;
     return;
 }
 static void SRAV(void) /* 000000 sssss ttttt ddddd ----- 000111 */
 {
     SR[inst.R.rd] = (signed)(SR[inst.R.rt]) >> MASK_SA(SR[inst.W >> 21]);
+    SR[0] = 0x00000000;
     return;
 }
 
@@ -261,91 +268,109 @@ static void SRAV(void) /* 000000 sssss ttttt ddddd ----- 000111 */
 static void ADD(void) /* 000000 sssss ttttt ddddd ----- 100000 */
 {
     SR[inst.R.rd] = SR[inst.W >> 21] + SR[inst.R.rt];
+    SR[0] = 0x00000000;
     return;
 } /* There is no overflow trap on the RSP.  Use ADDU. */
 static void ADDI(void) /* 001000 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] + (signed short)(inst.I.imm);
+    SR[0] = 0x00000000;
     return;
 } /* There is no overflow trap on the RSP.  Use ADDIU. */
 static void ADDIU(void) /* 001001 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] + (signed short)(inst.I.imm);
+    SR[0] = 0x00000000;
     return;
 }
 static void ADDU(void) /* 000000 sssss ttttt ddddd ----- 100001 */
 {
     SR[inst.R.rd] = SR[inst.W >> 21] + SR[inst.R.rt];
+    SR[0] = 0x00000000;
     return;
 }
 static void SUB(void) /* 000000 sssss ttttt ddddd ----- 100010 */
 {
     SR[inst.R.rd] = SR[inst.W >> 21] - SR[inst.R.rt];
+    SR[0] = 0x00000000;
     return;
 } /* There is no overflow trap on the RSP.  Use SUBU. */
 static void SUBU(void) /* 000000 sssss ttttt ddddd ----- 100011 */
 {
     SR[inst.R.rd] = SR[inst.W >> 21] - SR[inst.R.rt];
+    SR[0] = 0x00000000;
     return;
 }
 static void SLT(void) /* 000000 sssss ttttt ddddd ----- 101010 */
 {
     SR[inst.R.rd] = ((signed)(SR[inst.W >> 21]) < (signed)(SR[inst.R.rt]));
+    SR[0] = 0x00000000;
     return;
 }
 static void SLTI(void) /* 001010 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = ((signed)(SR[inst.I.rs]) < (signed short)(inst.I.imm));
+    SR[0] = 0x00000000;
     return;
 }
 static void SLTIU(void) /* 001011 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = ((unsigned)(SR[inst.I.rs]) < inst.I.imm);
+    SR[0] = 0x00000000;
     return;
 }
 static void SLTU(void) /* 000000 sssss ttttt ddddd ----- 101011 */
 {
     SR[inst.R.rd] = ((unsigned)(SR[inst.W >> 21]) < (unsigned)(SR[inst.R.rt]));
+    SR[0] = 0x00000000;
     return;
 }
 static void AND(void) /* 000000 sssss ttttt ddddd ----- 100100 */
 {
     SR[inst.R.rd] = SR[inst.W >> 21] & SR[inst.R.rt];
+    SR[0] = 0x00000000;
     return;
 }
 static void OR(void) /* 000000 sssss ttttt ddddd ----- 100101 */
 {
     SR[inst.R.rd] = SR[inst.W >> 21] | SR[inst.R.rt];
+    SR[0] = 0x00000000;
     return;
 }
 static void XOR(void) /* 000000 sssss ttttt ddddd ----- 100110 */
 {
     SR[inst.R.rd] = SR[inst.W >> 21] ^ SR[inst.R.rt];
+    SR[0] = 0x00000000;
     return;
 }
 static void NOR(void) /* 000000 sssss ttttt ddddd ----- 100111 */
 {
     SR[inst.R.rd] = ~(SR[inst.W >> 21] | SR[inst.R.rt]);
+    SR[0] = 0x00000000;
     return;
 }
 static void ANDI(void) /* 001100 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] & inst.I.imm;
+    SR[0] = 0x00000000;
     return;
 }
 static void ORI(void) /* 001101 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] | inst.I.imm;
+    SR[0] = 0x00000000;
     return;
 }
 static void XORI(void) /* 001110 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] ^ inst.I.imm;
+    SR[0] = 0x00000000;
     return;
 }
 static void LUI(void) /* 001111 ----- ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = inst.I.imm << 16;
+    SR[0] = 0x00000000;
     return;
 }
 
@@ -370,6 +395,7 @@ static void LB(void) /* 100000 sssss ttttt iiiiiiiiiiiiiiii */
 
     addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
     SR[inst.I.rt] = (signed char)(RSP.DMEM[addr]);
+    SR[0] = 0x00000000;
     return;
 }
 static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
@@ -394,6 +420,7 @@ static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
         SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
 #endif
     SR[rt] = (signed short)(SR[rt]);
+    SR[0] = 0x00000000;
     return;
 }
 static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
@@ -432,6 +459,7 @@ static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
     }
     SR[rt] = *(long *)(RSP.DMEM + addr); /* can emulate completely accurate */
 #endif
+    SR[0] = 0x00000000;
     return;
 }
 static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
@@ -441,6 +469,7 @@ static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
 
     addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
     SR[inst.I.rt] = (unsigned char)(RSP.DMEM[addr]);
+    SR[0] = 0x00000000;
     return;
 }
 static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
@@ -465,6 +494,7 @@ static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
     SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
 #endif
     SR[rt] = (unsigned short)(SR[rt]);
+    SR[0] = 0x00000000;
     return;
 }
 static void SB(void) /* 101000 sssss ttttt iiiiiiiiiiiiiiii */
@@ -550,6 +580,8 @@ static void MFC0(void)
 {
     const int rt = inst.R.rt;
 
+    if (rt == 0)
+        return;
     switch (inst.R.rd & 0xF)
     {
         case 0x0:
@@ -803,11 +835,13 @@ static void MFC2(void)
         goto WRAP; /* Various games do this, actually. */
     SR[rt] = VR_S(vs, e);
     SR[rt] = (signed short)(SR[rt]);
+    SR[0] = 0x00000000;
     return;
 WRAP:
     SR_B(rt, 2) = VR_B(vs, 0xF);
     SR_B(rt, 3) = VR_B(vs, 0x0);
     SR[rt] = (signed short)(SR[rt]);
+    SR[0] = 0x00000000;
     return;
 }
 static void MTC2(void)
@@ -828,6 +862,7 @@ static void CFC2(void)
         return;
     }
     SR[inst.R.rt] = *(signed short *)(vCR[inst.R.rd & 1]);
+    SR[0] = 0x00000000;
     return;
 }
 static void CTC2(void)
