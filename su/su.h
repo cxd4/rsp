@@ -152,8 +152,9 @@ static void BEQ(void) /* 000100 sssss ttttt iiiiiiiiiiiiiiii */
     const int BC = (SR[inst.I.rs] == SR[inst.I.rt]);
     const int offset = (signed short)(inst.I.imm);
 
-    if (BC)
-        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
+    if (BC == 0)
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BNE(void) /* 000101 sssss ttttt iiiiiiiiiiiiiiii */
@@ -161,8 +162,9 @@ static void BNE(void) /* 000101 sssss ttttt iiiiiiiiiiiiiiii */
     const int BC = (SR[inst.I.rs] != SR[inst.I.rt]);
     const int offset = (signed short)(inst.I.imm);
 
-    if (BC)
-        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
+    if (BC == 0)
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BLEZ(void) /* 000110 sssss 00000 iiiiiiiiiiiiiiii */
@@ -170,8 +172,9 @@ static void BLEZ(void) /* 000110 sssss 00000 iiiiiiiiiiiiiiii */
     const int BC = ((signed)(SR[inst.I.rs]) <= 0);
     const int offset = (signed short)(inst.I.imm);
 
-    if (BC)
-        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
+    if (BC == 0)
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BGTZ(void) /* 000111 sssss 00000 iiiiiiiiiiiiiiii */
@@ -179,8 +182,9 @@ static void BGTZ(void) /* 000111 sssss 00000 iiiiiiiiiiiiiiii */
     const int BC = ((signed)(SR[inst.I.rs])  > 0);
     const int offset = (signed short)(inst.I.imm);
 
-    if (BC)
-        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
+    if (BC == 0)
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BLTZ(void) /* 000001 sssss 00000 iiiiiiiiiiiiiiii */
@@ -188,8 +192,9 @@ static void BLTZ(void) /* 000001 sssss 00000 iiiiiiiiiiiiiiii */
     const int BC = ((signed)(SR[inst.I.rs])  < 0);
     const int offset = (signed short)(inst.I.imm);
 
-    if (BC)
-        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
+    if (BC == 0)
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BGEZ(void) /* 000001 sssss 00001 iiiiiiiiiiiiiiii */
@@ -197,8 +202,9 @@ static void BGEZ(void) /* 000001 sssss 00001 iiiiiiiiiiiiiiii */
     const int BC = ((signed)(SR[inst.I.rs]) >= 0);
     const int offset = (signed short)(inst.I.imm);
 
-    if (BC)
-        set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
+    if (BC == 0)
+        return;
+    set_PC(*RSP.SP_PC_REG + 4*offset + SLOT_OFF);
     return;
 }
 static void BLTZAL(void) /* 000001 sssss 10000 iiiiiiiiiiiiiiii */
