@@ -265,18 +265,24 @@ static void SRAV(void) /* 000000 sssss ttttt ddddd ----- 000111 */
 }
 
 /*** Scalar, Arithmetic and Logical Operations ***/
+static void ADDU(void);
 static void ADD(void) /* 000000 sssss ttttt ddddd ----- 100000 */
 {
-    SR[inst.R.rd] = SR[inst.W >> 21] + SR[inst.R.rt];
-    SR[0] = 0x00000000;
+    const int trap = 0; /* There is no overflow trap on the RSP.  Use ADDU. */
+
+    if (!trap)
+        ADDU();
     return;
-} /* There is no overflow trap on the RSP.  Use ADDU. */
+}
+static void ADDIU(void);
 static void ADDI(void) /* 001000 sssss ttttt iiiiiiiiiiiiiiii */
 {
-    SR[inst.I.rt] = SR[inst.I.rs] + (signed short)(inst.I.imm);
-    SR[0] = 0x00000000;
+    const int trap = 0; /* There is no overflow trap on the RSP.  Use ADDIU. */
+
+    if (!trap)
+        ADDIU();
     return;
-} /* There is no overflow trap on the RSP.  Use ADDIU. */
+}
 static void ADDIU(void) /* 001001 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] + (signed short)(inst.I.imm);
@@ -289,10 +295,13 @@ static void ADDU(void) /* 000000 sssss ttttt ddddd ----- 100001 */
     SR[0] = 0x00000000;
     return;
 }
+static void SUBU(void);
 static void SUB(void) /* 000000 sssss ttttt ddddd ----- 100010 */
 {
-    SR[inst.R.rd] = SR[inst.W >> 21] - SR[inst.R.rt];
-    SR[0] = 0x00000000;
+    const int trap = 0; /* There is no overflow trap on the RSP.  Use SUBU. */
+
+    if (!trap)
+        SUBU();
     return;
 } /* There is no overflow trap on the RSP.  Use SUBU. */
 static void SUBU(void) /* 000000 sssss ttttt ddddd ----- 100011 */
