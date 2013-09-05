@@ -410,7 +410,9 @@ static void LB(void) /* 100000 sssss ttttt iiiiiiiiiiiiiiii */
 
     addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
     SR[inst.I.rt] = (signed char)(RSP.DMEM[addr]);
-    SR[0] = 0x00000000;
+#if (0)
+    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LB. */
+#endif
     return;
 }
 static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
@@ -435,7 +437,9 @@ static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
         SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
 #endif
     SR[rt] = (signed short)(SR[rt]);
-    SR[0] = 0x00000000;
+#if (0)
+    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LH. */
+#endif
     return;
 }
 extern void ULW(int rd, unsigned long addr);
@@ -452,7 +456,9 @@ static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
         return;
     }
     SR[rt] = *(long *)(RSP.DMEM + addr);
-    SR[0] = 0x00000000;
+#if (0)
+    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LW. */
+#endif
     return;
 }
 static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
@@ -462,7 +468,9 @@ static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
 
     addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
     SR[inst.I.rt] = (unsigned char)(RSP.DMEM[addr]);
-    SR[0] = 0x00000000;
+#if (0)
+    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LBU. */
+#endif
     return;
 }
 static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
@@ -487,7 +495,9 @@ static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
     SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
 #endif
     SR[rt] = (unsigned short)(SR[rt]);
-    SR[0] = 0x00000000;
+#if (0)
+    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LHU. */
+#endif
     return;
 }
 static void SB(void) /* 101000 sssss ttttt iiiiiiiiiiiiiiii */
@@ -2125,7 +2135,7 @@ void ULW(int rd, unsigned long addr)
         SR_temp.H[00] = *(short *)(RSP.DMEM + addr + HES(0x000));
     }
     SR[rd] = SR_temp.W;
-    SR[0] = 0x00000000;
+ /* SR[0] = 0x00000000; */
     return;
 }
 void USW(int rs, unsigned long addr)
@@ -2496,21 +2506,21 @@ static void (*EX_SCALAR[64][64])(void) = {
         res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S
     },
     { /* Load Byte */
+        NOP    ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
-        LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
-        LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
+        NOP    ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB
     },
     { /* Load Halfword */
+        NOP    ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
-        LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
-        LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
+        NOP    ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH
@@ -2526,31 +2536,31 @@ static void (*EX_SCALAR[64][64])(void) = {
         res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S
     },
     { /* Load Word */
+        NOP    ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
-        LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
-        LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
+        NOP    ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW
     },
     { /* Load Byte Unsigned */
+        NOP    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
-        LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
-        LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
+        NOP    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU
     },
     { /* Load Halfword Unsigned */
+        NOP    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
-        LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
-        LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
+        NOP    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU
@@ -2860,12 +2870,12 @@ const int sub_op_table[64] = {
     OFF_OPCODE,
     OFF_OPCODE,
     OFF_OPCODE,
-    OFF_OPCODE, /* LB */
-    OFF_OPCODE, /* LH */
+    OFF_RT, /* LB */
+    OFF_RT, /* LH */
     OFF_OPCODE,
-    OFF_OPCODE, /* LW */
-    OFF_OPCODE, /* LBU */
-    OFF_OPCODE, /* LHU */
+    OFF_RT, /* LW */
+    OFF_RT, /* LBU */
+    OFF_RT, /* LHU */
     OFF_OPCODE,
     OFF_OPCODE,
     OFF_OPCODE, /* SB */
