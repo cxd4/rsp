@@ -34,17 +34,13 @@ void run_task(void)
 #endif
         if (inst.W >> 25 == 0x25) /* is a VU instruction */
         {
-            const int vd = inst.R.sa;
-            const int vs = inst.R.rd;
-            const int vt = inst.R.rt;
-            const int e  = inst.R.rs & 0xF;
 #ifdef PARALLELIZE_VECTOR_TRANSFERS
-            SHUFFLE_VECTOR(vt, e); /* *(__int128 *)VC = shuffle(VT, mask(e)); */
+            SHUFFLE_VECTOR(vt, e); // *(__int128 *)VC = shuffle(VT, mask(e));
 #endif
 #ifdef EMULATE_VECTOR_RESULT_BUFFER
             memcpy(Result, VR[vd], 16);
 #endif
-            SP_COP2_C2[inst.R.func](vd, vs, vt, e);
+            EX_VECTOR[inst.R.func][inst.R.rs & 0xF]();
 #ifdef EMULATE_VECTOR_RESULT_BUFFER
             memcpy(VR[vd], Result, 16);
 #endif

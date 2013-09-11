@@ -1,9 +1,9 @@
 #include "vu.h"
+#include "divrom.h"
 
-static void VRSQ(int vd, int de, int vt, int e)
+static void VRSQ(void)
 {
-    e = vt = de = vd = 0;
-    message("VRSQ\nUnimplemented instruction.", 3);
-    DPH = e;
+    message("VRSQ\nUnimplemented.", 3);
+    DPH = 0;
     return;
 }

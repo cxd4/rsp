@@ -6,7 +6,7 @@ static void VSAW(int vd, int vs, int vt, int e)
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
     short result[8]; /* Prebuffer VR[vs] to prevent source overwrite. */
 
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < N; i++)
         result[i] = VR[vs][i];
 #endif
     vs = vt = 0;
@@ -32,8 +32,36 @@ static void VSAW(int vd, int vs, int vt, int e)
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
     e ^= 03;
     --e;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < N; i++)
         VACC[i].s[e] = result[i]; /* ... = VR[vs][i]; */
 #endif
+    return;
+}
+
+static void VSAWH(void)
+{
+    register int i;
+    const int vd = inst.R.sa;
+
+    for (i = 0; i < N; i++)
+        VR[vd][i] = VACC[i].s[HI];
+    return;
+}
+static void VSAWM(void)
+{
+    register int i;
+    const int vd = inst.R.sa;
+
+    for (i = 0; i < N; i++)
+        VR[vd][i] = VACC[i].s[MD];
+    return;
+}
+static void VSAWL(void)
+{
+    register int i;
+    const int vd = inst.R.sa;
+
+    for (i = 0; i < N; i++)
+        VR[vd][i] = VACC[i].s[LO];
     return;
 }
