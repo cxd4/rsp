@@ -37,9 +37,9 @@ void do_eq(int vs)
         eq[i] &= (VR[vs][i] == VC[i]);
     VCC = 0x0000;
     for (i = 0; i < N; i++)
-        VCO |= eq[i] << (i + 0x0);
+        VCC |= eq[i] << (i + 0x0);
     for (i = 0; i < N; i++)
-        VCO |=     0 << (i + 0x8);
+        VCC |=     0 << (i + 0x8);
 #if (0)
     for (i = 0; i < N; i++)
         VACC[i].s[LO] = eq[i] ? VR[vs][i] : VC[i]; /* correct but redundant */
