@@ -2,7 +2,6 @@
 
 static void VSUB(int vd, int vs, int vt, int e)
 {
-    signed int result[8];
     register int i;
 
     for (i = 0; i < N; i++) /* Try to vectorize the subtracts to be parallel. */

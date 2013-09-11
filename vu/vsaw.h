@@ -4,8 +4,6 @@ static void VSAW(int vd, int vs, int vt, int e)
 {
     register int i;
 #ifdef VU_EMULATE_SCALAR_ACCUMULATOR_READ
-    short result[8]; /* Prebuffer VR[vs] to prevent source overwrite. */
-
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i];
 #endif

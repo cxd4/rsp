@@ -2,7 +2,6 @@
 
 static void VSUBC(int vd, int vs, int vt, int e)
 {
-    signed int result[8];
     register int i;
 
     VCO = 0x0000;
