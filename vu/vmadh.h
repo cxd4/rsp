@@ -24,7 +24,7 @@ static void VMADH_v(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][i];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -38,7 +38,7 @@ static void VMADH0q(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0x2 & 01) + (i & 0xE)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -52,7 +52,7 @@ static void VMADH1q(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0x3 & 01) + (i & 0xE)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -66,7 +66,7 @@ static void VMADH0h(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0x4 & 03) + (i & 0xC)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -80,7 +80,7 @@ static void VMADH1h(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0x5 & 03) + (i & 0xC)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -94,7 +94,7 @@ static void VMADH2h(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0x6 & 03) + (i & 0xC)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -108,7 +108,7 @@ static void VMADH3h(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0x7 & 03) + (i & 0xC)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -122,7 +122,7 @@ static void VMADH0w(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0x8 & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -136,7 +136,7 @@ static void VMADH1w(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0x9 & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -150,7 +150,7 @@ static void VMADH2w(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0xA & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -164,7 +164,7 @@ static void VMADH3w(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0xB & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -178,7 +178,7 @@ static void VMADH4w(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0xC & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -192,7 +192,7 @@ static void VMADH5w(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0xD & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -206,7 +206,7 @@ static void VMADH6w(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0xE & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
@@ -220,7 +220,7 @@ static void VMADH7w(void)
     for (i = 0; i < N; i++)
         result[i] = VR[vs][i] * VR[vt][(0xF & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VACC[i].DW += result[i] << 16;
+        VACC[i].DW += (INT64)(result[i]) << 16;
     SIGNED_CLAMP(VR[vd], SM_MUL_X);
     return;
 }
