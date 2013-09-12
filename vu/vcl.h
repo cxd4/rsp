@@ -99,13 +99,13 @@ void do_cl(int vs)
     for (i = 0; i < N; i++)
         gen[i] = (dif[i] >= 0x0000);
     for (i = 0; i < N; i++)
-        le[i] = eq[i] ? len[i] : le[i];
+        le[i] = (eq[i] &  sn[i]) ? len[i] : le[i];
     for (i = 0; i < N; i++)
-        ge[i] = eq[i] ? gen[i] : ge[i];
+        ge[i] = (eq[i] & ~sn[i]) ? gen[i] : ge[i];
     for (i = 0; i < N; i++)
         eq[i] = sn[i] ? le[i] : ge[i];
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = eq[i] ? VR[vs][i] : VC[i];
+        VACC[i].s[LO] = eq[i] ? VC[i] : VR[vs][i];
 
     VCC = 0x0000;
     for (i = 0; i < N; i++)
