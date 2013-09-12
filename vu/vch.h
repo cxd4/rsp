@@ -53,8 +53,6 @@ void do_ch(int vs)
     for (i = 0; i < N; i++)
         sn[i] = sn[i] >> 15;
     for (i = 0; i < N; i++)
-        le[i] = (VC[i] < 0);
-    for (i = 0; i < N; i++)
         VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
     for (i = 0; i < N; i++)
         vce[i]  = (VR[vs][i] == VC[i]); /* (VR[vs][i] + ~VC[i] == ~1); */
@@ -69,27 +67,17 @@ void do_ch(int vs)
     for (i = 0; i < N; i++)
         neq[i] = eq[i] ^ 1;
     for (i = 0; i < N; i++)
-        VS[i] = VR[vs][i] - VC[i];
+        sn[i] &= 0x0001;
     for (i = 0; i < N; i++)
-        VS[i] = VS[i] * sn[i]; /* VS - VT if !(sn); VT - VS if (sn) */
+        le[i] = sn[i] ? (VR[vs][i] <= VC[i]) : (VC[i] < 0);
     for (i = 0; i < N; i++)
-        ge[i] = (VS[i] >= 0x0000);
+        ge[i] = sn[i] ? (VC[i] > 0x0000) : (VR[vs][i] >= VC[i]);
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = ge[i] ? VC[i] : VR[vs][i];
-    for (i = 0; i < N; i++)
-        ge[i] <<= 8; /* By default, unless (sn), VCC[i+8] = ge;VCC[i+0] = le; */
-    for (i = 0; i < N; i++)
-        sn[i] &= 0x0008; /* mutated to shift offset:  zero or eight */
-    for (i = 0; i < N; i++)
-        ge[i] >>= sn[i];
-    for (i = 0; i < N; i++)
-        le[i] <<= sn[i];
-    for (i = 0; i < N; i++)
-        sn[i] >>= 3;
+        VACC[i].s[LO] = (sn[i] ? le[i] : ge[i]) ? VC[i] : VR[vs][i];
 
     VCC = 0x0000;
     for (i = 0; i < N; i++)
-        VCC |= ge[i] | le[i];
+        VCC |=  ge[i]<<(i + 0x8) | le[i]<<(i + 0x0);
     VCO = 0x0000;
     for (i = 0; i < N; i++)
         VCO |= neq[i]<<(i + 0x8) | sn[i]<<(i + 0x0);
