@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  RSP Disassembler                                                   *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.08.26                                                         *
+* Release:  2013.09.12                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 
@@ -98,7 +98,7 @@ static const char* computational_elements[16] = {
  *     3.  e==0x1 is impossible to set in the assembler; "[]" is just for debug.
  */
 
-void disassemble(unsigned int IW)
+void disassemble(int IW)
 {
     register int ID;
     unsigned short imm = (IW & 0x0000FFFF);
@@ -109,7 +109,7 @@ void disassemble(unsigned int IW)
     const int rd = (IW & 0x0000FFFF) >> 11;
     const int rt = (IW >> 16) & 31;
     const int rs = (IW >> 21) & 31;
-    const int op = (IW >> 26);
+    const int op = (IW >> 26) & 31;
 
     if ((op & ~001) == 000) /* SPECIAL/REGIMM */
         ID = op + 1;
