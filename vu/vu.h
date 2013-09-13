@@ -241,17 +241,17 @@ INLINE void do_acc(INT64* acc)
     register int i;
 
     for (i = 0; i < N; i++)
-        base[N] = ACC_H(i);
+        base[i] = ACC_H(i);
     for (i = 0; i < N; i++)
-        base[N] = base[N] << 16;
+        base[i] = base[i] << 16;
     for (i = 0; i < N; i++)
-        base[N] = base[N] | (unsigned short)ACC_M(i);
+        base[i] = base[i] | (unsigned short)ACC_M(i);
     for (i = 0; i < N; i++)
-        base[N] = base[N] << 16;
+        base[i] = base[i] << 16;
     for (i = 0; i < N; i++)
-        base[N] = base[N] | (unsigned short)ACC_L(i);
+        base[i] = base[i] | (unsigned short)ACC_L(i);
     for (i = 0; i < N; i++)
-        base[N] = base[N] + acc[i];
+        base[i] = base[i] + acc[i];
     do_store(base);
     return;
 }
