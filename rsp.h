@@ -102,7 +102,6 @@ void update_conf(void)
     return;
 }
 
-static int temp_PC;
 static int stage;
 #ifdef WAIT_FOR_CPU_HOST
 static int MFC0_count[32];

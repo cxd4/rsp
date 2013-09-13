@@ -35,7 +35,7 @@ void run_task(void)
         if (inst.W >> 25 == 0x25) /* is a VU instruction */
         {
 #ifdef PARALLELIZE_VECTOR_TRANSFERS
-            SHUFFLE_VECTOR(vt, e); // *(__int128 *)VC = shuffle(VT, mask(e));
+            SHUFFLE_VECTOR(vt, e);
 #endif
 #ifdef EMULATE_VECTOR_RESULT_BUFFER
             memcpy(Result, VR[vd], 16);

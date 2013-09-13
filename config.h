@@ -21,8 +21,8 @@
 #define EMULATE_STATIC_PC
 
 #if (0)
-#define SP_EXECUTE_LOG // For debugging only.  Keep it off to free CPU.
-#define VU_EMULATE_SCALAR_ACCUMULATOR_READ // experimental but needs tests
+#define SP_EXECUTE_LOG
+#define VU_EMULATE_SCALAR_ACCUMULATOR_READ
 #endif
 
 const char* DLL_name = "Iconoclast's SP Interpreter";
@@ -31,7 +31,7 @@ static unsigned char conf[32];
 #define CFG_FILE    "rsp_conf.bin"
 /*
  * The name of the config file is subject to change.
- * On InitiateRSP, plugin checks if a file named after the game code in the
+ * On InitiateRSP, plug-in checks if a file named after the game code in the
  * ROM header of the loaded ROM exists.  If so, load the settings per-ROM.
  */
 
@@ -46,11 +46,11 @@ static unsigned char conf[32];
 #define CFG_HLE_UNK     ((CFG_HLE >> 7) & 1) /* anything else, reserved */
 /*
  * Most of the point behind this config system is to let users use HLE video
- * or audio plugins.  The other task types are used less than 1% of the time
+ * or audio plug-ins.  The other task types are used less than 1% of the time
  * and only in a few games.  They require simulation from within the RSP
  * internally, which I have no intention to ever support.  Some good research
  * on a few of these special task types was done by Hacktarux in the MUPEN64
- * HLE RSP plugin, so consider using that instead for complete HLE.
+ * HLE RSP plug-in, so consider using that instead for complete HLE.
  */
 
 /*

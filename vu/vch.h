@@ -4,7 +4,6 @@ void do_ch(int vs)
 {
     int eq[8], neq[8], vce[8];
     int ge[8], le[8];
-    short VS[8];
     signed short sn[8];
     register int i;
 
