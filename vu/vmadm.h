@@ -1,12 +1,12 @@
 #include "vu.h"
 
-INLINE void do_madm(short* VD, signed short* VS, unsigned short* VT)
+INLINE void do_madm(short* VD, short* VS, short* VT)
 {
     INT64 acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = VS[i] * VT[i];
+        acc[i] = (signed short)(VS[i]) * (unsigned short)(VT[i]);
     do_acc(acc);
     SIGNED_CLAMP(VD, SM_MUL_X);
     return;

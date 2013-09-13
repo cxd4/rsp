@@ -1,12 +1,12 @@
 #include "vu.h"
 
-INLINE void do_madl(short* VD, unsigned short* VS, unsigned short* VT)
+INLINE void do_madl(short* VD, short* VS, short* VT)
 {
     INT64 acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = VS[i] * VT[i];
+        acc[i] = (unsigned short)(VS[i]) * (unsigned short)(VT[i]);
     for (i = 0; i < N; i++)
         acc[i] = acc[i] >> 16;
     do_acc(acc);

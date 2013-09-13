@@ -1,12 +1,12 @@
 #include "vu.h"
 
-INLINE void do_mudn(short* VD, unsigned short* VS, signed short* VT)
+INLINE void do_mudn(short* VD, short* VS, short* VT)
 {
     long acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = VS[i] * VT[i];
+        acc[i] = (unsigned short)(VS[i]) * (signed short)(VT[i]);
     for (i = 0; i < N; i++)
         ACC_H(i) = VT[i] >> 15;
     for (i = 0; i < N; i++)
