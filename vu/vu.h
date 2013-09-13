@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.11                                                         *
+* Release:  2013.09.13                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -11,6 +11,8 @@
 #if !(MAX_LONG < 0xFFFFFFFFFFFF)
 #define MACHINE_SIZE_48_MIN
 #endif
+
+typedef long long INT64;
 
 /*
  * vector-scalar element decoding
@@ -47,6 +49,9 @@ static const int ei[16][8] = {
     { 07, 07, 07, 07, 07, 07, 07, 07 }  /* 7 */
 };
 
+#define N      8
+/* N:  number of processor elements in SIMD processor */
+
 /*
  * RSP virtual registers (of vector unit)
  * The most important are the 32 general-purpose vector registers.
@@ -55,8 +60,8 @@ static const int ei[16][8] = {
  * For ?WC2 we may need to do byte-precision access just as directly.
  * This is amended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
-short VR[32][8];
-short VC[8]; /* vector/scalar coefficient */
+short VR[32][N];
+short VC[N]; /* vector/scalar coefficient */
 
 /* #define EMULATE_VECTOR_RESULT_BUFFER */
 /*
@@ -120,9 +125,6 @@ int sub_mask[16] = {
     0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
 };
 
-#define N      8
-/* N:  number of processor elements in SIMD processor */
-
 void SHUFFLE_VECTOR(int vt, int e)
 {
     register int i, j;
@@ -149,19 +151,15 @@ void SHUFFLE_VECTOR(int vt, int e)
     return;
 }
 
-typedef long long INT64;
-
+#if (0)
 /*
- * accumulator-indexing macros
+ * accumulator-indexing macros (little endian:  not suitable for VSAW)
  */
-#define LO  00
-#define MD  01
-#define HI  02
+#define HI      02
+#define MD      01
+#define LO      00
 
 static union ACC {
-#ifdef MACHINE_SIZE_48_MIN
-    signed e:  48; /* There are eight elements in the accumulator. */
-#endif
     short int s[3]; /* Each element has a low, middle, and high 16-bit slice. */
     signed char SB[6];
 /* 64-bit access: */
@@ -170,27 +168,32 @@ static union ACC {
     unsigned short UHW[4];
     int W[2];
     unsigned int UW[2];
-    long long int DW;
-    unsigned long long UDW;
-} VACC[8];
+    INT64 DW;
+} VACC[N];
+#define ACC_L(i)   (VACC[i].s[LO])
+#define ACC_M(i)   (VACC[i].s[MD])
+#define ACC_H(i)   (VACC[i].s[HI])
 
+#else
 /*
- * special macro service for clamping accumulators
- *
- * Clamping on the RSP is the same as traditional vector units, not just SGI.
- * This algorithm, therefore, is public domain material.
- *
- * In almost all cases, the RSP requests clamping to bits 47..16 of each acc.
- * We therefore compare the 32-bit (signed int)(acc >> 16) and clamp it down
- * to, usually, 16-bit results (0x8000 if < -32768, 0x7FFF if > +32767).
- *
- * The exception is VMACQ, which requests a clamp index lsb of >> 17.
+ * accumulator-indexing macros (inverted access dimensions, suited for SSE)
  */
-#define CLAMP_BASE(acc, lo) ((signed int)(VACC[acc].DW >> lo))
+#define HI      00
+#define MD      01
+#define LO      02
+
+short VACC[3][N];
 /*
- * This algorithm might have a bug if you invoke shifts greater than 16,
- * because the 48-bit acc needs to be sign-extended when shifting right here.
+ * short ACC_L[N];
+ * short ACC_M[N];
+ * short ACC_H[N];
  */
+#define ACC_L(i)   (VACC[LO][i])
+#define ACC_M(i)   (VACC[MD][i])
+#define ACC_H(i)   (VACC[HI][i])
+
+#endif
+
 #define FORCE_STATIC_CLAMP
 static signed short sclamp[2][2] = {
     { 0x0000, -0x8000},
@@ -220,6 +223,39 @@ enum {
 
 signed int result[N];
 
+INLINE void do_store(INT64* acc)
+{
+    register int i;
+
+    for (i = 0; i < N; i++)
+        ACC_H(i) = (short)(acc[i] >> 32);
+    for (i = 0; i < N; i++)
+        ACC_M(i) = (short)(acc[i] >> 16);
+    for (i = 0; i < N; i++)
+        ACC_L(i) = (short)(acc[i] >>  0);
+    return;
+}
+INLINE void do_acc(INT64* acc)
+{
+    INT64 base[N];
+    register int i;
+
+    for (i = 0; i < N; i++)
+        base[N] = ACC_H(i);
+    for (i = 0; i < N; i++)
+        base[N] = base[N] << 16;
+    for (i = 0; i < N; i++)
+        base[N] = base[N] | (unsigned short)ACC_M(i);
+    for (i = 0; i < N; i++)
+        base[N] = base[N] << 16;
+    for (i = 0; i < N; i++)
+        base[N] = base[N] | (unsigned short)ACC_L(i);
+    for (i = 0; i < N; i++)
+        base[N] = base[N] + acc[i];
+    do_store(base);
+    return;
+}
+
 void SIGNED_CLAMP(short* VD, int mode)
 {
     register int i;
@@ -228,8 +264,11 @@ void SIGNED_CLAMP(short* VD, int mode)
     {
         case SM_MUL_X: /* typical sign-clamp of accumulator-mid (bits 31:16) */
             for (i = 0; i < N; i++)
+                result[i] = ACC_H(i) << 16;
+            for (i = 0; i < N; i++)
+                result[i] = result[i] | (unsigned short)ACC_M(i);
+            for (i = 0; i < N; i++)
             {
-                result[i] = *(signed int *)((unsigned char *)(VACC + i) + 2);
 #ifdef FORCE_STATIC_CLAMP
                 VD[i]  = result[i] & 0x0000FFFF;
                 VD[i] &= ~(result[i] - -32768) >> 31; /* min: 0x8000 ^ 0x8000 */
@@ -245,10 +284,13 @@ void SIGNED_CLAMP(short* VD, int mode)
             return;
         case SM_MUL_Z: /* sign-clamp accumulator-low (bits 15:0) */
             for (i = 0; i < N; i++)
+                result[i] = ACC_H(i) << 16;
+            for (i = 0; i < N; i++)
+                result[i] = result[i] | (unsigned short)ACC_M(i);
+            for (i = 0; i < N; i++)
             {
-                result[i] = *(signed int *)((unsigned char *)(VACC + i) + 2);
 #ifdef FORCE_STATIC_CLAMP
-                VD[i]  = VACC[i].DW & 0x00000000FFFF;
+                VD[i]  = ACC_L(i);
                 VD[i] &= ~(result[i] - -32768) >> 31;
                 VD[i] |=  (+32767 - result[i]) >> 31;
                 continue;
@@ -262,15 +304,18 @@ void SIGNED_CLAMP(short* VD, int mode)
             return;
         case SM_MUL_Q: /* possible DCT inverse quantization (VMACQ only) */
             for (i = 0; i < N; i++)
-            {
-                result[i] = CLAMP_BASE(i, 17);
+                result[i] = (short)(ACC_H(i) << 31);
+            for (i = 0; i < N; i++)
+                result[i] = result[i] | (ACC_M(i) << 15);
+            for (i = 0; i < N; i++)
+                result[i] = result[i] | ((unsigned short)ACC_L(i) >> 1);
+            for (i = 0; i < N; i++)
                 if (result[i] < -32768)
                     VD[i] = -32768 & ~0x000F;
                 else if (result[i] > +32767)
                     VD[i] = +32767 & ~0x000F;
                 else
                     VD[i] = result[i] & 0x0000FFF0;
-            }
             return;
         case SM_ADD_A: /* VADD and VSUB */
             for (i = 0; i < N; i++)

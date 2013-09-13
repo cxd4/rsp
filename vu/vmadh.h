@@ -1,226 +1,207 @@
 #include "vu.h"
 
-static void VMADH(int vd, int vs, int vt, int e)
+INLINE void do_madh(short* VD, signed short* VS, signed short* VT)
 {
-    register signed long long product;
+    INT64 acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-    {
-        product = VR[vs][i] * VR_T(i);
-        VACC[i].DW += product << 16;
-    }
-    SIGNED_CLAMP(VMUL_PTR, SM_MUL_X);
+        acc[i] = VS[i] * VT[i];
+    for (i = 0; i < N; i++)
+        acc[i] = acc[i] << 16;
+    do_acc(acc);
+    SIGNED_CLAMP(VD, SM_MUL_X);
     return;
 }
 
 static void VMADH_v(void)
 {
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][i];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+    do_madh(VR[vd], VR[vs], VR[vt]);
     return;
 }
 static void VMADH0q(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0x2 & 01) + (i & 0xE)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0x2 & 0x1) + (i & 0xE)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH1q(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0x3 & 01) + (i & 0xE)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0x3 & 0x1) + (i & 0xE)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH0h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0x4 & 03) + (i & 0xC)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0x4 & 0x3) + (i & 0xC)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH1h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0x5 & 03) + (i & 0xC)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0x5 & 0x3) + (i & 0xC)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH2h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0x6 & 03) + (i & 0xC)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0x6 & 0x3) + (i & 0xC)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH3h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0x7 & 03) + (i & 0xC)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0x7 & 0x3) + (i & 0xC)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH0w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0x8 & 07) + (i & 0x0)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0x8 & 0x7) + (i & 0x0)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH1w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0x9 & 07) + (i & 0x0)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0x9 & 0x7) + (i & 0x0)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH2w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0xA & 07) + (i & 0x0)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0xA & 0x7) + (i & 0x0)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH3w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0xB & 07) + (i & 0x0)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0xB & 0x7) + (i & 0x0)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH4w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0xC & 07) + (i & 0x0)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0xC & 0x7) + (i & 0x0)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH5w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0xD & 07) + (i & 0x0)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0xD & 0x7) + (i & 0x0)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH6w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0xE & 07) + (i & 0x0)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0xE & 0x7) + (i & 0x0)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADH7w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] * VR[vt][(0xF & 07) + (i & 0x0)];
-    for (i = 0; i < N; i++)
-        VACC[i].DW += (INT64)(result[i]) << 16;
-    SIGNED_CLAMP(VR[vd], SM_MUL_X);
+        SV[i] = VR[vt][(0xF & 0x7) + (i & 0x0)];
+    do_madh(VR[vd], VR[vs], SV);
     return;
 }

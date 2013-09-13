@@ -1,16 +1,5 @@
 #include "vu.h"
 
-static void VMRG(int vd, int vs, int vt, int e)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        ACC_R(i) = VCC & (0x0001 << i) ? VR[vs][i] : VR_T(i);
-    for (i = 0; i < N; i++)
-        ACC_W(i) = ACC_R(i);
-    return;
-}
-
 void do_mrg(void)
 {
     int cmp[8];
@@ -34,9 +23,9 @@ static void VMRG_v(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][i];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][i];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG0q(void)
@@ -48,9 +37,9 @@ static void VMRG0q(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0x2 & 01) + (i & 0xE)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0x2 & 01) + (i & 0xE)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG1q(void)
@@ -62,9 +51,9 @@ static void VMRG1q(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0x3 & 01) + (i & 0xE)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0x3 & 01) + (i & 0xE)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG0h(void)
@@ -76,9 +65,9 @@ static void VMRG0h(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0x4 & 03) + (i & 0xC)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0x4 & 03) + (i & 0xC)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG1h(void)
@@ -90,9 +79,9 @@ static void VMRG1h(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0x5 & 03) + (i & 0xC)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0x5 & 03) + (i & 0xC)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG2h(void)
@@ -104,9 +93,9 @@ static void VMRG2h(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0x6 & 03) + (i & 0xC)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0x6 & 03) + (i & 0xC)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG3h(void)
@@ -118,9 +107,9 @@ static void VMRG3h(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0x7 & 03) + (i & 0xC)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0x7 & 03) + (i & 0xC)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG0w(void)
@@ -132,9 +121,9 @@ static void VMRG0w(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0x8 & 07) + (i & 0x0)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0x8 & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG1w(void)
@@ -146,9 +135,9 @@ static void VMRG1w(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0x9 & 07) + (i & 0x0)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0x9 & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG2w(void)
@@ -160,9 +149,9 @@ static void VMRG2w(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0xA & 07) + (i & 0x0)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0xA & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG3w(void)
@@ -174,9 +163,9 @@ static void VMRG3w(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0xB & 07) + (i & 0x0)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0xB & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG4w(void)
@@ -188,9 +177,9 @@ static void VMRG4w(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0xC & 07) + (i & 0x0)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0xC & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG5w(void)
@@ -202,9 +191,9 @@ static void VMRG5w(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0xD & 07) + (i & 0x0)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0xD & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG6w(void)
@@ -216,9 +205,9 @@ static void VMRG6w(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0xE & 07) + (i & 0x0)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0xE & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VMRG7w(void)
@@ -230,8 +219,8 @@ static void VMRG7w(void)
 
     do_mrg();
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = result[i] ? VR[vs][i] : VR[vt][(0xF & 07) + (i & 0x0)];
+        ACC_L(i) = result[i] ? VR[vs][i] : VR[vt][(0xF & 07) + (i & 0x0)];
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }

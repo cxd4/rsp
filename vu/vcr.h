@@ -1,38 +1,5 @@
 #include "vu.h"
 
-static void VCR(int vd, int vs, int vt, int e)
-{
-    int ge, le;
-    register int i;
-
-    VCC = 0x0000;
-    for (i = 0; i < N; i++)
-    {
-        const signed short VS = VR[vs][i];
-        const signed short VT = VR_T(i);
-        const int sn = (VS ^ VT) < 0; /* sn = (unsigned short)(VS ^ VT) >> 15 */
-
-        if (sn)
-        {
-            ge = (VT < 0); /* -VT > -0; (-VT - 1) > -1; (~VT) >= 0 */
-            le = (VS + VT + 1 <= 0); /* VS + VT < 0; VS < -VT:  "VS <= ~VT" */
-            ACC_R(i) = le ? ~VT : VS;
-        }
-        else
-        {
-            le = (VT < 0);
-            ge = (VS - VT >= 0); /* VS - VT + 1 > 0; VS > VT - 1:  "VS >= VT" */
-            ACC_R(i) = le ? VT : VS;
-        }
-        VCC |= (ge <<= (i + 8)) | (le <<= (i + 0));
-    }
-    for (i = 0; i < N; i++)
-        ACC_W(i) = ACC_R(i);
-    VCO = 0x0000;
-    VCE = 0x00;
-    return;
-}
-
 void do_cr(int vs)
 {
     int ge[8], le[8];
@@ -62,7 +29,7 @@ void do_cr(int vs)
     for (i = 0; i < N; i++)
         VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = le[i] ? VC[i] : VR[vs][i];
+        ACC_L(i) = le[i] ? VC[i] : VR[vs][i];
 #if (0)
     VCC = 0x0000;
     for (i = 0; i < N; i++)
@@ -92,7 +59,7 @@ static void VCR_v(void)
         VC[i] = VR[vt][i];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR0q(void)
@@ -106,7 +73,7 @@ static void VCR0q(void)
         VC[i] = VR[vt][(0x2 & 01) + (i & 0xE)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR1q(void)
@@ -120,7 +87,7 @@ static void VCR1q(void)
         VC[i] = VR[vt][(0x3 & 01) + (i & 0xE)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR0h(void)
@@ -134,7 +101,7 @@ static void VCR0h(void)
         VC[i] = VR[vt][(0x4 & 03) + (i & 0xC)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR1h(void)
@@ -148,7 +115,7 @@ static void VCR1h(void)
         VC[i] = VR[vt][(0x5 & 03) + (i & 0xC)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR2h(void)
@@ -162,7 +129,7 @@ static void VCR2h(void)
         VC[i] = VR[vt][(0x6 & 03) + (i & 0xC)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR3h(void)
@@ -176,7 +143,7 @@ static void VCR3h(void)
         VC[i] = VR[vt][(0x7 & 03) + (i & 0xC)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR0w(void)
@@ -190,7 +157,7 @@ static void VCR0w(void)
         VC[i] = VR[vt][(0x8 & 07) + (i & 0x0)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR1w(void)
@@ -204,7 +171,7 @@ static void VCR1w(void)
         VC[i] = VR[vt][(0x9 & 07) + (i & 0x0)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR2w(void)
@@ -218,7 +185,7 @@ static void VCR2w(void)
         VC[i] = VR[vt][(0xA & 07) + (i & 0x0)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR3w(void)
@@ -232,7 +199,7 @@ static void VCR3w(void)
         VC[i] = VR[vt][(0xB & 07) + (i & 0x0)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR4w(void)
@@ -246,7 +213,7 @@ static void VCR4w(void)
         VC[i] = VR[vt][(0xC & 07) + (i & 0x0)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR5w(void)
@@ -260,7 +227,7 @@ static void VCR5w(void)
         VC[i] = VR[vt][(0xD & 07) + (i & 0x0)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR6w(void)
@@ -274,7 +241,7 @@ static void VCR6w(void)
         VC[i] = VR[vt][(0xE & 07) + (i & 0x0)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }
 static void VCR7w(void)
@@ -288,6 +255,6 @@ static void VCR7w(void)
         VC[i] = VR[vt][(0xF & 07) + (i & 0x0)];
     do_cr(vs);
     for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[LO];
+        VR[vd][i] = ACC_L(i);
     return;
 }

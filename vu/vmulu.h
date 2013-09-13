@@ -1,272 +1,217 @@
 #include "vu.h"
 
-static void VMULU(int vd, int vs, int vt, int e)
+INLINE void do_mulu(short* VD, short* VS, short* VT)
 {
+    long acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = (VR[vs][i]*VR_T(i) << 1) + 0x8000;
-    for (i = 0; i < N; i++) /* Zero-clamp bits 31..16 of ACC to dest. VR. */
-    {
-        VR_D(i)  = VACC[i].s[MD];   /* VD  = ACC[31..16] */
-        VR_D(i) |= VR_D(i) >> 15;   /* VD |= -(result == 0x80008000) */
-        VR_D(i) &= ~VACC[i].HW[03]; /* VD  = (ACC < 0) ? 0 : ACC[31..16]; */
-    }
+        acc[i] = (VS[i]*VT[i]) << 1;
+    for (i = 0; i < N; i++)
+        acc[i] = acc[i] + 0x8000;
+    for (i = 0; i < N; i++)
+        ACC_H(i) = (VS[i] ^ VT[i]) >> 15;
+    for (i = 0; i < N; i++)
+        ACC_M(i) = (short)(acc[i] >> 16);
+    for (i = 0; i < N; i++)
+        ACC_L(i) = (short)(acc[i] >>  0);
+    for (i = 0; i < N; i++)
+        VD[i] = ACC_M(i);
+    for (i = 0; i < N; i++)
+        VD[i] |= ACC_M(i) >> 15; /* VD |= -(result == 0x000080008000) */
+    for (i = 0; i < N; i++)
+        VD[i] &= ~ACC_H(i); /* VD &= -(result >= 0x000000000000) */
     return;
 }
 
 static void VMULU_v(void)
 {
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][i] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+    do_mulu(VR[vd], VR[vs], VR[vt]);
     return;
 }
 static void VMULU0q(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0x2 & 01) + (i & 0xE)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0x2 & 0x1) + (i & 0xE)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU1q(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0x3 & 01) + (i & 0xE)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0x3 & 0x1) + (i & 0xE)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU0h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0x4 & 03) + (i & 0xC)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0x4 & 0x3) + (i & 0xC)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU1h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0x5 & 03) + (i & 0xC)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0x5 & 0x3) + (i & 0xC)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU2h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0x6 & 03) + (i & 0xC)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0x6 & 0x3) + (i & 0xC)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU3h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0x7 & 03) + (i & 0xC)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0x7 & 0x3) + (i & 0xC)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU0w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0x8 & 07) + (i & 0x0)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0x8 & 0x7) + (i & 0x0)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU1w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0x9 & 07) + (i & 0x0)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0x9 & 0x7) + (i & 0x0)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU2w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0xA & 07) + (i & 0x0)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0xA & 0x7) + (i & 0x0)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU3w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0xB & 07) + (i & 0x0)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0xB & 0x7) + (i & 0x0)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU4w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0xC & 07) + (i & 0x0)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0xC & 0x7) + (i & 0x0)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU5w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0xD & 07) + (i & 0x0)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0xD & 0x7) + (i & 0x0)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU6w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0xE & 07) + (i & 0x0)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0xE & 0x7) + (i & 0x0)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU7w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].DW = 2*VR[vs][i]*VR[vt][(0xF & 07) + (i & 0x0)] + 0x8000;
-    for (i = 0; i < N; i++)
-        VR[vd][i] = VACC[i].s[MD];
-    for (i = 0; i < N; i++)
-        VR[vd][i] |= VACC[i].s[MD] >> 15;
-    for (i = 0; i < N; i++)
-        VR[vd][i] &= VACC[i].s[HI] >> 15;
+        SV[i] = VR[vt][(0xF & 0x7) + (i & 0x0)];
+    do_mulu(VR[vd], VR[vs], SV);
     return;
 }

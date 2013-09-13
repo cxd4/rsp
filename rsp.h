@@ -251,7 +251,7 @@ void trace_RSP_registers(void)
     for (i = 0; i < 8; i++)
         fprintf(
             out, "ACC[%o]:  [%04X][%04X][%04X]\n", i,
-            VACC[i].s[HI], VACC[i].s[MD], VACC[i].s[LO]);
+            ACC_H(i), ACC_M(i), ACC_L(i));
     fprintf(out, "\n");
     fprintf(out, "DivIn:  %i\n", DivIn);
     fprintf(out, "DivOut:  %i\n", DivOut);

@@ -1,272 +1,213 @@
 #include "vu.h"
 
-static void VMUDL(int vd, int vs, int vt, int e)
+INLINE void do_mudl(short* VD, unsigned short* VS, unsigned short* VT)
 {
-    register unsigned int product;
+    long acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-    {
-        product = (unsigned short)VR[vs][i] * (unsigned short)VR_T(i);
-        VACC[i].DW = product >> 16;
-    }
-    for (i = 0; i < N; i++) /* Sign-clamp bits 15..0 of ACC to dest. VR. */
-        VR_D(i) = VACC[i].s[LO]; /* No arithmetic checks needed. */
+        acc[i] = VS[i] * VT[i];
+    for (i = 0; i < N; i++)
+        acc[i] = acc[i] >> 16;
+    for (i = 0; i < N; i++)
+        ACC_H(i) = 0x0000;
+    for (i = 0; i < N; i++)
+        ACC_M(i) = 0x0000;
+    for (i = 0; i < N; i++)
+        ACC_L(i) = acc[i];
+    for (i = 0; i < N; i++)
+        VD[i] = ACC_L(i); /* no possibilities to clamp */
     return;
 }
 
 static void VMUDL_v(void)
 {
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][i]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+    do_mudl(VR[vd], VR[vs], VR[vt]);
     return;
 }
 static void VMUDL0q(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0x2 & 01) + (i & 0xE)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0x2 & 0x1) + (i & 0xE)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL1q(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0x3 & 01) + (i & 0xE)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0x3 & 0x1) + (i & 0xE)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL0h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0x4 & 03) + (i & 0xC)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0x4 & 0x3) + (i & 0xC)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL1h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0x5 & 03) + (i & 0xC)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0x5 & 0x3) + (i & 0xC)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL2h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0x6 & 03) + (i & 0xC)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0x6 & 0x3) + (i & 0xC)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL3h(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0x7 & 03) + (i & 0xC)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0x7 & 0x3) + (i & 0xC)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL0w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0x8 & 07) + (i & 0x0)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0x8 & 0x7) + (i & 0x0)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL1w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0x9 & 07) + (i & 0x0)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0x9 & 0x7) + (i & 0x0)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL2w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0xA & 07) + (i & 0x0)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0xA & 0x7) + (i & 0x0)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL3w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0xB & 07) + (i & 0x0)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0xB & 0x7) + (i & 0x0)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL4w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0xC & 07) + (i & 0x0)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0xC & 0x7) + (i & 0x0)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL5w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0xD & 07) + (i & 0x0)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0xD & 0x7) + (i & 0x0)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL6w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0xE & 07) + (i & 0x0)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0xE & 0x7) + (i & 0x0)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }
 static void VMUDL7w(void)
 {
+    short SV[N];
     register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        MUDL_acc[i].W =
-            (unsigned short)(VR[vs][i])
-          * (unsigned short)(VR[vt][(0xF & 07) + (i & 0x0)]);
-    for (i = 0; i < N; i++)
-        VACC[i].DW = MUDL_acc[i].H[1];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = MUDL_acc[i].H[1];
+        SV[i] = VR[vt][(0xF & 0x7) + (i & 0x0)];
+    do_mudl(VR[vd], VR[vs], SV);
     return;
 }

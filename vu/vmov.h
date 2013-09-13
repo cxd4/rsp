@@ -1,16 +1,5 @@
 #include "vu.h"
 
-static void VMOV(int vd, int de, int vt, int e)
-{
-    register int i;
-
-    /* MovIn = (int)VR[vt][e & 07]; */
-    for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR_T(i);
-    VR_D(de &= 07) = VACC[de].s[LO];
-    return;
-}
-
 static void VMOVv0(void)
 {
     register int i;
@@ -19,8 +8,8 @@ static void VMOVv0(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x0 & 0x0) + (i & 0x7)];
-    VR[vd][de] = VACC[00].s[LO];
+        ACC_L(i) = VR[vt][(0x0 & 0x0) + (i & 0x7)];
+    VR[vd][de] = ACC_L(00);
     return;
 }
 static void VMOVv1(void)
@@ -31,8 +20,8 @@ static void VMOVv1(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x1 & 0x0) + (i & 0x7)];
-    VR[vd][de] = VACC[01].s[LO];
+        ACC_L(i) = VR[vt][(0x1 & 0x0) + (i & 0x7)];
+    VR[vd][de] = ACC_L(01);
     return;
 }
 static void VMOV0q(void)
@@ -43,8 +32,8 @@ static void VMOV0q(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x2 & 0x1) + (i & 0xE)];
-    VR[vd][de] = VACC[02].s[LO];
+        ACC_L(i) = VR[vt][(0x2 & 0x1) + (i & 0xE)];
+    VR[vd][de] = ACC_L(02);
     return;
 }
 static void VMOV1q(void)
@@ -55,8 +44,8 @@ static void VMOV1q(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x3 & 0x1) + (i & 0xE)];
-    VR[vd][de] = VACC[03].s[LO];
+        ACC_L(i) = VR[vt][(0x3 & 0x1) + (i & 0xE)];
+    VR[vd][de] = ACC_L(03);
     return;
 }
 static void VMOV0h(void)
@@ -67,8 +56,8 @@ static void VMOV0h(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x4 & 0x3) + (i & 0xC)];
-    VR[vd][de] = VACC[04].s[LO];
+        ACC_L(i) = VR[vt][(0x4 & 0x3) + (i & 0xC)];
+    VR[vd][de] = ACC_L(04);
     return;
 }
 static void VMOV1h(void)
@@ -79,8 +68,8 @@ static void VMOV1h(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x5 & 0x3) + (i & 0xC)];
-    VR[vd][de] = VACC[05].s[LO];
+        ACC_L(i) = VR[vt][(0x5 & 0x3) + (i & 0xC)];
+    VR[vd][de] = ACC_L(05);
     return;
 }
 static void VMOV2h(void)
@@ -91,8 +80,8 @@ static void VMOV2h(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x6 & 0x3) + (i & 0xC)];
-    VR[vd][de] = VACC[06].s[LO];
+        ACC_L(i) = VR[vt][(0x6 & 0x3) + (i & 0xC)];
+    VR[vd][de] = ACC_L(06);
     return;
 }
 static void VMOV3h(void)
@@ -103,8 +92,8 @@ static void VMOV3h(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x7 & 0x3) + (i & 0xC)];
-    VR[vd][de] = VACC[07].s[LO];
+        ACC_L(i) = VR[vt][(0x7 & 0x3) + (i & 0xC)];
+    VR[vd][de] = ACC_L(07);
     return;
 }
 static void VMOV0w(void)
@@ -115,8 +104,8 @@ static void VMOV0w(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x8 & 0x7) + (i & 0x0)];
-    VR[vd][de] = VACC[00].s[LO];
+        ACC_L(i) = VR[vt][(0x8 & 0x7) + (i & 0x0)];
+    VR[vd][de] = ACC_L(00);
     return;
 }
 static void VMOV1w(void)
@@ -127,8 +116,8 @@ static void VMOV1w(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0x9 & 0x7) + (i & 0x0)];
-    VR[vd][de] = VACC[01].s[LO];
+        ACC_L(i) = VR[vt][(0x9 & 0x7) + (i & 0x0)];
+    VR[vd][de] = ACC_L(01);
     return;
 }
 static void VMOV2w(void)
@@ -139,8 +128,8 @@ static void VMOV2w(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0xA & 0x7) + (i & 0x0)];
-    VR[vd][de] = VACC[02].s[LO];
+        ACC_L(i) = VR[vt][(0xA & 0x7) + (i & 0x0)];
+    VR[vd][de] = ACC_L(02);
     return;
 }
 static void VMOV3w(void)
@@ -151,8 +140,8 @@ static void VMOV3w(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0xB & 0x7) + (i & 0x0)];
-    VR[vd][de] = VACC[03].s[LO];
+        ACC_L(i) = VR[vt][(0xB & 0x7) + (i & 0x0)];
+    VR[vd][de] = ACC_L(03);
     return;
 }
 static void VMOV4w(void)
@@ -163,8 +152,8 @@ static void VMOV4w(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0xC & 0x7) + (i & 0x0)];
-    VR[vd][de] = VACC[04].s[LO];
+        ACC_L(i) = VR[vt][(0xC & 0x7) + (i & 0x0)];
+    VR[vd][de] = ACC_L(04);
     return;
 }
 static void VMOV5w(void)
@@ -175,8 +164,8 @@ static void VMOV5w(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0xD & 0x7) + (i & 0x0)];
-    VR[vd][de] = VACC[05].s[LO];
+        ACC_L(i) = VR[vt][(0xD & 0x7) + (i & 0x0)];
+    VR[vd][de] = ACC_L(05);
     return;
 }
 static void VMOV6w(void)
@@ -187,8 +176,8 @@ static void VMOV6w(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0xE & 0x7) + (i & 0x0)];
-    VR[vd][de] = VACC[06].s[LO];
+        ACC_L(i) = VR[vt][(0xE & 0x7) + (i & 0x0)];
+    VR[vd][de] = ACC_L(06);
     return;
 }
 static void VMOV7w(void)
@@ -199,7 +188,7 @@ static void VMOV7w(void)
     const int vt = inst.R.rt;
 
     for (i = 0; i < N; i++)
-        VACC[i].s[LO] = VR[vt][(0xF & 0x7) + (i & 0x0)];
-    VR[vd][de] = VACC[07].s[LO];
+        ACC_L(i) = VR[vt][(0xF & 0x7) + (i & 0x0)];
+    VR[vd][de] = ACC_L(07);
     return;
 }
