@@ -19,11 +19,10 @@ void do_ge(int vs)
         ge[i] = ge[i] & (VR[vs][i] == VC[i]); /* equal to */
     for (i = 0; i < N; i++)
         ge[i] = ge[i] | (VR[vs][i] >  VC[i]); /* greater than */
-    VCC = 0x0000;
     for (i = 0; i < N; i++)
-        VCC |= ge[i] << (i + 0x0);
+        clip[i] = 0;
     for (i = 0; i < N; i++)
-        VCC |=     0 << (i + 0x8);
+        comp[i] = ge[i];
     for (i = 0; i < N; i++)
         ACC_L(i) = ge[i] ? VR[vs][i] : VC[i];
     return;

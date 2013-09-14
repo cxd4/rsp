@@ -10,11 +10,10 @@ void do_ne(int vs)
     VCO = 0x0000;
     for (i = 0; i < N; i++)
         ne[i] |= (VR[vs][i] != VC[i]);
-    VCC = 0x0000;
     for (i = 0; i < N; i++)
-        VCC |= ne[i] << (i + 0x0);
+        clip[i] = 0;
     for (i = 0; i < N; i++)
-        VCC |=     0 << (i + 0x8);
+        comp[i] = ne[i];
 #if (0)
     for (i = 0; i < N; i++)
         ACC_L(i) = ne[i] ? VR[vs][i] : VC[i]; /* correct but redundant */

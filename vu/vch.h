@@ -34,9 +34,10 @@ void do_ch(int vs)
     for (i = 0; i < N; i++)
         ACC_L(i) = (sn[i] ? le[i] : ge[i]) ? VC[i] : VR[vs][i];
 
-    VCC = 0x0000;
     for (i = 0; i < N; i++)
-        VCC |=  ge[i]<<(i + 0x8) | le[i]<<(i + 0x0);
+        clip[i] = ge[i];
+    for (i = 0; i < N; i++)
+        comp[i] = le[i];
     VCO = 0x0000;
     for (i = 0; i < N; i++)
         VCO |= neq[i]<<(i + 0x8) | sn[i]<<(i + 0x0);

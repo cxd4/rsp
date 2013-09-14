@@ -30,19 +30,11 @@ void do_cr(int vs)
         VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
     for (i = 0; i < N; i++)
         ACC_L(i) = le[i] ? VC[i] : VR[vs][i];
-#if (0)
-    VCC = 0x0000;
+
     for (i = 0; i < N; i++)
-        VCC |= le[i] << (i + 0x0);
+        clip[i] = ge[i];
     for (i = 0; i < N; i++)
-        VCC |= ge[i] << (i + 0x8);
-#else
-    VCO =
-        (ge[07] << 0xF) | (ge[06] << 0xE) | (ge[05] << 0xD) | (ge[04] << 0xC) |
-        (ge[03] << 0xB) | (ge[02] << 0xA) | (ge[01] << 0x9) | (ge[00] << 0x8) |
-        (le[07] << 0x7) | (le[06] << 0x6) | (le[05] << 0x5) | (le[04] << 0x4) |
-        (le[03] << 0x3) | (le[02] << 0x2) | (le[01] << 0x1) | (le[00] << 0x0);
-#endif
+        comp[i] = le[i];
     VCO = 0x0000;
     for (i = 0; i < N; i++)
         vce[i] = 0;

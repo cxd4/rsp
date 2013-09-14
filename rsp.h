@@ -244,7 +244,7 @@ void trace_RSP_registers(void)
  * we have also a tiny group of special-purpose, vector control registers.
  */
     fprintf(out, "$vco:  [%02X][%02X]\n", (VCO >> 8), VCO & 0x00FF);
-    fprintf(out, "$vcc:  [%02X][%02X]\n", (VCC >> 8), VCC & 0x00FF);
+    fprintf(out, "$vcc:  %04X\n", get_VCC());
     fprintf(out, "$vce:  %02X\n\n", get_VCE());
 
     for (i = 0; i < 8; i++)

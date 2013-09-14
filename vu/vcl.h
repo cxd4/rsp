@@ -10,9 +10,9 @@ void do_cl(int vs)
     register int i;
 
     for (i = 0; i < N; i++)
-        le[i] = !!(0x0001<<i & VCC);
+        ge[i] = clip[i];
     for (i = 0; i < N; i++)
-        ge[i] = !!(0x0100<<i & VCC);
+        le[i] = comp[i];
     for (i = 0; i < N; i++)
         sn[i] = -(VCO>>i & 1);
     for (i = 0; i < N; i++)
@@ -56,12 +56,10 @@ void do_cl(int vs)
     for (i = 0; i < N; i++)
         ACC_L(i) = eq[i] ? VC[i] : VR[vs][i];
 
-    VCC = 0x0000;
     for (i = 0; i < N; i++)
-        VCC |= le[i] << (i + 0x0);
+        clip[i] = ge[i];
     for (i = 0; i < N; i++)
-        VCC |= ge[i] << (i + 0x8);
-
+        comp[i] = le[i];
     for (i = 0; i < N; i++)
         vce[i] = 0;
     return;

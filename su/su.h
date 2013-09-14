@@ -810,13 +810,15 @@ void SP_DMA_WRITE(void)
 
 /*** Scalar, Coprocessor Operations (vector unit) ***/
 extern short VR[32][8];
-extern unsigned short* vCR[2];
+extern unsigned short VCO;
 #define VR_B(v, e)  (*(unsigned char *)(((unsigned char *)(VR + v)) + MES(e)))
 #define VR_S(v, e)  (*(short *)((unsigned char *)(*(VR + v)) + ((e + 1) & ~1)))
 /* to-do:  check this stupid thing for (unsigned char *)(VR+v) like above? */
 
 extern unsigned char get_VCE(void);
-void set_VCE(unsigned char VCE);
+extern unsigned short get_VCC(void);
+extern void set_VCE(unsigned char VCE);
+extern void set_VCC(unsigned short VCC);
 
 static void MFC2(void)
 {
@@ -854,7 +856,9 @@ static void CFC2(void)
         SR[inst.R.rt] = get_VCE();
     }
     else
-        SR[inst.R.rt] = *(signed short *)(vCR[inst.R.rd & 1]);
+        SR[inst.R.rt] = (inst.R.rd & 1) ?
+            (signed short)get_VCC()
+          : (signed short)(VCO);
     SR[0] = 0x00000000;
     return;
 }
@@ -866,7 +870,10 @@ static void CTC2(void)
         set_VCE(SR[inst.R.rt] & 0x000000FF);
         return;
     }
-    *vCR[inst.R.rd & 1] = (short)SR[inst.R.rt];
+    if (inst.R.rd & 1)
+        set_VCC(SR[inst.R.rt] & 0x0000FFFF);
+    else
+        VCO = (short)SR[inst.R.rt];
     return;
 }
 static void C2(void)

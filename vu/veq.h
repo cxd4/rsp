@@ -11,11 +11,10 @@ void do_eq(int vs)
     VCO = 0x0000;
     for (i = 0; i < N; i++)
         eq[i] &= (VR[vs][i] == VC[i]);
-    VCC = 0x0000;
     for (i = 0; i < N; i++)
-        VCC |= eq[i] << (i + 0x0);
+        clip[i] = 0;
     for (i = 0; i < N; i++)
-        VCC |=     0 << (i + 0x8);
+        comp[i] = eq[i];
 #if (0)
     for (i = 0; i < N; i++)
         ACC_L(i) = eq[i] ? VR[vs][i] : VC[i]; /* correct but redundant */

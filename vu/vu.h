@@ -336,14 +336,38 @@ void SIGNED_CLAMP(short* VD, int mode)
 
 /* special-purpose vector control registers */
 unsigned short VCO; /* vector carry out register */
-unsigned short VCC; /* vector compare code register */
-int vce[N]; /* vector compare extension register */
+int clip[N]; /* $vcc:  vector compare code register (high byte:  clip only) */
+int comp[N]; /* $vcc:  vector compare code register (low byte:  compare) */
+int vce[N]; /* $vce:  vector compare extension register */
 
+unsigned short get_VCC(void)
+{
+    register unsigned short VCC;
+
+    VCC = 0x0000
+      | (clip[0xF % N] << 0xF)
+      | (clip[0xE % N] << 0xE)
+      | (clip[0xD % N] << 0xD)
+      | (clip[0xC % N] << 0xC)
+      | (clip[0xB % N] << 0xB)
+      | (clip[0xA % N] << 0xA)
+      | (clip[0x9 % N] << 0x9)
+      | (clip[0x8 % N] << 0x8)
+      | (comp[0x7 % N] << 0x7)
+      | (comp[0x6 % N] << 0x6)
+      | (comp[0x5 % N] << 0x5)
+      | (comp[0x4 % N] << 0x4)
+      | (comp[0x3 % N] << 0x3)
+      | (comp[0x2 % N] << 0x2)
+      | (comp[0x1 % N] << 0x1)
+      | (comp[0x0 % N] << 0x0);
+    return (VCC); /* Big endian becomes little. */
+}
 unsigned char get_VCE(void)
 {
-    register unsigned char ret_slot;
+    register unsigned char VCE;
 
-    ret_slot = 0x00
+    VCE = 0x00
       | (vce[07] << 0x7)
       | (vce[06] << 0x6)
       | (vce[05] << 0x5)
@@ -352,20 +376,30 @@ unsigned char get_VCE(void)
       | (vce[02] << 0x2)
       | (vce[01] << 0x1)
       | (vce[00] << 0x0);
-    return (ret_slot);
+    return (VCE); /* Big endian becomes little. */
 }
 void set_VCE(unsigned char VCE)
 {
     register int i;
 
     for (i = 0; i < N; i++)
-        vce[i] = (VCE >> i) & 1; /* little endian becomes big */
-    return;
+        vce[i] = (VCE >> i) & 1;
+    return; /* Little endian becomes big. */
+}
+void set_VCC(unsigned short VCC)
+{
+    register int i;
+
+    for (i = 0; i < N; i++)
+        comp[i] = (VCC >> (i + 0x0)) & 1;
+    for (i = 0; i < N; i++)
+        clip[i] = (VCC >> (i + 0x8)) & 1;
+    return; /* Little endian becomes big. */
 }
 
 unsigned short* vCR[2] = {
     &VCO,
-    &VCC
+    NULL
 };
 
 static void res_V(void)

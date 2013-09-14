@@ -18,11 +18,10 @@ void do_lt(int vs)
         lt[i] = lt[i] & (VR[vs][i] == VC[i]); /* equal to */
     for (i = 0; i < N; i++)
         lt[i] = lt[i] | (VR[vs][i] <  VC[i]); /* less than */
-    VCC = 0x0000;
     for (i = 0; i < N; i++)
-        VCC |= lt[i] << (i + 0x0);
+        clip[i] = 0;
     for (i = 0; i < N; i++)
-        VCC |=     0 << (i + 0x8);
+        comp[i] = lt[i];
     for (i = 0; i < N; i++)
         ACC_L(i) = lt[i] ? VR[vs][i] : VC[i];
     return;
