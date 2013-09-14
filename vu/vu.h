@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.13                                                         *
+* Release:  2013.09.14                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -258,6 +258,7 @@ INLINE void do_acc(INT64* acc)
 
 void SIGNED_CLAMP(short* VD, int mode)
 {
+    short hi[N], lo[N];
     register int i;
 
     switch (mode)
@@ -268,19 +269,17 @@ void SIGNED_CLAMP(short* VD, int mode)
             for (i = 0; i < N; i++)
                 result[i] = result[i] | (unsigned short)ACC_M(i);
             for (i = 0; i < N; i++)
-            {
-#ifdef FORCE_STATIC_CLAMP
-                VD[i]  = result[i] & 0x0000FFFF;
-                VD[i] &= ~(result[i] - -32768) >> 31; /* min: 0x8000 ^ 0x8000 */
-                VD[i] |=  (+32767 - result[i]) >> 31; /* max: 0x7FFF ^ 0x8000 */
-                VD[i] ^= 0x8000 & ((result[i]+32768)>>31|(32767-result[i])>>31);
-#else
-                VD[i] = (result[i] < -32768)
-                      ? -32768 : (result[i] > +32767)
-                      ? +32767
-                      : result[i] & 0x0000FFFF;
-#endif
-            }
+                VD[i]  = ACC_M(i);
+            for (i = 0; i < N; i++)
+                lo[i] = (result[i] + 32768) >> 31;
+            for (i = 0; i < N; i++)
+                hi[i] = (32767 - result[i]) >> 31;
+            for (i = 0; i < N; i++)
+                VD[i] &= ~lo[i];
+            for (i = 0; i < N; i++)
+                VD[i] |=  hi[i];
+            for (i = 0; i < N; i++)
+                VD[i] ^= 0x8000 & (hi[i] | lo[i]);
             return;
         case SM_MUL_Z: /* sign-clamp accumulator-low (bits 15:0) */
             for (i = 0; i < N; i++)
@@ -288,19 +287,15 @@ void SIGNED_CLAMP(short* VD, int mode)
             for (i = 0; i < N; i++)
                 result[i] = result[i] | (unsigned short)ACC_M(i);
             for (i = 0; i < N; i++)
-            {
-#ifdef FORCE_STATIC_CLAMP
                 VD[i]  = ACC_L(i);
-                VD[i] &= ~(result[i] - -32768) >> 31;
-                VD[i] |=  (+32767 - result[i]) >> 31;
-                continue;
-#else
-                VD[i] = (result[i] < -32768)
-                      ? 0x0000 : (result[i] > +32767)
-                      ? 0xFFFF
-                      : VACC[i].s[LO];
-#endif
-            }
+            for (i = 0; i < N; i++)
+                lo[i] = (result[i] + 32768) >> 31;
+            for (i = 0; i < N; i++)
+                hi[i] = (32767 - result[i]) >> 31;
+            for (i = 0; i < N; i++)
+                VD[i] &= ~lo[i];
+            for (i = 0; i < N; i++)
+                VD[i] |=  hi[i];
             return;
         case SM_MUL_Q: /* possible DCT inverse quantization (VMACQ only) */
             for (i = 0; i < N; i++)
