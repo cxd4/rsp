@@ -245,7 +245,7 @@ void trace_RSP_registers(void)
  */
     fprintf(out, "$vco:  [%02X][%02X]\n", (VCO >> 8), VCO & 0x00FF);
     fprintf(out, "$vcc:  [%02X][%02X]\n", (VCC >> 8), VCC & 0x00FF);
-    fprintf(out, "$vce:  %02X\n\n", VCE); /* 8-bit vector cnd. flags register */
+    fprintf(out, "$vce:  %02X\n\n", get_VCE());
 
     for (i = 0; i < 8; i++)
         fprintf(

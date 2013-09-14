@@ -811,10 +811,13 @@ void SP_DMA_WRITE(void)
 /*** Scalar, Coprocessor Operations (vector unit) ***/
 extern short VR[32][8];
 extern unsigned short* vCR[2];
-extern unsigned char VCE;
 #define VR_B(v, e)  (*(unsigned char *)(((unsigned char *)(VR + v)) + MES(e)))
 #define VR_S(v, e)  (*(short *)((unsigned char *)(*(VR + v)) + ((e + 1) & ~1)))
 /* to-do:  check this stupid thing for (unsigned char *)(VR+v) like above? */
+
+extern unsigned char get_VCE(void);
+void set_VCE(unsigned char VCE);
+
 static void MFC2(void)
 {
     const int rt = inst.R.rt;
@@ -848,10 +851,10 @@ static void CFC2(void)
     if (inst.R.rd & 2)
     {
         message("CFC2\nVCE", 1);
-        SR[inst.R.rt] = VCE; /* This transfer is not sign-extended. */
-        return;
+        SR[inst.R.rt] = get_VCE();
     }
-    SR[inst.R.rt] = *(signed short *)(vCR[inst.R.rd & 1]);
+    else
+        SR[inst.R.rt] = *(signed short *)(vCR[inst.R.rd & 1]);
     SR[0] = 0x00000000;
     return;
 }
@@ -860,7 +863,7 @@ static void CTC2(void)
     if (inst.R.rd & 2)
     {
         message("CTC2\nVCE", 1);
-        VCE = (unsigned char)SR[inst.R.rt];
+        set_VCE(SR[inst.R.rt] & 0x000000FF);
         return;
     }
     *vCR[inst.R.rd & 1] = (short)SR[inst.R.rt];

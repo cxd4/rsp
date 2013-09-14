@@ -44,7 +44,8 @@ void do_cr(int vs)
         (le[03] << 0x3) | (le[02] << 0x2) | (le[01] << 0x1) | (le[00] << 0x0);
 #endif
     VCO = 0x0000;
-    VCE = 0x00;
+    for (i = 0; i < N; i++)
+        vce[i] = 0;
     return;
 }
 

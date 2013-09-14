@@ -2,7 +2,7 @@
 
 void do_cl(int vs)
 {
-    int eq[8], vce[8];
+    int eq[8];
     int ge[8], le[8];
     int lz[8], uz[8];
     int dif[8], gen[8], len[8]; /* temporaries for computing flag corrections */
@@ -17,10 +17,7 @@ void do_cl(int vs)
         sn[i] = -(VCO>>i & 1);
     for (i = 0; i < N; i++)
         eq[i] =  !(0x0100<<i & VCO);
-    for (i = 0; i < N; i++)
-        vce[i] = (VCE >> i) & 1;
     VCO = 0x0000;
-    VCE = 0x00;
 /*
  * Now that we have extracted all the flags, we will essentially be masking
  * them back in where they came from redundantly, unless the corresponding
@@ -64,6 +61,9 @@ void do_cl(int vs)
         VCC |= le[i] << (i + 0x0);
     for (i = 0; i < N; i++)
         VCC |= ge[i] << (i + 0x8);
+
+    for (i = 0; i < N; i++)
+        vce[i] = 0;
     return;
 }
 

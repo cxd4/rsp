@@ -337,18 +337,32 @@ void SIGNED_CLAMP(short* VD, int mode)
 /* special-purpose vector control registers */
 unsigned short VCO; /* vector carry out register */
 unsigned short VCC; /* vector compare code register */
-unsigned char VCE; /* vector compare extension register */
+int vce[N]; /* vector compare extension register */
 
-/*
- * vector control register indexing pointer table
- * This is particularly useful for directly executing CFC2 and CTC2.
- */
-const void* vCR_old[4] = {
-    &VCO,
-    &VCC,
-    &VCE,
-    &VCE /* Invalid vector control register.  (There are only three.) */
-};
+unsigned char get_VCE(void)
+{
+    register unsigned char ret_slot;
+
+    ret_slot = 0x00
+      | (vce[07] << 0x7)
+      | (vce[06] << 0x6)
+      | (vce[05] << 0x5)
+      | (vce[04] << 0x4)
+      | (vce[03] << 0x3)
+      | (vce[02] << 0x2)
+      | (vce[01] << 0x1)
+      | (vce[00] << 0x0);
+    return (ret_slot);
+}
+void set_VCE(unsigned char VCE)
+{
+    register int i;
+
+    for (i = 0; i < N; i++)
+        vce[i] = (VCE >> i) & 1; /* little endian becomes big */
+    return;
+}
+
 unsigned short* vCR[2] = {
     &VCO,
     &VCC
