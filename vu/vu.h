@@ -228,11 +228,11 @@ INLINE void do_store(INT64* acc)
     register int i;
 
     for (i = 0; i < N; i++)
-        ACC_H(i) = (short)(acc[i] >> 32);
+        ACC_H(i) = (acc[i] & 0xFFFF00000000) >> 32;
     for (i = 0; i < N; i++)
-        ACC_M(i) = (short)(acc[i] >> 16);
+        ACC_M(i) = (acc[i] & 0x0000FFFF0000) >> 16;
     for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(acc[i] >>  0);
+        ACC_L(i) = (acc[i] & 0x00000000FFFF) >>  0;
     return;
 }
 INLINE void do_acc(INT64* acc)

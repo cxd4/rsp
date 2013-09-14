@@ -2,17 +2,12 @@
 
 INLINE void do_mudn(short* VD, short* VS, short* VT)
 {
-    long acc[N];
+    INT64 acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
         acc[i] = (unsigned short)(VS[i]) * (signed short)(VT[i]);
-    for (i = 0; i < N; i++)
-        ACC_H(i) = VT[i] >> 15;
-    for (i = 0; i < N; i++)
-        ACC_M(i) = (acc[i] >> 16);
-    for (i = 0; i < N; i++)
-        ACC_L(i) = acc[i];
+    do_store(acc);
     for (i = 0; i < N; i++)
         VD[i] = ACC_L(i); /* no possibilities to clamp */
     return;

@@ -8,7 +8,7 @@ INLINE void do_madl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         acc[i] = (unsigned short)(VS[i]) * (unsigned short)(VT[i]);
     for (i = 0; i < N; i++)
-        acc[i] = acc[i] >> 16;
+        acc[i] = (unsigned int)acc[i] >> 16;
     do_acc(acc);
     SIGNED_CLAMP(VD, SM_MUL_Z);
     return;

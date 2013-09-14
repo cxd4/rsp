@@ -8,9 +8,9 @@ INLINE void do_mudh(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         acc[i] = (signed short)(VS[i]) * (signed short)(VT[i]);
     for (i = 0; i < N; i++)
-        ACC_H(i) = (acc[i] >> 16);
+        ACC_H(i) = (unsigned int)acc[i] >> 16;
     for (i = 0; i < N; i++)
-        ACC_M(i) = (short)(acc[i]);
+        ACC_M(i) = acc[i];
     for (i = 0; i < N; i++)
         ACC_L(i) = 0x0000;
     SIGNED_CLAMP(VD, SM_MUL_X);
