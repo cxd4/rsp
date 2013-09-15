@@ -243,10 +243,10 @@ void trace_RSP_registers(void)
  * Just like we have the scalar 16 system control registers for the RSP CP0,
  * we have also a tiny group of special-purpose, vector control registers.
  */
-    fprintf(out, "$vco:  [%02X][%02X]\n", (VCO >> 8), VCO & 0x00FF);
-    fprintf(out, "$vcc:  %04X\n", get_VCC());
-    fprintf(out, "$vce:  %02X\n\n", get_VCE());
-
+    fprintf(out, "$vco:  0x%04X\n", get_VCO());
+    fprintf(out, "$vcc:  0x%04X\n", get_VCC());
+    fprintf(out, "$vce:  0x%02X\n", get_VCE());
+    fprintf(out, "\n");
     for (i = 0; i < 8; i++)
         fprintf(
             out, "ACC[%o]:  [%04X][%04X][%04X]\n", i,

@@ -2,28 +2,28 @@
 
 void do_lt(int vs)
 {
-    int lt[8];
-    int vce[8]; /* !(NOTEQUAL) */
-    int vcc[8]; /* !(CARRY) */
+    int eq[N];
+    int cn[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        vcc[i] = (VCO >> (i+0x0)) & 1;
+        eq[i] = (VR[vs][i] == VC[i]);
     for (i = 0; i < N; i++)
-        vce[i] = (VCO >> (i+0x8)) & 1;
-    VCO = 0x0000;
+        cn[i] = (ne[i] ^= 0) & (co[i] ^= 0);
     for (i = 0; i < N; i++)
-        lt[i] = vce[i] & vcc[i]; /* le = (VS < VT) || (VS == VT && vcc&vce) */
-    for (i = 0; i < N; i++)
-        lt[i] = lt[i] & (VR[vs][i] == VC[i]); /* equal to */
-    for (i = 0; i < N; i++)
-        lt[i] = lt[i] | (VR[vs][i] <  VC[i]); /* less than */
+        eq[i] = eq[i] & cn[i];
     for (i = 0; i < N; i++)
         clip[i] = 0;
     for (i = 0; i < N; i++)
-        comp[i] = lt[i];
+        comp[i] = (VR[vs][i] < VC[i]); /* less than */
     for (i = 0; i < N; i++)
-        ACC_L(i) = lt[i] ? VR[vs][i] : VC[i];
+        comp[i] = comp[i] | eq[i]; /* ... or equal (uncommonly) */
+    for (i = 0; i < N; i++)
+        ACC_L(i) = comp[i] ? VR[vs][i] : VC[i];
+    for (i = 0; i < N; i++)
+        ne[i] = 0;
+    for (i = 0; i < N; i++)
+        co[i] = 0;
     return;
 }
 

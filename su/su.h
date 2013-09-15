@@ -810,16 +810,73 @@ void SP_DMA_WRITE(void)
 
 /*** Scalar, Coprocessor Operations (vector unit) ***/
 extern short VR[32][8];
-extern unsigned short VCO;
 #define VR_B(v, e)  (*(unsigned char *)(((unsigned char *)(VR + v)) + MES(e)))
 #define VR_S(v, e)  (*(short *)((unsigned char *)(*(VR + v)) + ((e + 1) & ~1)))
 /* to-do:  check this stupid thing for (unsigned char *)(VR+v) like above? */
-
-extern unsigned char get_VCE(void);
+extern unsigned short get_VCO(void);
 extern unsigned short get_VCC(void);
-extern void set_VCE(unsigned char VCE);
+extern unsigned char get_VCE(void);
+extern void set_VCO(unsigned short VCO);
 extern void set_VCC(unsigned short VCC);
+extern void set_VCE(unsigned char VCE);
+unsigned short rwR_VCE(void)
+{ /* never saw a game try to read VCE out to a scalar GPR yet */
+#if (0)
+    register unsigned short ret_slot;
 
+    ret_slot = 0x00 | (unsigned short)get_VCE();
+    return (ret_slot);
+#else
+    char* debug = "CFC2\nrd = 0o00";
+
+ /* *(debug +  1) = (inst.R.rs & 4) ? 'T' : 'F'; */
+    *(debug + 12) |= inst.R.rd >> 3;
+    *(debug + 13) |= inst.R.rd & 07;
+    message(debug, 3);
+    return 0x00FF;
+#endif
+}
+void rwW_VCE(unsigned short VCE)
+{ /* never saw a game try to write VCE using a scalar GPR yet */
+#if (0)
+    register int i;
+
+    VCE = 0x00 | (VCE & 0xFF);
+    for (i = 0; i < 8; i++)
+        vce[i] = (VCE >> i) & 1;
+#else
+    char *debug = "CTC2\nrd = 0o00";
+
+ /* *(debug +  1) = (inst.R.rs & 4) ? 'T' : 'F'; */
+    *(debug + 12) |= inst.R.rd >> 3;
+    *(debug + 13) |= inst.R.rd & 07;
+    message(debug, 3);
+#endif
+    return;
+}
+
+static unsigned short (*R_VCF[32])(void) = {
+    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
+/* Hazard reaction barrier:  RD = (UINT16)(inst) >> 11, without &= 3. */
+    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
+    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
+    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
+    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
+    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
+    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
+    get_VCO,get_VCC,rwR_VCE,rwR_VCE
+};
+static void (*W_VCF[32])(unsigned short) = {
+    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
+/* Hazard reaction barrier:  RD = (UINT16)(inst) >> 11, without &= 3. */
+    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
+    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
+    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
+    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
+    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
+    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
+    set_VCO,set_VCC,rwW_VCE,rwW_VCE
+};
 static void MFC2(void)
 {
     const int rt = inst.R.rt;
@@ -850,30 +907,13 @@ static void MTC2(void)
 }
 static void CFC2(void)
 {
-    if (inst.R.rd & 2)
-    {
-        message("CFC2\nVCE", 1);
-        SR[inst.R.rt] = get_VCE();
-    }
-    else
-        SR[inst.R.rt] = (inst.R.rd & 1) ?
-            (signed short)get_VCC()
-          : (signed short)(VCO);
+    SR[inst.R.rt] = (signed short)R_VCF[inst.R.rd]();
     SR[0] = 0x00000000;
     return;
 }
 static void CTC2(void)
 {
-    if (inst.R.rd & 2)
-    {
-        message("CTC2\nVCE", 1);
-        set_VCE(SR[inst.R.rt] & 0x000000FF);
-        return;
-    }
-    if (inst.R.rd & 1)
-        set_VCC(SR[inst.R.rt] & 0x0000FFFF);
-    else
-        VCO = (short)SR[inst.R.rt];
+    W_VCF[inst.R.rd](SR[inst.R.rt] & 0x0000FFFF);
     return;
 }
 static void C2(void)

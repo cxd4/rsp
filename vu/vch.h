@@ -2,9 +2,9 @@
 
 void do_ch(int vs)
 {
-    int eq[8], neq[8];
-    int ge[8], le[8];
-    signed short sn[8];
+    int eq[N];
+    int ge[N], le[N];
+    signed short sn[N];
     register int i;
 
     for (i = 0; i < N; i++)
@@ -24,10 +24,6 @@ void do_ch(int vs)
     for (i = 0; i < N; i++)
         eq[i] |= vce[i];
     for (i = 0; i < N; i++)
-        neq[i] = eq[i] ^ 1;
-    for (i = 0; i < N; i++)
-        sn[i] &= 0x0001;
-    for (i = 0; i < N; i++)
         le[i] = sn[i] ? (VR[vs][i] <= VC[i]) : (VC[i] < 0);
     for (i = 0; i < N; i++)
         ge[i] = sn[i] ? (VC[i] > 0x0000) : (VR[vs][i] >= VC[i]);
@@ -38,9 +34,10 @@ void do_ch(int vs)
         clip[i] = ge[i];
     for (i = 0; i < N; i++)
         comp[i] = le[i];
-    VCO = 0x0000;
     for (i = 0; i < N; i++)
-        VCO |= neq[i]<<(i + 0x8) | sn[i]<<(i + 0x0);
+        ne[i] = eq[i] ^ 1;
+    for (i = 0; i < N; i++)
+        co[i] = sn[i] & 1;
     return;
 }
 

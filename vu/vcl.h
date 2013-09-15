@@ -2,11 +2,11 @@
 
 void do_cl(int vs)
 {
-    int eq[8];
-    int ge[8], le[8];
-    int lz[8], uz[8];
-    int dif[8], gen[8], len[8]; /* temporaries for computing flag corrections */
-    signed short sn[8];
+    int eq[N];
+    int ge[N], le[N];
+    int lz[N], uz[N];
+    int dif[N], gen[N], len[N]; /* temporaries for computing flag corrections */
+    signed short sn[N];
     register int i;
 
     for (i = 0; i < N; i++)
@@ -14,10 +14,9 @@ void do_cl(int vs)
     for (i = 0; i < N; i++)
         le[i] = comp[i];
     for (i = 0; i < N; i++)
-        sn[i] = -(VCO>>i & 1);
+        eq[i] = ne[i] ^ 1;
     for (i = 0; i < N; i++)
-        eq[i] =  !(0x0100<<i & VCO);
-    VCO = 0x0000;
+        sn[i] = -co[i];
 /*
  * Now that we have extracted all the flags, we will essentially be masking
  * them back in where they came from redundantly, unless the corresponding
@@ -55,11 +54,15 @@ void do_cl(int vs)
         eq[i] = sn[i] ? le[i] : ge[i];
     for (i = 0; i < N; i++)
         ACC_L(i) = eq[i] ? VC[i] : VR[vs][i];
-
     for (i = 0; i < N; i++)
         clip[i] = ge[i];
     for (i = 0; i < N; i++)
         comp[i] = le[i];
+
+    for (i = 0; i < N; i++)
+        ne[i] = 0;
+    for (i = 0; i < N; i++)
+        co[i] = 0;
     for (i = 0; i < N; i++)
         vce[i] = 0;
     return;

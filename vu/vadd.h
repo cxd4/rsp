@@ -2,14 +2,14 @@
 
 void clr_ci(void) /* clear CARRY and carry in to accumulators */
 {
-    int ci[8];
     register int i;
 
     for (i = 0; i < N; i++)
-        ci[i] = !!(VCO & 0x01<<i); /* (VCO >> i) & 1 */
-    VCO = 0x0000;
+        result[i] += co[i];
     for (i = 0; i < N; i++)
-        result[i] += ci[i];
+        ne[i] = 0;
+    for (i = 0; i < N; i++)
+        co[i] = 0;
     return;
 }
 static void VADD_v(void)

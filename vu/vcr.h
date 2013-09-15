@@ -2,9 +2,9 @@
 
 void do_cr(int vs)
 {
-    int ge[8], le[8];
-    short VS[8];
-    signed short sn[8];
+    int ge[N], le[N];
+    short VS[N];
+    signed short sn[N];
     register int i;
 
     for (i = 0; i < N; i++)
@@ -35,7 +35,10 @@ void do_cr(int vs)
         clip[i] = ge[i];
     for (i = 0; i < N; i++)
         comp[i] = le[i];
-    VCO = 0x0000;
+    for (i = 0; i < N; i++)
+        ne[i] = 0;
+    for (i = 0; i < N; i++)
+        co[i] = 0;
     for (i = 0; i < N; i++)
         vce[i] = 0;
     return;

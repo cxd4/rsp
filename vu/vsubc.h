@@ -10,26 +10,12 @@
 #define BMASK(i)    ((i & 0x8) ? (ne[i-8] << i) : (bo[i-0] << i))
 void set_bo(void) /* set CARRY and borrow out from difference */
 {
-    int bo[8], ne[8];
     register int i;
 
     for (i = 0; i < N; i++)
         ne[i] = SETNE(i);
     for (i = 0; i < N; i++)
-        bo[i] = SETBI(i);
-#if (0)
-    VCO = 0x0000;
-    for (i = 0; i < N; i++)
-        VCO |= bo[i] << (i + 0x0);
-    for (i = 0; i < N; i++)
-        VCO |= ne[i] << (i + 0x8);
-#else
-    VCO =
-        BMASK(0xF) | BMASK(0xE) | BMASK(0xD) | BMASK(0xC) |
-        BMASK(0xB) | BMASK(0xA) | BMASK(0x9) | BMASK(0x8) |
-        BMASK(0x7) | BMASK(0x6) | BMASK(0x5) | BMASK(0x4) |
-        BMASK(0x3) | BMASK(0x2) | BMASK(0x1) | BMASK(0x0);
-#endif
+        co[i] = SETBI(i);
     return;
 }
 static void VSUBC_v(void)

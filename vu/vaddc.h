@@ -9,23 +9,14 @@
 /* Because MAX is 0xFFFF, and MAX + MAX < 0x00020000. */
 #endif
 
-#define CMASK(i)    ((i & 0x8) ? (0x0000 << i) : (co[i] << i))
 void set_co(void) /* set CARRY and carry out from sum */
 {
-    int co[8];
     register int i;
 
     for (i = 0; i < N; i++)
-        co[i] = SETCO(i);
-#if (0)
-    VCO = 0x0000;
+        ne[i] = 0;
     for (i = 0; i < N; i++)
-        VCO |= CMASK(i);
-#else
-    VCO =
-        CMASK(0x7) | CMASK(0x6) | CMASK(0x5) | CMASK(0x4)
-      | CMASK(0x3) | CMASK(0x2) | CMASK(0x1) | CMASK(0x0);
-#endif
+        co[i] = SETCO(i);
     return;
 }
 static void VADDC_v(void)

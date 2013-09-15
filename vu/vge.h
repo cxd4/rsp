@@ -2,29 +2,28 @@
 
 void do_ge(int vs)
 {
-    int ge[8];
-    int vce[8]; /* !(NOTEQUAL) */
-    int vnc[8]; /* !(CARRY) */
+    int eq[N];
+    int ce[N];
     register int i;
 
-    VCO = ~VCO; /* CARRY <-- !CARRY; NOTEQUAL <-- !NOTEQUAL */
     for (i = 0; i < N; i++)
-        vnc[i] = (VCO >> (i+0x0)) & 1;
+        eq[i] = (VR[vs][i] == VC[i]);
     for (i = 0; i < N; i++)
-        vce[i] = (VCO >> (i+0x8)) & 1;
-    VCO = 0x0000;
+        ce[i] = (ne[i] ^= 1) | (co[i] ^= 1);
     for (i = 0; i < N; i++)
-        ge[i] = vce[i] | vnc[i]; /* ge = (VS > VT) || (VS == VT && vnc|vce) */
-    for (i = 0; i < N; i++)
-        ge[i] = ge[i] & (VR[vs][i] == VC[i]); /* equal to */
-    for (i = 0; i < N; i++)
-        ge[i] = ge[i] | (VR[vs][i] >  VC[i]); /* greater than */
+        eq[i] = eq[i] & ce[i];
     for (i = 0; i < N; i++)
         clip[i] = 0;
     for (i = 0; i < N; i++)
-        comp[i] = ge[i];
+        comp[i] = (VR[vs][i] > VC[i]); /* greater than */
     for (i = 0; i < N; i++)
-        ACC_L(i) = ge[i] ? VR[vs][i] : VC[i];
+        comp[i] = comp[i] | eq[i]; /* ... or equal (commonly) */
+    for (i = 0; i < N; i++)
+        ACC_L(i) = comp[i] ? VR[vs][i] : VC[i];
+    for (i = 0; i < N; i++)
+        ne[i] = 0;
+    for (i = 0; i < N; i++)
+        co[i] = 0;
     return;
 }
 

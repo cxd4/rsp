@@ -2,14 +2,14 @@
 
 void clr_bi(void) /* clear CARRY and borrow in to accumulators */
 {
-    int bi[8];
     register int i;
 
     for (i = 0; i < N; i++)
-        bi[i] = !!(VCO & 0x01<<i); /* (VCO >> i) & 1 */
-    VCO = 0x0000;
+        result[i] -= co[i];
     for (i = 0; i < N; i++)
-        result[i] -= bi[i];
+        ne[i] = 0;
+    for (i = 0; i < N; i++)
+        co[i] = 0;
     return;
 }
 static void VSUB_v(void)

@@ -2,26 +2,25 @@
 
 void do_eq(int vs)
 {
-    int eq[8];
     register int i;
 
-    VCO = ~VCO;
-    for (i = 0; i < N; i++)
-        eq[i]  = (VCO >> (i+0x8)) & 1;
-    VCO = 0x0000;
-    for (i = 0; i < N; i++)
-        eq[i] &= (VR[vs][i] == VC[i]);
     for (i = 0; i < N; i++)
         clip[i] = 0;
     for (i = 0; i < N; i++)
-        comp[i] = eq[i];
+        comp[i] = (VR[vs][i] == VC[i]);
+    for (i = 0; i < N; i++)
+        comp[i] = comp[i] & (ne[i] ^= 1);
 #if (0)
     for (i = 0; i < N; i++)
-        ACC_L(i) = eq[i] ? VR[vs][i] : VC[i]; /* correct but redundant */
+        ACC_L(i) = comp[i] ? VR[vs][i] : VC[i]; /* correct but redundant */
 #else
     for (i = 0; i < N; i++)
         ACC_L(i) = VC[i];
 #endif
+    for (i = 0; i < N; i++)
+        ne[i] = 0;
+    for (i = 0; i < N; i++)
+        co[i] = 0;
     return;
 }
 

@@ -2,25 +2,25 @@
 
 void do_ne(int vs)
 {
-    int ne[8];
     register int i;
 
     for (i = 0; i < N; i++)
-        ne[i]  = (VCO >> (i+0x8)) & 1;
-    VCO = 0x0000;
-    for (i = 0; i < N; i++)
-        ne[i] |= (VR[vs][i] != VC[i]);
-    for (i = 0; i < N; i++)
         clip[i] = 0;
     for (i = 0; i < N; i++)
-        comp[i] = ne[i];
+        comp[i] = (VR[vs][i] != VC[i]);
+    for (i = 0; i < N; i++)
+        comp[i] = comp[i] | ne[i];
 #if (0)
     for (i = 0; i < N; i++)
-        ACC_L(i) = ne[i] ? VR[vs][i] : VC[i]; /* correct but redundant */
+        ACC_L(i) = comp[i] ? VR[vs][i] : VC[i]; /* correct but redundant */
 #else
     for (i = 0; i < N; i++)
         ACC_L(i) = VR[vs][i];
 #endif
+    for (i = 0; i < N; i++)
+        ne[i] = 0;
+    for (i = 0; i < N; i++)
+        co[i] = 0;
     return;
 }
 
