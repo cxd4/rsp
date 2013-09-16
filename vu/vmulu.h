@@ -6,21 +6,21 @@ INLINE void do_mulu(short* VD, short* VS, short* VT)
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = (VS[i]*VT[i]) << 1;
+        acc[i] = VS[i] * VT[i];
     for (i = 0; i < N; i++)
-        acc[i] = acc[i] + 0x8000;
+        ACC_H(i) = -(acc[i] < 0); /* (0x8000 * 0x8000) << 1 == 0x000080000000 */
     for (i = 0; i < N; i++)
-        ACC_H(i) = -(acc[i] < 0);
+        acc[i] = (acc[i] << 1) + 0x8000;
     for (i = 0; i < N; i++)
-        ACC_M(i) = acc[i] >> 16;
+        ACC_L(i) = (acc[i] & 0x00000000FFFF) >>  0;
     for (i = 0; i < N; i++)
-        ACC_L(i) = acc[i];
+        ACC_M(i) = (acc[i] & 0x0000FFFF0000) >> 16;
     for (i = 0; i < N; i++)
-        VD[i] = ACC_M(i);
+        VD[i]  = ACC_M(i);
     for (i = 0; i < N; i++)
         VD[i] |= ACC_M(i) >> 15; /* VD |= -(result == 0x000080008000) */
     for (i = 0; i < N; i++)
-        VD[i] &= ~ACC_H(i); /* VD &= -(result >= 0x000000000000) */
+        VD[i] &= ACC_H(i) ^  ~0; /* VD &= -(result >= 0x000000000000) */
     return;
 }
 
