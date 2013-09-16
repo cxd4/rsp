@@ -10,11 +10,11 @@ INLINE void do_mulu(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         acc[i] = acc[i] + 0x8000;
     for (i = 0; i < N; i++)
-        ACC_H(i) = (VS[i] ^ VT[i]) >> 15;
+        ACC_H(i) = -(acc[i] < 0);
     for (i = 0; i < N; i++)
-        ACC_M(i) = (short)(acc[i] >> 16);
+        ACC_M(i) = acc[i] >> 16;
     for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(acc[i] >>  0);
+        ACC_L(i) = acc[i];
     for (i = 0; i < N; i++)
         VD[i] = ACC_M(i);
     for (i = 0; i < N; i++)
