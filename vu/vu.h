@@ -314,22 +314,17 @@ void SIGNED_CLAMP(short* VD, int mode)
             return;
         case SM_ADD_A: /* VADD and VSUB */
             for (i = 0; i < N; i++)
-            {
-#ifdef FORCE_STATIC_CLAMP
-                const signed int under = (signed)(result[i] + 32768) >> 31;
-                const signed int over  = (signed)(32767 - result[i]) >> 31;
-
-                sclamp[1][1] = result[i] & 0x0000FFFF;
-                VD[i] = sclamp[under + 1][over + 1];
-#else
-                if (result[i] > +32767)
-                    VD[i] = +32767;
-                else if (result[i] < -32768)
-                    VD[i] = -32768;
-                else
-                    VD[i] = (short)result[i];
-#endif
-            }
+                VD[i]  = result[i] & 0x0000FFFF;
+            for (i = 0; i < N; i++)
+                lo[i] = (result[i] + 32768) >> 31;
+            for (i = 0; i < N; i++)
+                hi[i] = (32767 - result[i]) >> 31;
+            for (i = 0; i < N; i++)
+                VD[i] &= ~lo[i];
+            for (i = 0; i < N; i++)
+                VD[i] |=  hi[i];
+            for (i = 0; i < N; i++)
+                VD[i] ^= 0x8000 & (hi[i] | lo[i]);
             return;
     }
 }
