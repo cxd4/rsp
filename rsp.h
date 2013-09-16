@@ -6,7 +6,7 @@ RSP_INFO RSP;
 
 #ifdef _MSC_VER
 #define INLINE      __inline
-#define NOINLINE    __noinline
+#define NOINLINE    __declspec(noinline)
 #else
 #define INLINE      inline
 #define NOINLINE    __attribute__((noinline))
