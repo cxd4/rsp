@@ -8,11 +8,11 @@ INLINE void do_mudm(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         acc[i] = (signed short)(VS[i]) * (unsigned short)(VT[i]);
     for (i = 0; i < N; i++)
-        ACC_H(i) = VS[i] >> 15;
+        ACC_L(i) = (acc[i] & 0x00000000FFFF) >>  0;
     for (i = 0; i < N; i++)
-        ACC_M(i) = (unsigned int)(acc[i]) >> 16;
+        ACC_M(i) = (acc[i] & 0x0000FFFF0000) >> 16;
     for (i = 0; i < N; i++)
-        ACC_L(i) = acc[i];
+        ACC_H(i) = -(ACC_M(i) < 0);
     for (i = 0; i < N; i++)
         VD[i] = ACC_M(i); /* no possibilities to clamp */
     return;
