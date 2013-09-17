@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.14                                                         *
+* Release:  2013.09.17                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -149,30 +149,6 @@ void SHUFFLE_VECTOR(int vt, int e)
     return;
 }
 
-#if (0)
-/*
- * accumulator-indexing macros (little endian:  not suitable for VSAW)
- */
-#define HI      02
-#define MD      01
-#define LO      00
-
-static union ACC {
-    short int s[3]; /* Each element has a low, middle, and high 16-bit slice. */
-    signed char SB[6];
-/* 64-bit access: */
-    unsigned char B[8];
-    short int HW[4];
-    unsigned short UHW[4];
-    int W[2];
-    unsigned int UW[2];
-    INT64 DW;
-} VACC[N];
-#define ACC_L(i)   (VACC[i].s[LO])
-#define ACC_M(i)   (VACC[i].s[MD])
-#define ACC_H(i)   (VACC[i].s[HI])
-
-#else
 /*
  * accumulator-indexing macros (inverted access dimensions, suited for SSE)
  */
@@ -180,16 +156,20 @@ static union ACC {
 #define MD      01
 #define LO      02
 
-short VACC[3][N];
-/*
- * short ACC_L[N];
- * short ACC_M[N];
- * short ACC_H[N];
- */
+#if (0)
+short VACC_L[N];
+short VACC_M[N];
+short VACC_H[N];
+
+#define ACC_L(i)   (VACC_L[i])
+#define ACC_M(i)   (VACC_M[i])
+#define ACC_H(i)   (VACC_H[i])
+#else
+unsigned short VACC[3][N];
+
 #define ACC_L(i)   (VACC[LO][i])
 #define ACC_M(i)   (VACC[MD][i])
 #define ACC_H(i)   (VACC[HI][i])
-
 #endif
 
 /*
