@@ -10,9 +10,9 @@ INLINE void do_mudl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         ACC_L(i) = acc[i] >> 16;
     for (i = 0; i < N; i++)
-        ACC_M(i) = (0x0000 & 0x0000FFFF0000) >> 16;
+        ACC_M(i) = 0x0000;
     for (i = 0; i < N; i++)
-        ACC_H(i) = (0x0000 & 0xFFFF00000000) >> 32;
+        ACC_H(i) = 0x0000;
     for (i = 0; i < N; i++)
         VD[i] = ACC_L(i); /* no possibilities to clamp */
     return;
