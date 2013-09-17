@@ -20,12 +20,32 @@ INLINE void UNSIGNED_CLAMP(short* VD)
 
 INLINE void do_macu(short* VD, short* VS, short* VT)
 {
-    INT64 acc[N];
+    long product[N];
+    unsigned long addend[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = (VS[i]*VT[i]) << 1;
-    do_acc(acc);
+        product[i] = VS[i] * VT[i];
+    for (i = 0; i < N; i++)
+        ACC_H(i) = ACC_H(i) - (product[i] < 0); /* `... + (product[i] >> 31)` */
+    for (i = 0; i < N; i++)
+        product[i] = product[i] << 1;
+    for (i = 0; i < N; i++)
+        addend[i] = (product[i] & 0x00000000FFFF) >>  0;
+    for (i = 0; i < N; i++)
+        addend[i] = (unsigned short)ACC_L(i) + addend[i];
+    for (i = 0; i < N; i++)
+        ACC_L(i) = (short)addend[i];
+    for (i = 0; i < N; i++)
+        addend[i] = (addend[i] >> 16) + (unsigned short)(product[i] >> 16);
+    for (i = 0; i < N; i++)
+        addend[i] = (unsigned short)ACC_M(i) + addend[i];
+    for (i = 0; i < N; i++)
+        ACC_M(i) = (short)addend[i];
+    for (i = 0; i < N; i++)
+        addend[i] = (unsigned short)(addend[i] >> 16);
+    for (i = 0; i < N; i++)
+        ACC_H(i) = ACC_H(i) + (short)addend[i];
     UNSIGNED_CLAMP(VD);
     return;
 }

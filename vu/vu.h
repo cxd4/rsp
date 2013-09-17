@@ -12,8 +12,6 @@
 #define MACHINE_SIZE_48_MIN
 #endif
 
-typedef long long INT64;
-
 /*
  * vector-scalar element decoding
  *
@@ -194,18 +192,6 @@ short VACC[3][N];
 
 #endif
 
-#define FORCE_STATIC_CLAMP
-static signed short sclamp[2][2] = {
-    { 0x0000, -0x8000},
-    {+0x7FFF,  0x0000}
-};
-/*
-static unsigned short zclamp[2][2] = {
-    { 0x0000, -0x0000},
-    {+0xFFFF,  0x0000}
-};
-*/
-
 /*
  * modes of saturation (unofficial labels, just made up by file author)
  */
@@ -222,39 +208,6 @@ enum {
 };
 
 signed int result[N];
-
-INLINE void do_store(INT64* acc)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        ACC_H(i) = (acc[i] & 0xFFFF00000000) >> 32;
-    for (i = 0; i < N; i++)
-        ACC_M(i) = (acc[i] & 0x0000FFFF0000) >> 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (acc[i] & 0x00000000FFFF) >>  0;
-    return;
-}
-INLINE void do_acc(INT64* acc)
-{
-    INT64 base[N];
-    register int i;
-
-    for (i = 0; i < N; i++)
-        base[i] = ACC_H(i);
-    for (i = 0; i < N; i++)
-        base[i] = base[i] << 16;
-    for (i = 0; i < N; i++)
-        base[i] = base[i] | (unsigned short)ACC_M(i);
-    for (i = 0; i < N; i++)
-        base[i] = base[i] << 16;
-    for (i = 0; i < N; i++)
-        base[i] = base[i] | (unsigned short)ACC_L(i);
-    for (i = 0; i < N; i++)
-        base[i] = base[i] + acc[i];
-    do_store(base);
-    return;
-}
 
 void SIGNED_CLAMP(short* VD, int mode)
 {

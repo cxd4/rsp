@@ -2,12 +2,28 @@
 
 INLINE void do_madn(short* VD, short* VS, short* VT)
 {
-    INT64 acc[N];
+    long product[N];
+    unsigned long addend[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = (unsigned short)(VS[i]) * (signed short)(VT[i]);
-    do_acc(acc);
+        product[i] = (unsigned short)(VS[i]) * (signed short)(VT[i]);
+    for (i = 0; i < N; i++)
+        addend[i] = (product[i] & 0x00000000FFFF) >>  0;
+    for (i = 0; i < N; i++)
+        addend[i] = (unsigned short)ACC_L(i) + addend[i];
+    for (i = 0; i < N; i++)
+        ACC_L(i) = (short)addend[i];
+    for (i = 0; i < N; i++)
+        addend[i] = (unsigned short)(addend[i] >> 16) + (product[i] >> 16);
+    for (i = 0; i < N; i++)
+        addend[i] = (unsigned short)ACC_M(i) + addend[i];
+    for (i = 0; i < N; i++)
+        ACC_M(i) = (short)addend[i];
+    for (i = 0; i < N; i++)
+        addend[i] = (unsigned short)(addend[i] >> 16);
+    for (i = 0; i < N; i++)
+        ACC_H(i) = ACC_H(i) + (short)addend[i];
     SIGNED_CLAMP(VD, SM_MUL_Z);
     return;
 }
