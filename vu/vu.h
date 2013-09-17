@@ -165,7 +165,7 @@ short VACC_H[N];
 #define ACC_M(i)   (VACC_M[i])
 #define ACC_H(i)   (VACC_H[i])
 #else
-unsigned short VACC[3][N];
+short VACC[3][N];
 
 #define ACC_L(i)   (VACC[LO][i])
 #define ACC_M(i)   (VACC[MD][i])
@@ -189,7 +189,7 @@ enum {
 
 signed int result[N];
 
-void SIGNED_CLAMP(short* VD, int mode)
+INLINE void SIGNED_CLAMP(short* VD, int mode)
 {
     short hi[N], lo[N];
     register int i;

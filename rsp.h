@@ -25,7 +25,7 @@ const unsigned int type_index[4] = {
     0x00000030, /* MB_ICONEXCLAMATION -- might be missing RSP support */
     0x00000010  /* MB_ICONHAND -- definite error or problem in emulator */
 };
-__attribute__((noinline)) void message(const char* body, int priority)
+NOINLINE void message(const char* body, int priority)
 {
     priority &= 03;
     if (priority < MINIMUM_MESSAGE_PRIORITY)
