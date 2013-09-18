@@ -1,94 +1,101 @@
 #include "vu.h"
 
-static void VOR_v(void)
+INLINE void do_or(short* VD, short* VS, short* VT)
 {
     register int i;
+
+    for (i = 0; i < N; i++)
+        ACC_L(i) = VS[i] | VT[i];
+    for (i = 0; i < N; i++)
+        VD[i] = ACC_L(i);
+    return;
+}
+
+static void VOR_v(void)
+{
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vs][i] | VR[vt][i];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    do_or(VR[vd], VR[vs], VR[vt]);
     return;
 }
 static void VOR0q(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vs][i] | VR[vt][(0x2 & 01) + (i & 0xE)];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 02);
+    STORE_VECTOR(SV, VT);
+    do_or(VR[vd], VR[vs], SV);
     return;
 }
 static void VOR1q(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vs][i] | VR[vt][(0x3 & 01) + (i & 0xE)];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 03);
+    STORE_VECTOR(SV, VT);
+    do_or(VR[vd], VR[vs], SV);
     return;
 }
 static void VOR0h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vs][i] | VR[vt][(0x4 & 03) + (i & 0xC)];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 04);
+    STORE_VECTOR(SV, VT);
+    do_or(VR[vd], VR[vs], SV);
     return;
 }
 static void VOR1h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vs][i] | VR[vt][(0x5 & 03) + (i & 0xC)];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 05);
+    STORE_VECTOR(SV, VT);
+    do_or(VR[vd], VR[vs], SV);
     return;
 }
 static void VOR2h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vs][i] | VR[vt][(0x6 & 03) + (i & 0xC)];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 06);
+    STORE_VECTOR(SV, VT);
+    do_or(VR[vd], VR[vs], SV);
     return;
 }
 static void VOR3h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vs][i] | VR[vt][(0x7 & 03) + (i & 0xC)];
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 07);
+    STORE_VECTOR(SV, VT);
+    do_or(VR[vd], VR[vs], SV);
     return;
 }
 static void VOR0w(void)
