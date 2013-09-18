@@ -35,79 +35,79 @@ static void VMULU_v(void)
 }
 static void VMULU0q(void)
 {
+    VECTOR VT;
     short SV[N];
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        SV[i] = VR[vt][(0x2 & 0x1) + (i & 0xE)];
+    VT = SHUFFLE_VECTOR(VR[vt], 02);
+    STORE_VECTOR(SV, VT);
     do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU1q(void)
 {
+    VECTOR VT;
     short SV[N];
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        SV[i] = VR[vt][(0x3 & 0x1) + (i & 0xE)];
+    VT = SHUFFLE_VECTOR(VR[vt], 03);
+    STORE_VECTOR(SV, VT);
     do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU0h(void)
 {
+    VECTOR VT;
     short SV[N];
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        SV[i] = VR[vt][(0x4 & 0x3) + (i & 0xC)];
+    VT = SHUFFLE_VECTOR(VR[vt], 04);
+    STORE_VECTOR(SV, VT);
     do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU1h(void)
 {
+    VECTOR VT;
     short SV[N];
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        SV[i] = VR[vt][(0x5 & 0x3) + (i & 0xC)];
+    VT = SHUFFLE_VECTOR(VR[vt], 05);
+    STORE_VECTOR(SV, VT);
     do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU2h(void)
 {
+    VECTOR VT;
     short SV[N];
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        SV[i] = VR[vt][(0x6 & 0x3) + (i & 0xC)];
+    VT = SHUFFLE_VECTOR(VR[vt], 06);
+    STORE_VECTOR(SV, VT);
     do_mulu(VR[vd], VR[vs], SV);
     return;
 }
 static void VMULU3h(void)
 {
+    VECTOR VT;
     short SV[N];
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        SV[i] = VR[vt][(0x7 & 0x3) + (i & 0xC)];
+    VT = SHUFFLE_VECTOR(VR[vt], 07);
+    STORE_VECTOR(SV, VT);
     do_mulu(VR[vd], VR[vs], SV);
     return;
 }
