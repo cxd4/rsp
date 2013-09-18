@@ -1,32 +1,34 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.17                                                         *
+* Release:  2013.09.18                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
 #define _VU_H
 
-#define MAX_LONG (~0)
-#if !(MAX_LONG < 0xFFFFFFFFFFFF)
-#define MACHINE_SIZE_48_MIN
+/*
+ * `memcpy` as the intrinsic for parallel vector accumulator write-back
+ */
+#include <memory.h>
+#include <string.h>
+
+/*
+ * Un-define this if your environment lacks the SSE2 instruction set.
+ */
+#define ARCH_MIN_SSE2
+
+#ifdef ARCH_MIN_SSE2
+#include <emmintrin.h>
+typedef __m128i VECTOR;
+#else
+/* ANSI C approximation for RSP vectors */
+typedef short* VECTOR;
 #endif
 
 /*
  * vector-scalar element decoding
- *
- * Obviously, doing a switch jump table on (element & 0xF) is very fast
- * because it saves the decoding time of constantly fetching source elements.
- *
- * However, there are several disadvantages to the above method:
- *     * Extremely difficult to maintain.  (Algorithm fixes need 16 copies.)
- *     * Not accurate.  (Real H/W decodes all of the elements iteratively.)
- *     * Colossal boost in program size, cutting down command cache memory.
- *     * Using branch frames for performing at least one conditional jump.
- *     * Even if element = 0x0, it's still 8 un-merged, separate data moves.
- *     * Faster only for large-cache processors.  (RSP is very small-cache.)
- *     * Difficult to read.
- *     * Pointless to try to optimize that way when SSSE3 could be applied.
+ * Obsolete.  Consider using at least the SSE2 algorithms instead.
  */
 static const int ei[16][8] = {
     { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none (vector-only operand) */
@@ -97,24 +99,7 @@ static short Result[8];
 
 #define VR_D(i) VMUL_PTR[i]
 
-#ifdef PARALLELIZE_VECTOR_TRANSFERS
-#define ACC_R(i)    VR_D(i)
-#define ACC_W(i)    VACC[i].s[LO]
-#else
-#define ACC_R(i)    VACC[i].s[LO]
-#define ACC_W(i)    VR_D(i)
-#endif
-/*
- * If we want to parallelize vector transfers, we probably also want to
- * linearize the register files.  (VR dest. reads from VR src. op. VR trg.)
- * Lining up the emulator for VR[vd] = VR[vs] & VR[vt] is a lot easier than
- * doing it for VACC[i](15..0) = VR[vs][i] & VR[vt][i] inside of some loop.
- * However, the correct order in vector units is to update the accumulator
- * register file BEFORE the vector register file.  This is slower but more
- * accurate and even required in some cases (VMAC* and VMAD* operations).
- * However, it is worth sacrificing if it means doing vectors in parallel.
- */
-
+#ifndef ARCH_MIN_SSE2
 int sub_mask[16] = {
     0x0,
     0x0,
@@ -122,31 +107,79 @@ int sub_mask[16] = {
     0x3, 0x3, 0x3, 0x3,
     0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
 };
-
-void SHUFFLE_VECTOR(int vt, int e)
+static VECTOR SHUFFLE_VECTOR(VECTOR VT, int e)
 {
+    short SV[8];
     register int i, j;
 #if (0 == 0)
     j = sub_mask[e];
     e &= j;
     j ^= 07;
     for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(i & j) | e];
+        SV[i] = VT[(i & j) | e];
 #else
     if (e & 0x8)
         for (i = 0; i < N; i++)
-            VC[i] = VR[vt][(i & 00) | (e & 0x7)];
+            SV[i] = VT[(i & 0x0) | (e & 0x7)];
     else if (e & 0x4)
         for (i = 0; i < N; i++)
-            VC[i] = VR[vt][(i & 04) | (e & 0x3)];
+            SV[i] = VT[(i & 0xC) | (e & 0x3)];
     else if (e & 0x2)
         for (i = 0; i < N; i++)
-            VC[i] = VR[vt][(i & 06) | (e & 0x1)];
+            SV[i] = VT[(i & 0xE) | (e & 0x1)];
     else /* if ((e == 0b0000) || (e == 0b0001)) */
         for (i = 0; i < N; i++)
-            VC[i] = VR[vt][(i & 07) | (e & 0x0)];
+            SV[i] = VT[(i & 0x7) | (e & 0x0)];
 #endif
+    return (SV);
+}
+static void STORE_VECTOR(short* VD, short* VS)
+{
+    VD = VS;
     return;
+}
+#else
+#define SHUFFLE(a,b,c,d)    (((a) << 6) | ((b) << 4) | ((c) << 2) | ((d) << 0))
+const int simm[8] = {
+    SHUFFLE(0x03, 0x02, 0x01, 0x00), /* vector operand */
+    SHUFFLE(0x03, 0x02, 0x01, 0x00),
+    SHUFFLE(0x02, 0x02, 0x00, 0x00), /* scalar quarter:  0q */
+    SHUFFLE(0x03, 0x03, 0x01, 0x01), /* scalar quarter:  1q */
+    SHUFFLE(0x00, 0x00, 0x00, 0x00), /* scalar half   :  0h */
+    SHUFFLE(0x01, 0x01, 0x01, 0x01), /* scalar half   :  1h */
+    SHUFFLE(0x02, 0x02, 0x02, 0x02), /* scalar half   :  2h */
+    SHUFFLE(0x03, 0x03, 0x03, 0x03)  /* scalar half   :  3h */
+};
+
+static VECTOR SHUFFLE_VECTOR(short* VT, int e)
+{
+    VECTOR SV;
+    const int element = e & 0x7;
+
+    SV = _mm_load_si128((VECTOR*)VT);
+    SV = _mm_shufflehi_epi16(SV, simm[element]);
+    SV = _mm_shufflelo_epi16(SV, simm[element]);
+    return (SV);
+}
+static void STORE_VECTOR(short* VD, __m128i xmm)
+{
+    _mm_store_si128((__m128i*)VD, xmm);
+    return;
+}
+#endif
+/*
+ * The following may be written the same way when compiled either for SSE2
+ * or any older systems, due to the simplicity of the basic loop pattern.
+ */
+static short* SHUFFLE_SCALAR(short* VT, int e)
+{
+    short* SV;
+    register int i;
+    const int element = e & 0x7;
+
+    for (i = 0; i < N; i++) /* easily vectorized to SSE2 via compiler smarts */
+        *(SV + i) = *(VT + element);
+    return (SV);
 }
 
 /*
