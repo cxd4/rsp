@@ -3,224 +3,248 @@
 
 static void VRSQHv0(void)
 {
-    register int i;
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][00] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x0 & 0x0) + (i & 0x7)];
+    memcpy(VACC_L, VR[vt], 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQHv1(void)
 {
-    register int i;
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][01] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x1 & 0x0) + (i & 0x7)];
+    memcpy(VACC_L, VR[vt], 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH0q(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][02] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x2 & 0x1) + (i & 0xE)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0x2);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH1q(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][03] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x3 & 0x1) + (i & 0xE)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0x3);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH0h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][04] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x4 & 0x3) + (i & 0xC)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0x4);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH1h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][05] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x5 & 0x3) + (i & 0xC)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0x5);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH2h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][06] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x6 & 0x3) + (i & 0xC)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0x6);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH3h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][07] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x7 & 0x3) + (i & 0xC)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0x7);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH0w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][00] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x8 & 0x7) + (i & 0x0)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0x8);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH1w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][01] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0x9 & 0x7) + (i & 0x0)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0x9);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH2w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][02] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0xA & 0x7) + (i & 0x0)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0xA);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH3w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][03] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0xB & 0x7) + (i & 0x0)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0xB);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH4w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][04] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0xC & 0x7) + (i & 0x0)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0xC);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH5w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][05] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0xD & 0x7) + (i & 0x0)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0xD);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH6w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][06] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0xE & 0x7) + (i & 0x0)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0xE);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;
 }
 static void VRSQH7w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][07] << 16;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VR[vt][(0xF & 0x7) + (i & 0x0)];
+    VT = SHUFFLE_VECTOR(VR[vt], 0xF);
+    STORE_VECTOR(SV, VT);
+    memcpy(VACC_L, SV, 8*sizeof(short));
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;

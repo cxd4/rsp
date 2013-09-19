@@ -140,7 +140,7 @@ static void STORE_VECTOR(short* VD, short* VS)
 }
 #else
 #define SHUFFLE(a,b,c,d)    (((a) << 6) | ((b) << 4) | ((c) << 2) | ((d) << 0))
-const int simm[8] = {
+const int simm[16] = {
     SHUFFLE(0x03, 0x02, 0x01, 0x00), /* vector operand */
     SHUFFLE(0x03, 0x02, 0x01, 0x00),
     SHUFFLE(0x02, 0x02, 0x00, 0x00), /* scalar quarter:  0q */
@@ -148,17 +148,40 @@ const int simm[8] = {
     SHUFFLE(0x00, 0x00, 0x00, 0x00), /* scalar half   :  0h */
     SHUFFLE(0x01, 0x01, 0x01, 0x01), /* scalar half   :  1h */
     SHUFFLE(0x02, 0x02, 0x02, 0x02), /* scalar half   :  2h */
-    SHUFFLE(0x03, 0x03, 0x03, 0x03)  /* scalar half   :  3h */
+    SHUFFLE(0x03, 0x03, 0x03, 0x03), /* scalar half   :  3h */
+    SHUFFLE(0x00, 0x00, 0x00, 0x00),
+    SHUFFLE(0x01, 0x01, 0x01, 0x01),
+    SHUFFLE(0x02, 0x02, 0x02, 0x02),
+    SHUFFLE(0x03, 0x03, 0x03, 0x03),
+    SHUFFLE(0x00, 0x00, 0x00, 0x00),
+    SHUFFLE(0x01, 0x01, 0x01, 0x01),
+    SHUFFLE(0x02, 0x02, 0x02, 0x02),
+    SHUFFLE(0x03, 0x03, 0x03, 0x03)
 };
 
 static VECTOR SHUFFLE_VECTOR(short* VT, int e)
 {
     VECTOR SV;
-    const int element = e & 0x7;
 
     SV = _mm_load_si128((VECTOR*)VT);
-    SV = _mm_shufflehi_epi16(SV, simm[element]);
-    SV = _mm_shufflelo_epi16(SV, simm[element]);
+    if (e & 0x8) /* scalar wholes */
+    { /* Not really intended for this function; use scalar loops instead. */
+        if (e & 0x4)
+        {
+            SV = _mm_shufflehi_epi16(SV, simm[e & 0xF]);
+            SV = _mm_unpackhi_epi16(SV, SV);
+        }
+        else
+        {
+            SV = _mm_shufflelo_epi16(SV, simm[e & 0xF]);
+            SV = _mm_unpacklo_epi16(SV, SV);
+        }
+    }
+    else
+    {
+        SV = _mm_shufflehi_epi16(SV, simm[e & 0x7]);
+        SV = _mm_shufflelo_epi16(SV, simm[e & 0x7]);
+    }
     return (SV);
 }
 static void STORE_VECTOR(short* VD, __m128i xmm)
@@ -167,20 +190,6 @@ static void STORE_VECTOR(short* VD, __m128i xmm)
     return;
 }
 #endif
-/*
- * The following may be written the same way when compiled either for SSE2
- * or any older systems, due to the simplicity of the basic loop pattern.
- */
-static short* SHUFFLE_SCALAR(short* VT, int e)
-{
-    short* SV;
-    register int i;
-    const int element = e & 0x7;
-
-    for (i = 0; i < N; i++) /* easily vectorized to SSE2 via compiler smarts */
-        *(SV + i) = *(VT + element);
-    return (SV);
-}
 
 /*
  * accumulator-indexing macros (inverted access dimensions, suited for SSE)
@@ -194,15 +203,19 @@ short VACC_L[N];
 short VACC_M[N];
 short VACC_H[N];
 
-#define ACC_L(i)   (VACC_L[i])
-#define ACC_M(i)   (VACC_M[i])
-#define ACC_H(i)   (VACC_H[i])
+#define ACC_L(i)    (VACC_L[i])
+#define ACC_M(i)    (VACC_M[i])
+#define ACC_H(i)    (VACC_H[i])
 #else
 short VACC[3][N];
 
-#define ACC_L(i)   (VACC[LO][i])
-#define ACC_M(i)   (VACC[MD][i])
-#define ACC_H(i)   (VACC[HI][i])
+#define VACC_L      (VACC[LO])
+#define VACC_M      (VACC[MD])
+#define VACC_H      (VACC[HI])
+
+#define ACC_L(i)    (VACC_L[i])
+#define ACC_M(i)    (VACC_M[i])
+#define ACC_H(i)    (VACC_H[i])
 #endif
 
 /*
@@ -303,7 +316,7 @@ int comp[N]; /* $vcc:  vector compare code register (low byte:  compare) */
 int vce[N]; /* $vce:  vector compare extension register (one byte) */
 
 /*
- * Note about the third vector control flags register (VCE).
+ * Note about the third vector condition flags register (VCE).
  *
  * Only CFC2, CTC2, and VCH may set this value without clearing.
  * My personal method of saying it:
