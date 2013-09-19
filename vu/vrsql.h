@@ -44,7 +44,7 @@ static void VRSQLv0(void)
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][00];
     do_rsql(DivIn);
-    memcpy(VACC_L, VR[vt], 8*sizeof(short));
+    memcpy(VACC_L, VR[vt], N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -57,7 +57,7 @@ static void VRSQLv1(void)
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][01];
     do_rsql(DivIn);
-    memcpy(VACC_L, VR[vt], 8*sizeof(short));
+    memcpy(VACC_L, VR[vt], N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -74,7 +74,7 @@ static void VRSQL0q(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0x2);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -91,7 +91,7 @@ static void VRSQL1q(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0x3);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -108,7 +108,7 @@ static void VRSQL0h(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0x4);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -125,7 +125,7 @@ static void VRSQL1h(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0x5);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -142,7 +142,7 @@ static void VRSQL2h(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0x6);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -159,7 +159,7 @@ static void VRSQL3h(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0x7);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -176,7 +176,7 @@ static void VRSQL0w(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0x8);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -193,7 +193,7 @@ static void VRSQL1w(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0x9);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -210,7 +210,7 @@ static void VRSQL2w(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0xA);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -227,7 +227,7 @@ static void VRSQL3w(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0xB);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -244,7 +244,7 @@ static void VRSQL4w(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0xC);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -261,7 +261,7 @@ static void VRSQL5w(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0xD);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -278,7 +278,7 @@ static void VRSQL6w(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0xE);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -295,7 +295,7 @@ static void VRSQL7w(void)
     do_rsql(DivIn);
     VT = SHUFFLE_VECTOR(VR[vt], 0xF);
     STORE_VECTOR(SV, VT);
-    memcpy(VACC_L, SV, 8*sizeof(short));
+    memcpy(VACC_L, SV, N*sizeof(short));
     VR[vd][de] = (short)DivOut;
     return;
 }
