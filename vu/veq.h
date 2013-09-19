@@ -1,22 +1,24 @@
 #include "vu.h"
 
-void do_eq(int vs)
+void do_eq(short* VD, short* VS, short* VT)
 {
     register int i;
 
     for (i = 0; i < N; i++)
         clip[i] = 0;
     for (i = 0; i < N; i++)
-        comp[i] = (VR[vs][i] == VC[i]);
+        comp[i] = (VS[i] == VT[i]);
     for (i = 0; i < N; i++)
         comp[i] = comp[i] & (ne[i] ^= 1);
 #if (0)
     for (i = 0; i < N; i++)
-        ACC_L(i) = comp[i] ? VR[vs][i] : VC[i]; /* correct but redundant */
+        ACC_L(i) = comp[i] ? VS[i] : VT[i]; /* correct but redundant */
 #else
     for (i = 0; i < N; i++)
-        ACC_L(i) = VC[i];
+        ACC_L(i) = VT[i];
 #endif
+    memcpy(VD, VACC_L, N*sizeof(short));
+
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)
@@ -26,211 +28,192 @@ void do_eq(int vs)
 
 static void VEQ_v(void)
 {
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][i];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    do_eq(VR[vd], VR[vs], VR[vt]);
     return;
 }
 static void VEQ0q(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0x2 & 01) + (i & 0xE)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x2);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ1q(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0x3 & 01) + (i & 0xE)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x3);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ0h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0x4 & 03) + (i & 0xC)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x4);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ1h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0x5 & 03) + (i & 0xC)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x5);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ2h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0x6 & 03) + (i & 0xC)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x6);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ3h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0x7 & 03) + (i & 0xC)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x7);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ0w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0x8 & 07) + (i & 0x0)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x8);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ1w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0x9 & 07) + (i & 0x0)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x9);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ2w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0xA & 07) + (i & 0x0)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xA);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ3w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0xB & 07) + (i & 0x0)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xB);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ4w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0xC & 07) + (i & 0x0)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xC);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ5w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0xD & 07) + (i & 0x0)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xD);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ6w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0xE & 07) + (i & 0x0)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xE);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
 static void VEQ7w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VR[vt][(0xF & 07) + (i & 0x0)];
-    do_eq(vs);
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xF);
+    STORE_VECTOR(SV, VT);
+    do_eq(VR[vd], VR[vs], SV);
     return;
 }
