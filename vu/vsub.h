@@ -1,239 +1,210 @@
 #include "vu.h"
 
-void clr_bi(void) /* clear CARRY and borrow in to accumulators */
-{
+void clr_bi(short* VD, short* VS, short* VT)
+{ /* clear CARRY and borrow in to accumulators */
     register int i;
 
+    for (i = 0; i < N; i++)
+        result[i] = VS[i] - VT[i];
     for (i = 0; i < N; i++)
         result[i] -= co[i];
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)
         co[i] = 0;
+    for (i = 0; i < N; i++)
+        ACC_L(i) = (short)(result[i]);
+    SIGNED_CLAMP(VD, SM_ADD_A);
     return;
 }
 static void VSUB_v(void)
 {
-    register int i;
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][i];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    clr_bi(VR[vd], VR[vs], VR[vt]);
     return;
 }
 static void VSUB0q(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0x2 & 01) + (i & 0xE)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x2);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB1q(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0x3 & 01) + (i & 0xE)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x3);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB0h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0x4 & 03) + (i & 0xC)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x4);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB1h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0x5 & 03) + (i & 0xC)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x5);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB2h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0x6 & 03) + (i & 0xC)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x6);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB3h(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0x7 & 03) + (i & 0xC)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x7);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB0w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0x8 & 07) + (i & 0x0)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x8);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB1w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0x9 & 07) + (i & 0x0)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0x9);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB2w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0xA & 07) + (i & 0x0)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xA);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB3w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0xB & 07) + (i & 0x0)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xB);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB4w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0xC & 07) + (i & 0x0)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xC);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB5w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0xD & 07) + (i & 0x0)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xD);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB6w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0xE & 07) + (i & 0x0)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xE);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUB7w(void)
 {
-    register int i;
+    VECTOR VT;
+    short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    for (i = 0; i < N; i++)
-        result[i] = VR[vs][i] - VR[vt][(0xF & 07) + (i & 0x0)];
-    clr_bi();
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
-    SIGNED_CLAMP(VR[vd], SM_ADD_A);
+    VT = SHUFFLE_VECTOR(VR[vt], 0xF);
+    STORE_VECTOR(SV, VT);
+    clr_bi(VR[vd], VR[vs], SV);
     return;
 }

@@ -35,28 +35,22 @@ static void VSAR(int vd, int vs, int vt, int e)
 
 static void VSAWH(void)
 {
-    register int i;
     const int vd = inst.R.sa;
 
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_H(i);
+    memcpy(VR[vd], VACC_H, N*sizeof(short));
     return;
 }
 static void VSAWM(void)
 {
-    register int i;
     const int vd = inst.R.sa;
 
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_M(i);
+    memcpy(VR[vd], VACC_M, N*sizeof(short));
     return;
 }
 static void VSAWL(void)
 {
-    register int i;
     const int vd = inst.R.sa;
 
-    for (i = 0; i < N; i++)
-        VR[vd][i] = ACC_L(i);
+    memcpy(VR[vd], VACC_L, N*sizeof(short));
     return;
 }
