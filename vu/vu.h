@@ -60,7 +60,7 @@ static const int ei[16][8] = {
  * For ?WC2 we may need to do byte-precision access just as directly.
  * This is amended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
-ALIGNED static short VR[32][N];
+ALIGNED short VR[32][N];
 
 /* #define EMULATE_VECTOR_RESULT_BUFFER */
 /*
