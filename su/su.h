@@ -809,7 +809,7 @@ void SP_DMA_WRITE(void)
 }
 
 /*** Scalar, Coprocessor Operations (vector unit) ***/
-extern short VR[32][8];
+ALIGNED static short VR[32][8];
 #define VR_B(v, e)  (*(unsigned char *)(((unsigned char *)(VR + v)) + MES(e)))
 #define VR_S(v, e)  (*(short *)((unsigned char *)(*(VR + v)) + ((e + 1) & ~1)))
 /* to-do:  check this stupid thing for (unsigned char *)(VR+v) like above? */

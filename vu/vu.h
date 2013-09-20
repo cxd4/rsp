@@ -60,7 +60,7 @@ static const int ei[16][8] = {
  * For ?WC2 we may need to do byte-precision access just as directly.
  * This is amended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
-short VR[32][N];
+ALIGNED static short VR[32][N];
 
 /* #define EMULATE_VECTOR_RESULT_BUFFER */
 /*
@@ -195,12 +195,12 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
 #define LO      02
 
 #if (0)
-short VACC_L[N];
-short VACC_M[N];
-short VACC_H[N];
+ALIGNED static short VACC_L[N];
+ALIGNED static short VACC_M[N];
+ALIGNED static short VACC_H[N];
 
 #else
-short VACC[3][N];
+ALIGNED static short VACC[3][N];
 
 #define VACC_L      (VACC[LO])
 #define VACC_M      (VACC[MD])
@@ -226,7 +226,7 @@ enum {
     EOL /* more stuff here if you want */
 };
 
-signed int result[N];
+static signed int result[N];
 
 INLINE void SIGNED_CLAMP(short* VD, int mode)
 {
@@ -236,10 +236,6 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
     switch (mode)
     {
         case SM_MUL_X: /* typical sign-clamp of accumulator-mid (bits 31:16) */
-            for (i = 0; i < N; i++)
-                result[i] = ACC_H(i) << 16;
-            for (i = 0; i < N; i++)
-                result[i] = result[i] | (unsigned short)ACC_M(i);
             for (i = 0; i < N; i++)
                 VD[i]  = ACC_M(i);
             for (i = 0; i < N; i++)
@@ -254,10 +250,6 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
                 VD[i] ^= 0x8000 & (hi[i] | lo[i]);
             return;
         case SM_MUL_Z: /* sign-clamp accumulator-low (bits 15:0) */
-            for (i = 0; i < N; i++)
-                result[i] = ACC_H(i) << 16;
-            for (i = 0; i < N; i++)
-                result[i] = result[i] | (unsigned short)ACC_M(i);
             for (i = 0; i < N; i++)
                 VD[i]  = ACC_L(i);
             for (i = 0; i < N; i++)

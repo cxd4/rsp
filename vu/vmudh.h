@@ -2,17 +2,16 @@
 
 INLINE void do_mudh(short* VD, short* VS, short* VT)
 {
-    long acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = (signed short)(VS[i]) * (signed short)(VT[i]);
+        result[i] = (signed short)(VS[i]) * (signed short)(VT[i]);
     for (i = 0; i < N; i++)
         ACC_L(i) = 0x0000;
     for (i = 0; i < N; i++)
-        ACC_M(i) = (acc[i] & 0x0000FFFF) >>  0;
+        ACC_M(i) = (result[i] & 0x0000FFFF) >>  0;
     for (i = 0; i < N; i++)
-        ACC_H(i) = (acc[i] & 0xFFFF0000) >> 16;
+        ACC_H(i) = (result[i] & 0xFFFF0000) >> 16;
     SIGNED_CLAMP(VD, SM_MUL_X);
     return;
 }

@@ -21,9 +21,9 @@ INLINE void do_madm(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         ACC_M(i) = (short)addend[i];
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(addend[i] >> 16);
+        result[i] = (ACC_H(i) << 16) + addend[i];
     for (i = 0; i < N; i++)
-        ACC_H(i) = ACC_H(i) + (short)addend[i];
+        ACC_H(i) = (short)(result[i] >> 16);
     SIGNED_CLAMP(VD, SM_MUL_X);
     return;
 }
