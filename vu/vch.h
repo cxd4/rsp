@@ -4,6 +4,7 @@ void do_ch(short* VD, short* VS, short* VT)
 {
     int eq[N];
     int ge[N], le[N];
+    short VC[N];
     signed short sn[N];
     register int i;
 

@@ -61,7 +61,6 @@ static const int ei[16][8] = {
  * This is amended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
 short VR[32][N];
-short VC[N]; /* vector/scalar coefficient */
 
 /* #define EMULATE_VECTOR_RESULT_BUFFER */
 /*
