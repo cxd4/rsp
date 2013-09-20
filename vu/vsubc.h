@@ -36,183 +36,155 @@ static void VSUBC_v(void)
 }
 static void VSUBC0q(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x2);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x2);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC1q(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x3);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x3);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC0h(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x4);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x4);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC1h(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x5);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x5);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC2h(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x6);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x6);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC3h(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x7);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x7);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC0w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x8);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x8);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC1w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x9);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x9);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC2w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xA);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xA);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC3w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xB);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xB);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC4w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xC);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xC);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC5w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xD);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xD);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC6w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xE);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xE);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }
 static void VSUBC7w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xF);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xF);
     set_bo(VR[vd], VR[vs], SV);
     return;
 }

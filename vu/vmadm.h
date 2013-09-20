@@ -39,183 +39,155 @@ static void VMADM_v(void)
 }
 static void VMADM0q(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x2);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x2);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM1q(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x3);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x3);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM0h(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x4);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x4);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM1h(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x5);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x5);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM2h(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x6);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x6);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM3h(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x7);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x7);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM0w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x8);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x8);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM1w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0x9);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0x9);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM2w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xA);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xA);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM3w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xB);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xB);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM4w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xC);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xC);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM5w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xD);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xD);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM6w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xE);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xE);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }
 static void VMADM7w(void)
 {
-    VECTOR VT;
     short SV[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 
-    VT = SHUFFLE_VECTOR(VR[vt], 0xF);
-    STORE_VECTOR(SV, VT);
+    SHUFFLE_VECTOR(SV, VR[vt], 0xF);
     do_madm(VR[vd], VR[vs], SV);
     return;
 }

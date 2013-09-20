@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.18                                                         *
+* Release:  2013.09.19                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -139,54 +139,51 @@ static void STORE_VECTOR(short* VD, short* VS)
     return;
 }
 #else
-#define SHUFFLE(a,b,c,d)    (((a) << 6) | ((b) << 4) | ((c) << 2) | ((d) << 0))
-const int simm[16] = {
-    SHUFFLE(0x03, 0x02, 0x01, 0x00), /* vector operand */
-    SHUFFLE(0x03, 0x02, 0x01, 0x00),
-    SHUFFLE(0x02, 0x02, 0x00, 0x00), /* scalar quarter:  0q */
-    SHUFFLE(0x03, 0x03, 0x01, 0x01), /* scalar quarter:  1q */
-    SHUFFLE(0x00, 0x00, 0x00, 0x00), /* scalar half   :  0h */
-    SHUFFLE(0x01, 0x01, 0x01, 0x01), /* scalar half   :  1h */
-    SHUFFLE(0x02, 0x02, 0x02, 0x02), /* scalar half   :  2h */
-    SHUFFLE(0x03, 0x03, 0x03, 0x03), /* scalar half   :  3h */
-    SHUFFLE(0x00, 0x00, 0x00, 0x00),
-    SHUFFLE(0x01, 0x01, 0x01, 0x01),
-    SHUFFLE(0x02, 0x02, 0x02, 0x02),
-    SHUFFLE(0x03, 0x03, 0x03, 0x03),
-    SHUFFLE(0x00, 0x00, 0x00, 0x00),
-    SHUFFLE(0x01, 0x01, 0x01, 0x01),
-    SHUFFLE(0x02, 0x02, 0x02, 0x02),
-    SHUFFLE(0x03, 0x03, 0x03, 0x03)
+#define B(x)    ((x) & 3)
+#define SHUFFLE(a,b,c,d)    ((B(d)<<6) | (B(c)<<4) | (B(b)<<2) | (B(a)<<0))
+const unsigned char simm[16] = {
+    SHUFFLE(00, 01, 02, 03), /* vector operand */
+    SHUFFLE(00, 01, 02, 03),
+    SHUFFLE(00, 00, 02, 02), /* scalar quarter:  0q */
+    SHUFFLE(01, 01, 03, 03), /* scalar quarter:  1q */
+    SHUFFLE(00, 00, 00, 00), /* scalar half   :  0h */
+    SHUFFLE(01, 01, 01, 01), /* scalar half   :  1h */
+    SHUFFLE(02, 02, 02, 02), /* scalar half   :  2h */
+    SHUFFLE(03, 03, 03, 03), /* scalar half   :  3h */
+    SHUFFLE(00, 00, 00, 00),
+    SHUFFLE(01, 01, 01, 01),
+    SHUFFLE(02, 02, 02, 02),
+    SHUFFLE(03, 03, 03, 03),
+    SHUFFLE(04, 04, 04, 04),
+    SHUFFLE(05, 05, 05, 05),
+    SHUFFLE(06, 06, 06, 06),
+    SHUFFLE(07, 07, 07, 07)
 };
 
-static VECTOR SHUFFLE_VECTOR(short* VT, int e)
+INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
 {
-    VECTOR SV;
+    __m128i xmm;
 
-    SV = _mm_load_si128((VECTOR*)VT);
+    xmm = _mm_load_si128((__m128i *)VT);
     if (e & 0x8) /* scalar wholes */
-    { /* Not really intended for this function; use scalar loops instead. */
+    {
         if (e & 0x4)
         {
-            SV = _mm_shufflehi_epi16(SV, simm[e & 0xF]);
-            SV = _mm_unpackhi_epi16(SV, SV);
+            xmm = _mm_shufflehi_epi16(xmm, simm[e & 0xF]);
+            xmm = _mm_unpackhi_epi16(xmm, xmm);
         }
         else
         {
-            SV = _mm_shufflelo_epi16(SV, simm[e & 0xF]);
-            SV = _mm_unpacklo_epi16(SV, SV);
+            xmm = _mm_shufflelo_epi16(xmm, simm[e & 0xF]);
+            xmm = _mm_unpacklo_epi16(xmm, xmm);
         }
     }
     else
     {
-        SV = _mm_shufflehi_epi16(SV, simm[e & 0x7]);
-        SV = _mm_shufflelo_epi16(SV, simm[e & 0x7]);
+        xmm = _mm_shufflehi_epi16(xmm, simm[e & 0x7]);
+        xmm = _mm_shufflelo_epi16(xmm, simm[e & 0x7]);
     }
-    return (SV);
-}
-static void STORE_VECTOR(short* VD, __m128i xmm)
-{
-    _mm_store_si128((__m128i*)VD, xmm);
+    _mm_store_si128((__m128i *)VD, xmm);
     return;
 }
 #endif
@@ -203,20 +200,17 @@ short VACC_L[N];
 short VACC_M[N];
 short VACC_H[N];
 
-#define ACC_L(i)    (VACC_L[i])
-#define ACC_M(i)    (VACC_M[i])
-#define ACC_H(i)    (VACC_H[i])
 #else
 short VACC[3][N];
 
 #define VACC_L      (VACC[LO])
 #define VACC_M      (VACC[MD])
 #define VACC_H      (VACC[HI])
+#endif
 
 #define ACC_L(i)    (VACC_L[i])
 #define ACC_M(i)    (VACC_M[i])
 #define ACC_H(i)    (VACC_H[i])
-#endif
 
 /*
  * modes of saturation (unofficial labels, just made up by file author)
