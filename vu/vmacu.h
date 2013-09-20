@@ -2,20 +2,20 @@
 
 INLINE void UNSIGNED_CLAMP(short* VD)
 {
+    short hi[N], lo[N];
     register int i;
 
-    for (i = 0; i < N; i++) /* Zero-clamp bits 31..16 of ACC to dest. VR. */
-    {
-        register signed short result;
-        register short int tmp;
-
-        result  = ACC_M(i); /* raw slice before clamping */
-        tmp = (((ACC_H(i) << 1) | !!(ACC_M(i) & 0x8000)) != 0x0000);
-        result |= -tmp; /* slice overflow */
-        tmp = ACC_H(i) >> 15; /* Zero- or one-extend. */
-        result &= ~tmp; /* slice underflow */
-        VD[i] = result;
-    }
+    for (i = 0; i < N; i++)
+        VD[i] = ACC_M(i);
+    for (i = 0; i < N; i++)
+        lo[i] = -(result[i] < 0);
+    for (i = 0; i < N; i++)
+        hi[i] = (+0x7FFF - result[i]) >> 31;
+    for (i = 0; i < N; i++)
+        VD[i] = VD[i] & ~lo[i];
+    for (i = 0; i < N; i++)
+        VD[i] = VD[i] | hi[i];
+    return;
 }
 
 INLINE void do_macu(short* VD, short* VS, short* VT)
@@ -43,9 +43,9 @@ INLINE void do_macu(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         ACC_M(i) = (short)addend[i];
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(addend[i] >> 16);
+        result[i] = (ACC_H(i) << 16) + addend[i];
     for (i = 0; i < N; i++)
-        ACC_H(i) = ACC_H(i) + (short)addend[i];
+        ACC_H(i) = (short)(result[i] >> 16);
     UNSIGNED_CLAMP(VD);
     return;
 }
