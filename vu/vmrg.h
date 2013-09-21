@@ -1,12 +1,21 @@
 #include "vu.h"
 
-void do_mrg(short* VD, short* VS, short* VT)
+INLINE static void do_mrg(short* VD, short* VS, short* VT)
 {
     register int i;
 
     for (i = 0; i < N; i++)
         ACC_L(i) = comp[i] ? VS[i] : VT[i];
     memcpy(VD, VACC_L, N*sizeof(short));
+    return;
+}
+
+static void VMRG(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_mrg(VR[vd], VR[vs], ST);
     return;
 }
 

@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void do_ge(short* VD, short* VS, short* VT)
+INLINE static void do_ge(short* VD, short* VS, short* VT)
 {
     int eq[N];
     int ce[N];
@@ -26,6 +26,15 @@ void do_ge(short* VD, short* VS, short* VT)
         ne[i] = 0;
     for (i = 0; i < N; i++)
         co[i] = 0;
+    return;
+}
+
+static void VGE(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_ge(VR[vd], VR[vs], ST);
     return;
 }
 

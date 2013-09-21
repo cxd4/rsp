@@ -161,7 +161,7 @@ static __m128i (*SSE2_SHUFFLE_16[16])(__m128i) = {
     shuffle_4w, shuffle_5w, shuffle_6w, shuffle_7w
 };
 
-#if (0)
+#if (1)
 INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
 {
     __m128i xmm;
@@ -208,49 +208,64 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     {
         case 0x0:
         case 0x1:
-            xmm = shuffle_none(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0x0]);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x0]);
             break;
         case 0x2:
-            xmm = shuffle_0q(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0x2]);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x2]);
             break;
         case 0x3:
-            xmm = shuffle_1q(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0x3]);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x3]);
             break;
         case 0x4:
-            xmm = shuffle_0h(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0x4]);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x4]);
             break;
         case 0x5:
-            xmm = shuffle_1h(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0x5]);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x5]);
             break;
         case 0x6:
-            xmm = shuffle_2h(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0x6]);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x6]);
             break;
         case 0x7:
-            xmm = shuffle_3h(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0x7]);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x7]);
             break;
         case 0x8:
-            xmm = shuffle_0w(xmm);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x8]);
+            xmm = _mm_unpacklo_epi16(xmm, xmm);
             break;
         case 0x9:
-            xmm = shuffle_1w(xmm);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0x9]);
+            xmm = _mm_unpacklo_epi16(xmm, xmm);
             break;
         case 0xA:
-            xmm = shuffle_2w(xmm);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0xA]);
+            xmm = _mm_unpacklo_epi16(xmm, xmm);
             break;
         case 0xB:
-            xmm = shuffle_3w(xmm);
+            xmm = _mm_shufflelo_epi16(xmm, simm[0xB]);
+            xmm = _mm_unpacklo_epi16(xmm, xmm);
             break;
         case 0xC:
-            xmm = shuffle_4w(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0xC]);
+            xmm = _mm_unpackhi_epi16(xmm, xmm);
             break;
         case 0xD:
-            xmm = shuffle_5w(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0xD]);
+            xmm = _mm_unpackhi_epi16(xmm, xmm);
             break;
         case 0xE:
-            xmm = shuffle_6w(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0xE]);
+            xmm = _mm_unpackhi_epi16(xmm, xmm);
             break;
         case 0xF:
-            xmm = shuffle_7w(xmm);
+            xmm = _mm_shufflehi_epi16(xmm, simm[0xF]);
+            xmm = _mm_unpackhi_epi16(xmm, xmm);
             break;
     }
     _mm_store_si128((__m128i *)VD, xmm);

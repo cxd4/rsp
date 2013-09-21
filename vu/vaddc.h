@@ -9,7 +9,7 @@
 /* Because MAX is 0xFFFF, and MAX + MAX < 0x00020000. */
 #endif
 
-void set_co(short* VD, short* VS, short* VT)
+INLINE static void set_co(short* VD, short* VS, short* VT)
 { /* set CARRY and carry out from sum */
     unsigned int res[N];
     register int i;
@@ -26,6 +26,16 @@ void set_co(short* VD, short* VS, short* VT)
         co[i] = SETCO(i);
     return;
 }
+
+static void VADDC(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    set_co(VR[vd], VR[vs], ST);
+    return;
+}
+
 static void VADDC_v(void)
 {
     const int vd = inst.R.sa;

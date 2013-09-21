@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void do_cr(short* VD, short* VS, short* VT)
+INLINE static void do_cr(short* VD, short* VS, short* VT)
 {
     int ge[N], le[N];
     short temp[N];
@@ -44,6 +44,15 @@ void do_cr(short* VD, short* VS, short* VT)
         co[i] = 0;
     for (i = 0; i < N; i++)
         vce[i] = 0;
+    return;
+}
+
+static void VCR(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_cr(VR[vd], VR[vs], ST);
     return;
 }
 

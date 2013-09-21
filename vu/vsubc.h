@@ -8,7 +8,7 @@
 #define SETNE(i)    (res[i] != 0)
 
 #define BMASK(i)    ((i & 0x8) ? (ne[i-8] << i) : (bo[i-0] << i))
-void set_bo(short* VD, short* VS, short* VT)
+INLINE static void set_bo(short* VD, short* VS, short* VT)
 { /* set CARRY and borrow out from difference */
     unsigned int res[N];
     register int i;
@@ -25,6 +25,16 @@ void set_bo(short* VD, short* VS, short* VT)
         co[i] = SETBI(i);
     return;
 }
+
+static void VSUBC(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    set_bo(VR[vd], VR[vs], ST);
+    return;
+}
+
 static void VSUBC_v(void)
 {
     const int vd = inst.R.sa;

@@ -34,15 +34,11 @@ void run_task(void)
 #endif
         if (inst.W >> 25 == 0x25) /* is a VU instruction */
         {
-#ifdef PARALLELIZE_VECTOR_TRANSFERS
-            SHUFFLE_VECTOR(vt, e);
-#endif
-#ifdef EMULATE_VECTOR_RESULT_BUFFER
-            memcpy(Result, VR[vd], 16);
-#endif
+#ifdef SSE2_SHUFFLE_JUMP_DIMENSION
             EX_VECTOR[inst.R.func][inst.R.rs & 0xF]();
-#ifdef EMULATE_VECTOR_RESULT_BUFFER
-            memcpy(VR[vd], Result, 16);
+#else
+            SHUFFLE_VECTOR(ST, VR[inst.R.rt], inst.R.rs & 0xF);
+            COP2_C2[inst.R.func]();
 #endif
         }
         else

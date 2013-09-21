@@ -6,7 +6,7 @@
  * +1:  VT *= +1, because VS > 0 // VT ^=  0
  *      VT ^= -1, "negate" -32768 as ~+32767 (corner case hack for N64 SP)
  */
-void do_abs(short* VD, short* VS, short* VT)
+INLINE static void do_abs(short* VD, short* VS, short* VT)
 {
     signed int neg[N], pos[N];
     signed int nez[N], cch[N]; /* corner case hack -- abs(-32768) == +32767 */
@@ -54,6 +54,15 @@ void do_abs(short* VD, short* VS, short* VT)
         ACC_L(i) = res[i];
     for (i = 0; i < N; i++)
         VD[i] = ACC_L(i);
+    return;
+}
+
+static void VABS(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_abs(VR[vd], VR[vs], ST);
     return;
 }
 

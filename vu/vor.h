@@ -10,6 +10,15 @@ INLINE void do_or(short* VD, short* VS, short* VT)
     return;
 }
 
+static void VOR(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_or(VR[vd], VR[vs], ST);
+    return;
+}
+
 static void VOR_v(void)
 {
     const int vd = inst.R.sa;

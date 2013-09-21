@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.19                                                         *
+* Release:  2013.09.21                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -48,27 +48,7 @@ static const int ei[16][8] = {
  * This is amended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
 ALIGNED short VR[32][N];
-
-/* #define EMULATE_VECTOR_RESULT_BUFFER */
-/*
- * There is a hidden vector result register used for moving the data to the
- * real vector destination register near the end of the execute cycle for a
- * vector unit instruction, but it is not required to emulate the presence
- * of this register.  It is currently slower than just directly writing to
- * the destination vector register file from within the vector operation.
- */
-
-#ifdef EMULATE_VECTOR_RESULT_BUFFER
-static short Result[8];
-#endif
-
-#ifdef EMULATE_VECTOR_RESULT_BUFFER
-#define VMUL_PTR    Result
-#else
-#define VMUL_PTR    VR[vd]
-#endif
-
-#define VR_D(i) VMUL_PTR[i]
+ALIGNED short ST[N]; /* shuffled scalar-decoded target paired source */
 
 /*
  * Un-define this if your environment lacks the SSE2 instruction set.
@@ -123,18 +103,11 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
 #define MD      01
 #define LO      02
 
-#if (0)
-ALIGNED static short VACC_L[N];
-ALIGNED static short VACC_M[N];
-ALIGNED static short VACC_H[N];
-
-#else
 ALIGNED static short VACC[3][N];
 
 #define VACC_L      (VACC[LO])
 #define VACC_M      (VACC[MD])
 #define VACC_H      (VACC[HI])
-#endif
 
 #define ACC_L(i)    (VACC_L[i])
 #define ACC_M(i)    (VACC_M[i])
@@ -394,6 +367,17 @@ static void res_M(void)
 #include "vsubc.h"
 #include "vxor.h"
 
+static void (*COP2_C2[64])(void) = {
+    VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
+    VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
+    VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */
+    res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,VSAW   ,res_V  ,res_V  , /* 011 */
+    VLT    ,VEQ    ,VNE    ,VGE    ,VCL    ,VCH    ,VCR    ,VMRG   , /* 100 */
+    VAND   ,VNAND  ,VOR    ,VNOR   ,VXOR   ,VNXOR  ,res_V  ,res_V  , /* 101 */
+    VRCP   ,VRCPL  ,VRCPH  ,VMOV   ,VRSQ   ,VRSQL  ,VRSQH  ,VNOP   , /* 110 */
+    res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,res_V  , /* 111 */
+}; /* 000     001     010     011     100     101     110     111 */
+
 static void (*EX_VECTOR[64][16])(void) = {
     { /* "Vector Multiply Signed Fractions" */
         VMULF_v,VMULF_v,VMULF0q,VMULF1q,
@@ -431,7 +415,7 @@ static void (*EX_VECTOR[64][16])(void) = {
         VMUDM0w,VMUDM1w,VMUDM2w,VMUDM3w,
         VMUDM4w,VMUDM5w,VMUDM6w,VMUDM7w
     },
-    { /* DP:  "Vector Multiply Middle Partial Products" */
+    { /* DP:  "Vector Multiply Middle Partial Products" inverse */
         VMUDN_v,VMUDN_v,VMUDN0q,VMUDN1q,
         VMUDN0h,VMUDN1h,VMUDN2h,VMUDN3h,
         VMUDN0w,VMUDN1w,VMUDN2w,VMUDN3w,

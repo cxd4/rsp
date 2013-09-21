@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void do_ne(short* VD, short* VS, short* VT)
+INLINE static void do_ne(short* VD, short* VS, short* VT)
 {
     register int i;
 
@@ -23,6 +23,15 @@ void do_ne(short* VD, short* VS, short* VT)
         ne[i] = 0;
     for (i = 0; i < N; i++)
         co[i] = 0;
+    return;
+}
+
+static void VNE(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_ne(VR[vd], VR[vs], ST);
     return;
 }
 

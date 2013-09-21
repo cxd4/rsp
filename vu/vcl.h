@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void do_cl(short* VD, short* VS, short* VT)
+INLINE static void do_cl(short* VD, short* VS, short* VT)
 {
     int eq[N];
     int ge[N], le[N];
@@ -68,6 +68,15 @@ void do_cl(short* VD, short* VS, short* VT)
         co[i] = 0;
     for (i = 0; i < N; i++)
         vce[i] = 0;
+    return;
+}
+
+static void VCL(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_cl(VR[vd], VR[vs], ST);
     return;
 }
 

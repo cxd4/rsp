@@ -1,6 +1,19 @@
 #include "vu.h"
 #include "divrom.h"
 
+static void VRSQH(void)
+{
+    const int vd = inst.R.sa;
+    const int de = inst.R.rd & 07;
+    const int vt = inst.R.rt;
+
+    DivIn = VR[vt][inst.R.rs & 07] << 16;
+    memcpy(VACC_L, ST, N*sizeof(short));
+    VR[vd][de] = DivOut >> 16;
+    DPH = 1;
+    return;
+}
+
 static void VRSQHv0(void)
 {
     const int vd = inst.R.sa;

@@ -33,6 +33,21 @@ static void VSAR(int vd, int vs, int vt, int e)
 }
 #endif
 
+static void VSAW(void)
+{
+    const int vd = inst.R.sa;
+    const int e  = (inst.R.rs & 0xF) ^ 0x8; /* &= 7 */
+
+    if (e > 2)
+    {
+        message("VSAW\nInvalid mask.", 2);
+        memset(VR[vd], 0x00, N*sizeof(short));
+        return;
+    }
+    memcpy(VR[vd], VACC[e], N*sizeof(short));
+    return;
+}
+
 static void VSAWH(void)
 {
     const int vd = inst.R.sa;

@@ -10,6 +10,15 @@ INLINE void do_nor(short* VD, short* VS, short* VT)
     return;
 }
 
+static void VNOR(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_nor(VR[vd], VR[vs], ST);
+    return;
+}
+
 static void VNOR_v(void)
 {
     const int vd = inst.R.sa;

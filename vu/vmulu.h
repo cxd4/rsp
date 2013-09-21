@@ -1,6 +1,6 @@
 #include "vu.h"
 
-INLINE void do_mulu(short* VD, short* VS, short* VT)
+INLINE static void do_mulu(short* VD, short* VS, short* VT)
 {
     long acc[N];
     register int i;
@@ -21,6 +21,15 @@ INLINE void do_mulu(short* VD, short* VS, short* VT)
         VD[i] |= ACC_M(i) >> 15; /* VD |= -(result == 0x000080008000) */
     for (i = 0; i < N; i++)
         VD[i] &= ACC_H(i) ^  ~0; /* VD &= -(result >= 0x000000000000) */
+    return;
+}
+
+static void VMULU(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_mulu(VR[vd], VR[vs], ST);
     return;
 }
 

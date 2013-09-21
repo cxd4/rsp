@@ -10,6 +10,15 @@ INLINE void do_nxor(short* VD, short* VS, short* VT)
     return;
 }
 
+static void VNXOR(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_nxor(VR[vd], VR[vs], ST);
+    return;
+}
+
 static void VNXOR_v(void)
 {
     const int vd = inst.R.sa;

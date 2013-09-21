@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void clr_bi(short* VD, short* VS, short* VT)
+INLINE static void clr_bi(short* VD, short* VS, short* VT)
 { /* clear CARRY and borrow in to accumulators */
     register int i;
 
@@ -17,6 +17,16 @@ void clr_bi(short* VD, short* VS, short* VT)
     SIGNED_CLAMP(VD, SM_ADD_A);
     return;
 }
+
+static void VSUB(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    clr_bi(VR[vd], VR[vs], ST);
+    return;
+}
+
 static void VSUB_v(void)
 {
     const int vd = inst.R.sa;

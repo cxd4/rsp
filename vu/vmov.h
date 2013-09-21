@@ -1,5 +1,15 @@
 #include "vu.h"
 
+static void VMOV(void)
+{
+    const int vd = inst.R.sa;
+    const int de = inst.R.rd & 07;
+
+    memcpy(VACC_L, ST, N*sizeof(short));
+    VR[vd][de] = VACC_L[inst.R.rs & 07];
+    return;
+}
+
 static void VMOVv0(void)
 {
     const int vd = inst.R.sa;
@@ -17,7 +27,7 @@ static void VMOVv1(void)
     const int vt = inst.R.rt;
 
     memcpy(VACC_L, VR[vt], N*sizeof(short));
-    VR[vd][de] = ACC_L(00);
+    VR[vd][de] = ACC_L(01);
     return;
 }
 static void VMOV0q(void)

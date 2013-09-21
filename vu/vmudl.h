@@ -1,6 +1,6 @@
 #include "vu.h"
 
-INLINE void do_mudl(short* VD, short* VS, short* VT)
+INLINE static void do_mudl(short* VD, short* VS, short* VT)
 {
     long acc[N];
     register int i;
@@ -10,11 +10,20 @@ INLINE void do_mudl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         ACC_L(i) = acc[i] >> 16;
     for (i = 0; i < N; i++)
-        ACC_M(i) = (0x0000 & 0x0000FFFF0000) >> 16;
+        ACC_M(i) = 0x0000;
     for (i = 0; i < N; i++)
-        ACC_H(i) = (0x0000 & 0xFFFF00000000) >> 32;
+        ACC_H(i) = 0x0000;
     for (i = 0; i < N; i++)
         VD[i] = ACC_L(i); /* no possibilities to clamp */
+    return;
+}
+
+static void VMUDL(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_mudl(VR[vd], VR[vs], ST);
     return;
 }
 

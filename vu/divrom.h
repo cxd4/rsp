@@ -21,7 +21,7 @@ static int DPH;
 
 /*
  * 11-bit vector divide result look-up table
- * Thanks to Ville Linde @ MAME for organizing.
+ * Thanks to MooglyGuy @ MESS for organizing.
  */
 static const unsigned short div_ROM[1024] = {
     0xFFFF,

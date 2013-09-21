@@ -1,6 +1,6 @@
 #include "vu.h"
 
-INLINE void do_mudm(short* VD, short* VS, short* VT)
+INLINE static void do_mudm(short* VD, short* VS, short* VT)
 {
     long acc[N];
     register int i;
@@ -15,6 +15,15 @@ INLINE void do_mudm(short* VD, short* VS, short* VT)
         ACC_H(i) = -(ACC_M(i) < 0);
     for (i = 0; i < N; i++)
         VD[i] = ACC_M(i); /* no possibilities to clamp */
+    return;
+}
+
+static void VMUDM(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_mudm(VR[vd], VR[vs], ST);
     return;
 }
 

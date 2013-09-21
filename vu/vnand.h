@@ -10,6 +10,15 @@ INLINE void do_nand(short* VD, short* VS, short* VT)
     return;
 }
 
+static void VNAND(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_nand(VR[vd], VR[vs], ST);
+    return;
+}
+
 static void VNAND_v(void)
 {
     const int vd = inst.R.sa;

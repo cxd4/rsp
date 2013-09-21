@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void clr_ci(short* VD, short* VS, short* VT)
+INLINE static void clr_ci(short* VD, short* VS, short* VT)
 { /* clear CARRY and carry in to accumulators */
     register int i;
 
@@ -17,6 +17,16 @@ void clr_ci(short* VD, short* VS, short* VT)
     SIGNED_CLAMP(VD, SM_ADD_A);
     return;
 }
+
+static void VADD(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    clr_ci(VR[vd], VR[vs], ST);
+    return;
+}
+
 static void VADD_v(void)
 {
     const int vd = inst.R.sa;

@@ -1,6 +1,6 @@
 #include "vu.h"
 
-void do_ch(short* VD, short* VS, short* VT)
+INLINE static void do_ch(short* VD, short* VS, short* VT)
 {
     int eq[N];
     int ge[N], le[N];
@@ -41,6 +41,15 @@ void do_ch(short* VD, short* VS, short* VT)
         ne[i] = eq[i] ^ 1;
     for (i = 0; i < N; i++)
         co[i] = sn[i] & 1;
+    return;
+}
+
+static void VCH(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_ch(VR[vd], VR[vs], ST);
     return;
 }
 

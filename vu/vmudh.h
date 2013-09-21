@@ -1,6 +1,6 @@
 #include "vu.h"
 
-INLINE void do_mudh(short* VD, short* VS, short* VT)
+INLINE static void do_mudh(short* VD, short* VS, short* VT)
 {
     register int i;
 
@@ -13,6 +13,15 @@ INLINE void do_mudh(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         ACC_H(i) = (result[i] & 0xFFFF0000) >> 16;
     SIGNED_CLAMP(VD, SM_MUL_X);
+    return;
+}
+
+static void VMUDH(void)
+{
+    const int vd = inst.R.sa;
+    const int vs = inst.R.rd;
+
+    do_mudh(VR[vd], VR[vs], ST);
     return;
 }
 

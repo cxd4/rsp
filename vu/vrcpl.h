@@ -1,7 +1,7 @@
 #include "vu.h"
 #include "divrom.h"
 
-void do_rcpl(int data)
+INLINE static void do_rcpl(int data)
 {
     unsigned int addr;
     int fetch;
@@ -29,6 +29,20 @@ FOUND_MSB:
         DivOut = 0x7FFFFFFF;
     else if (DivIn == -32768) /* corner case:  signed underflow barrier */
         DivOut = 0xFFFF0000;
+    return;
+}
+
+static void VRCPL(void)
+{
+    const int vd = inst.R.sa;
+    const int de = inst.R.rd & 07;
+    const int vt = inst.R.rt;
+
+    DivIn &= -DPH;
+    DivIn |= (unsigned short)VR[vt][inst.R.rs & 07];
+    do_rcpl(DivIn);
+    memcpy(VACC_L, ST, N*sizeof(short));
+    VR[vd][de] = (short)DivOut;
     return;
 }
 
