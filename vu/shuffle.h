@@ -13,7 +13,7 @@
 #define B(x)    ((x) & 3)
 #define SHUFFLE(a,b,c,d)    ((B(d)<<6) | (B(c)<<4) | (B(b)<<2) | (B(a)<<0))
 
-const unsigned char simm[16] = {
+static const unsigned char simm[16] = {
     SHUFFLE(00, 01, 02, 03), /* vector operands */
     SHUFFLE(00, 01, 02, 03),
     SHUFFLE(00, 00, 02, 02), /* scalar quarters */

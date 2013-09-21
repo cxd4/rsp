@@ -11,7 +11,7 @@ EXPORT void CALL CloseDLL(void)
     RomClosed();
     return;
 }
-const char DLL_about[] =
+static const char DLL_about[] =
     "RSP Interpreter by Iconoclast&&ECHO."\
     "&&ECHO "\
     "Thanks for test RDP:  Jabo, ziggy, and angrylion\n"\
