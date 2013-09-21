@@ -14,19 +14,6 @@
 #include <string.h>
 
 /*
- * Un-define this if your environment lacks the SSE2 instruction set.
- */
-#define ARCH_MIN_SSE2
-
-#ifdef ARCH_MIN_SSE2
-#include <emmintrin.h>
-typedef __m128i VECTOR;
-#else
-/* ANSI C approximation for RSP vectors */
-typedef short* VECTOR;
-#endif
-
-/*
  * vector-scalar element decoding
  * Obsolete.  Consider using at least the SSE2 algorithms instead.
  */
@@ -71,23 +58,8 @@ ALIGNED short VR[32][N];
  * the destination vector register file from within the vector operation.
  */
 
-/* #define PARALLELIZE_VECTOR_TRANSFERS */
-/*
- * Leaving this defined, the RSP emulator will try to encourage parallel
- * transactions within vector element operations by shuffling the target
- * (partially scalar coefficient) vector register as necessary so that
- * the elements `i`(0..7) of VS can directly match up with 1:1
- * parallelism to the short elements `i`(0..7) of the shuffled VT.
- */
-
 #ifdef EMULATE_VECTOR_RESULT_BUFFER
 static short Result[8];
-#endif
-
-#ifdef PARALLELIZE_VECTOR_TRANSFERS
-#define VR_T(i) VC[i]
-#else
-#define VR_T(i) VR[vt][ei[e][i]]
 #endif
 
 #ifdef EMULATE_VECTOR_RESULT_BUFFER
@@ -98,7 +70,14 @@ static short Result[8];
 
 #define VR_D(i) VMUL_PTR[i]
 
-#ifndef ARCH_MIN_SSE2
+/*
+ * Un-define this if your environment lacks the SSE2 instruction set.
+ */
+#define ARCH_MIN_SSE2
+
+#ifdef ARCH_MIN_SSE2
+#include "shuffle.h"
+#else
 int sub_mask[16] = {
     0x0,
     0x0,
@@ -106,7 +85,8 @@ int sub_mask[16] = {
     0x3, 0x3, 0x3, 0x3,
     0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
 };
-static VECTOR SHUFFLE_VECTOR(VECTOR VT, int e)
+
+INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
 {
     short SV[8];
     register int i, j;
@@ -130,59 +110,8 @@ static VECTOR SHUFFLE_VECTOR(VECTOR VT, int e)
         for (i = 0; i < N; i++)
             SV[i] = VT[(i & 0x7) | (e & 0x0)];
 #endif
-    return (SV);
-}
-static void STORE_VECTOR(short* VD, short* VS)
-{
-    VD = VS;
-    return;
-}
-#else
-#define B(x)    ((x) & 3)
-#define SHUFFLE(a,b,c,d)    ((B(d)<<6) | (B(c)<<4) | (B(b)<<2) | (B(a)<<0))
-const unsigned char simm[16] = {
-    SHUFFLE(00, 01, 02, 03), /* vector operand */
-    SHUFFLE(00, 01, 02, 03),
-    SHUFFLE(00, 00, 02, 02), /* scalar quarter:  0q */
-    SHUFFLE(01, 01, 03, 03), /* scalar quarter:  1q */
-    SHUFFLE(00, 00, 00, 00), /* scalar half   :  0h */
-    SHUFFLE(01, 01, 01, 01), /* scalar half   :  1h */
-    SHUFFLE(02, 02, 02, 02), /* scalar half   :  2h */
-    SHUFFLE(03, 03, 03, 03), /* scalar half   :  3h */
-    SHUFFLE(00, 00, 00, 00),
-    SHUFFLE(01, 01, 01, 01),
-    SHUFFLE(02, 02, 02, 02),
-    SHUFFLE(03, 03, 03, 03),
-    SHUFFLE(04, 04, 04, 04),
-    SHUFFLE(05, 05, 05, 05),
-    SHUFFLE(06, 06, 06, 06),
-    SHUFFLE(07, 07, 07, 07)
-};
-
-INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
-{
-    __m128i xmm;
-
-    xmm = _mm_load_si128((__m128i *)VT);
-    if (e & 0x8) /* scalar wholes */
-    {
-        if (e & 0x4)
-        {
-            xmm = _mm_shufflehi_epi16(xmm, simm[e & 0xF]);
-            xmm = _mm_unpackhi_epi16(xmm, xmm);
-        }
-        else
-        {
-            xmm = _mm_shufflelo_epi16(xmm, simm[e & 0xF]);
-            xmm = _mm_unpacklo_epi16(xmm, xmm);
-        }
-    }
-    else
-    {
-        xmm = _mm_shufflehi_epi16(xmm, simm[e & 0x7]);
-        xmm = _mm_shufflelo_epi16(xmm, simm[e & 0x7]);
-    }
-    _mm_store_si128((__m128i *)VD, xmm);
+    for (i = 0; i < N; i++)
+        *(VD + i) = *(SV + i);
     return;
 }
 #endif
