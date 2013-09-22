@@ -40,11 +40,13 @@ static void VRSQL(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][inst.R.rs & 07];
     do_rsql(DivIn);
-    memcpy(VACC_L, ST, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = ST[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -54,11 +56,13 @@ static void VRSQLv0(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][00];
     do_rsql(DivIn);
-    memcpy(VACC_L, VR[vt], N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = VR[vt][i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -67,11 +71,13 @@ static void VRSQLv1(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][01];
     do_rsql(DivIn);
-    memcpy(VACC_L, VR[vt], N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = VR[vt][i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -81,12 +87,14 @@ static void VRSQL0q(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][02];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0x2);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -96,12 +104,14 @@ static void VRSQL1q(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][03];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0x3);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -111,12 +121,14 @@ static void VRSQL0h(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][04];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0x4);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -126,12 +138,14 @@ static void VRSQL1h(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][05];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0x5);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -141,12 +155,14 @@ static void VRSQL2h(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][06];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0x6);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -156,12 +172,14 @@ static void VRSQL3h(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][07];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0x7);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -171,12 +189,14 @@ static void VRSQL0w(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][00];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0x8);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -186,12 +206,14 @@ static void VRSQL1w(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][01];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0x9);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -201,12 +223,14 @@ static void VRSQL2w(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][02];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0xA);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -216,12 +240,14 @@ static void VRSQL3w(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][03];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0xB);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -231,12 +257,14 @@ static void VRSQL4w(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][04];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0xC);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -246,12 +274,14 @@ static void VRSQL5w(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][05];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0xD);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -261,12 +291,14 @@ static void VRSQL6w(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][06];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0xE);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -276,12 +308,14 @@ static void VRSQL7w(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
+    register int i;
 
     DivIn &= -DPH;
     DivIn |= (unsigned short)VR[vt][07];
     do_rsql(DivIn);
     SHUFFLE_VECTOR(SV, VR[vt], 0xF);
-    memcpy(VACC_L, SV, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VACC_L[i] = SV[i];
     VR[vd][de] = (short)DivOut;
     return;
 }
