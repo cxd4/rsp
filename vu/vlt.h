@@ -4,12 +4,13 @@ INLINE static void do_lt(short* VD, short* VS, short* VT)
 {
     int eq[N];
     int cn[N];
+    short diff[N];
     register int i;
 
     for (i = 0; i < N; i++)
         eq[i] = (VS[i] == VT[i]);
     for (i = 0; i < N; i++)
-        cn[i] = (ne[i] ^= 0) & (co[i] ^= 0);
+        cn[i] = ne[i] & co[i];
     for (i = 0; i < N; i++)
         eq[i] = eq[i] & cn[i];
     for (i = 0; i < N; i++)
@@ -18,10 +19,13 @@ INLINE static void do_lt(short* VD, short* VS, short* VT)
         comp[i] = (VS[i] < VT[i]); /* less than */
     for (i = 0; i < N; i++)
         comp[i] = comp[i] | eq[i]; /* ... or equal (uncommonly) */
-    for (i = 0; i < N; i++)
-        ACC_L(i) = comp[i] ? VS[i] : VT[i];
-    memcpy(VD, VACC_L, N*sizeof(short));
 
+    for (i = 0; i < N; i++)
+        diff[i] = VS[i] - VT[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = VT[i] + comp[i]*diff[i];
+    for (i = 0; i < N; i++)
+        VD[i] = VACC_L[i];
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)

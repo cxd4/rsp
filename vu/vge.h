@@ -4,12 +4,13 @@ INLINE static void do_ge(short* VD, short* VS, short* VT)
 {
     int eq[N];
     int ce[N];
+    short diff[N];
     register int i;
 
     for (i = 0; i < N; i++)
         eq[i] = (VS[i] == VT[i]);
     for (i = 0; i < N; i++)
-        ce[i] = (ne[i] ^= 1) | (co[i] ^= 1);
+        ce[i] = (ne[i] & co[i]) ^ 1;
     for (i = 0; i < N; i++)
         eq[i] = eq[i] & ce[i];
     for (i = 0; i < N; i++)
@@ -18,10 +19,13 @@ INLINE static void do_ge(short* VD, short* VS, short* VT)
         comp[i] = (VS[i] > VT[i]); /* greater than */
     for (i = 0; i < N; i++)
         comp[i] = comp[i] | eq[i]; /* ... or equal (commonly) */
-    for (i = 0; i < N; i++)
-        ACC_L(i) = comp[i] ? VS[i] : VT[i];
-    memcpy(VD, VACC_L, N*sizeof(short));
 
+    for (i = 0; i < N; i++)
+        diff[i] = VS[i] - VT[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = VT[i] + comp[i]*diff[i];
+    for (i = 0; i < N; i++)
+        VD[i] = VACC_L[i];
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)

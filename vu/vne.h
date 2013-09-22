@@ -17,7 +17,8 @@ INLINE static void do_ne(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         ACC_L(i) = VS[i];
 #endif
-    memcpy(VD, VACC_L, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VD[i] = VACC_L[i];
 
     for (i = 0; i < N; i++)
         ne[i] = 0;
