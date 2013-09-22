@@ -2,15 +2,17 @@
 
 INLINE static void do_cl(short* VD, short* VS, short* VT)
 {
-    int eq[N];
-    int ge[N], le[N];
-    int lz[N], uz[N];
-    int dif[N], gen[N], len[N]; /* temporaries for computing flag corrections */
-    short VC[N];
-    signed short sn[N];
+    short eq[N], ge[N], le[N];
+    short gen[N], len[N], lz[N], uz[N], sn[N];
+    short diff[N];
+    unsigned short VB[N], VC[N];
     register int i;
 
-    memcpy(VC, VT, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VB[i] = VS[i];
+    for (i = 0; i < N; i++)
+        VC[i] = VT[i];
+
     for (i = 0; i < N; i++)
         ge[i] = clip[i];
     for (i = 0; i < N; i++)
@@ -18,22 +20,22 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         eq[i] = ne[i] ^ 1;
     for (i = 0; i < N; i++)
-        sn[i] = -co[i];
+        sn[i] = co[i];
 /*
  * Now that we have extracted all the flags, we will essentially be masking
  * them back in where they came from redundantly, unless the corresponding
  * NOTEQUAL bit from VCO upper was not set....
  */
     for (i = 0; i < N; i++)
-        VC[i] = VC[i] ^ sn[i];
+        VC[i] = VC[i] ^ -sn[i];
     for (i = 0; i < N; i++)
-        VC[i] = VC[i] - sn[i]; /* conditional negation, if sn */
+        VC[i] = VC[i] + sn[i]; /* conditional negation, if sn */
     for (i = 0; i < N; i++)
-        dif[i] = VS[i] - VC[i]; /* of course, if sn, VS + VT, not VS - VT */
+        diff[i] = VB[i] - VC[i];
     for (i = 0; i < N; i++)
-        lz[i] = !(dif[i] &  0x0000FFFF);
+        uz[i] = (VB[i] - VC[i] - 0xFFFF) >> 31;
     for (i = 0; i < N; i++)
-        uz[i] = !(dif[i] & ~0x0000FFFF);
+        lz[i] = (diff[i] == 0x0000);
     for (i = 0; i < N; i++)
         gen[i] = lz[i] | uz[i];
     for (i = 0; i < N; i++)
@@ -41,23 +43,37 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         gen[i] = gen[i] & vce[i];
     for (i = 0; i < N; i++)
-        vce[i] = ~vce[i]; /* vce[i] = (vce[i] ^ 1) */
-    for (i = 0; i < N; i++)
-        len[i] = len[i] & vce[i]; /* ... & (vce[i] ^ 1) */
+        len[i] = len[i] & (vce[i] ^ 1);
     for (i = 0; i < N; i++)
         len[i] = len[i] | gen[i];
     for (i = 0; i < N; i++)
-        gen[i] = (dif[i] >= 0x0000);
-    for (i = 0; i < N; i++)
-        le[i] = (eq[i] &  sn[i]) ? len[i] : le[i];
-    for (i = 0; i < N; i++)
-        ge[i] = (eq[i] & ~sn[i]) ? gen[i] : ge[i];
-    for (i = 0; i < N; i++)
-        eq[i] = sn[i] ? le[i] : ge[i];
-    for (i = 0; i < N; i++)
-        ACC_L(i) = eq[i] ? VC[i] : VS[i];
-    memcpy(VD, VACC_L, N*sizeof(short));
+        gen[i] = (VB[i] >= VC[i]);
 
+    for (i = 0; i < N; i++)
+        comp[i] = eq[i] & sn[i];
+    for (i = 0; i < N; i++)
+        diff[i] = len[i] - le[i];
+    for (i = 0; i < N; i++)
+        le[i] = le[i] + comp[i]*diff[i];
+
+    for (i = 0; i < N; i++)
+        comp[i] = eq[i] & (sn[i] ^ 1);
+    for (i = 0; i < N; i++)
+        diff[i] = gen[i] - ge[i];
+    for (i = 0; i < N; i++)
+        ge[i] = ge[i] + comp[i]*diff[i];
+
+    for (i = 0; i < N; i++)
+        diff[i] = le[i] - ge[i];
+    for (i = 0; i < N; i++)
+        comp[i] = ge[i] + sn[i]*diff[i];
+    for (i = 0; i < N; i++)
+        diff[i] = VC[i] - VB[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = VB[i] + comp[i]*diff[i];
+
+    for (i = 0; i < N; i++)
+        VD[i] = VACC_L[i];
     for (i = 0; i < N; i++)
         clip[i] = ge[i];
     for (i = 0; i < N; i++)

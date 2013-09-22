@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.21                                                         *
+* Release:  2013.09.22                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -195,12 +195,19 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
     }
 }
 
-/* special-purpose vector control registers */
-int ne[N]; /* $vco:  vector carry out register (high byte:  NOTEQUAL) */
-int co[N]; /* $vco:  vector carry out register (low byte:  CARRY/borrow I/O) */
-int clip[N]; /* $vcc:  vector compare code register (high byte:  clip only) */
-int comp[N]; /* $vcc:  vector compare code register (low byte:  compare) */
-int vce[N]; /* $vce:  vector compare extension register (one byte) */
+/*
+ * special-purpose, vector control registers
+ * (traditionally called "VCF" for "vector condition flags" outside of SGI)
+ *
+ * These normally should have type `int` because they are Boolean T/F arrays.
+ * However, since SSE2 uses 128-bit XMM's, and Win32 `int` storage is 32-bit,
+ * we have the problem of 32*N > 128 bits, so we use `short` to reduce packs.
+ */
+short ne[N]; /* $vco:  vector carry out register (high byte:  NOTEQUAL) */
+short co[N]; /* $vco:  vector carry out register (low byte:  cry./borrow I/O) */
+short clip[N]; /* $vcc:  vector compare code register (high byte:  clip only) */
+short comp[N]; /* $vcc:  vector compare code register (low byte:  compare) */
+short vce[N]; /* $vce:  vector compare extension register (one byte) */
 
 /*
  * Note about the third vector condition flags register (VCE).

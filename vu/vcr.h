@@ -2,37 +2,38 @@
 
 INLINE static void do_cr(short* VD, short* VS, short* VT)
 {
-    int ge[N], le[N];
-    short temp[N];
+    short ge[N], le[N], sn[N];
     short VC[N];
-    signed short sn[N];
+    short diff[N];
     register int i;
 
-    memcpy(VC, VT, N*sizeof(short));
     for (i = 0; i < N; i++)
-        sn[i] = VS[i] ^ VC[i];
+        VC[i] = VT[i];
     for (i = 0; i < N; i++)
-        sn[i] = sn[i] >> 15;
+        sn[i] = (signed short)(VS[i] ^ VT[i]) >> 15;
 #if (0)
     for (i = 0; i < N; i++)
-        le[i] = sn[i] ? (VC[i] <= ~VS[i]) : (VC[i] <= ~0x0000);
+        le[i] = sn[i] ? (VT[i] <= ~VS[i]) : (VT[i] <= ~0x0000);
     for (i = 0; i < N; i++)
-        ge[i] = sn[i] ? (~0x0000 >= VC[i]) : (VS[i] >= VC[i]);
+        ge[i] = sn[i] ? (~0x0000 >= VT[i]) : (VS[i] >= VT[i]);
 #else
     for (i = 0; i < N; i++)
-        temp[i] = VS[i] & sn[i];
+        diff[i] = ~(VS[i] & sn[i]);
     for (i = 0; i < N; i++)
-        le[i] = (VC[i] <= ~temp[i]);
+        le[i] = (VT[i] <= diff[i]);
     for (i = 0; i < N; i++)
-        temp[i] = VS[i] | sn[i];
+        diff[i] = VS[i] | sn[i];
     for (i = 0; i < N; i++)
-        ge[i] = (temp[i] >=  VC[i]);
+        ge[i] = (diff[i] >= VT[i]);
 #endif
     for (i = 0; i < N; i++)
         VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
     for (i = 0; i < N; i++)
-        ACC_L(i) = le[i] ? VC[i] : VS[i];
-    memcpy(VD, VACC_L, N*sizeof(short));
+        diff[i] = VC[i] - VS[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = VS[i] + le[i]*diff[i];
+    for (i = 0; i < N; i++)
+        VD[i] = VACC_L[i];
 
     for (i = 0; i < N; i++)
         clip[i] = ge[i];

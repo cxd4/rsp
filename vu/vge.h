@@ -2,8 +2,8 @@
 
 INLINE static void do_ge(short* VD, short* VS, short* VT)
 {
-    int eq[N];
-    int ce[N];
+    short ce[N];
+    short eq[N];
     short diff[N];
     register int i;
 

@@ -2,36 +2,60 @@
 
 INLINE static void do_ch(short* VD, short* VS, short* VT)
 {
-    int eq[N];
-    int ge[N], le[N];
+    short eq[N], ge[N], le[N];
+    short sn[N];
     short VC[N];
-    signed short sn[N];
+    short diff[N];
     register int i;
 
-    memcpy(VC, VT, N*sizeof(short));
     for (i = 0; i < N; i++)
-        sn[i] = VS[i] ^ VC[i];
+        VC[i] = VT[i];
     for (i = 0; i < N; i++)
-        sn[i] = sn[i] >> 15;
+        sn[i] = (VS[i] ^ VC[i]) < 0;
     for (i = 0; i < N; i++)
-        VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
+        VC[i] ^= -sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
     for (i = 0; i < N; i++)
         vce[i]  = (VS[i] == VC[i]); /* (VR[vs][i] + ~VC[i] == ~1); */
     for (i = 0; i < N; i++)
         vce[i] &= sn[i];
     for (i = 0; i < N; i++)
-        VC[i] -= sn[i]; /* converts ~(VT) into -(VT) by subtracting -1 or 0 */
+        VC[i] += sn[i]; /* converts ~(VT) into -(VT) if (sign) */
     for (i = 0; i < N; i++)
         eq[i]  = (VS[i] == VC[i]);
     for (i = 0; i < N; i++)
         eq[i] |= vce[i];
+
+#if (0)
     for (i = 0; i < N; i++)
         le[i] = sn[i] ? (VS[i] <= VC[i]) : (VC[i] < 0);
     for (i = 0; i < N; i++)
         ge[i] = sn[i] ? (VC[i] > 0x0000) : (VS[i] >= VC[i]);
+#elif (0)
     for (i = 0; i < N; i++)
-        ACC_L(i) = (sn[i] ? le[i] : ge[i]) ? VC[i] : VS[i];
-    memcpy(VD, VACC_L, N*sizeof(short));
+        le[i] = sn[i] ? (VT[i] <= -VS[i]) : (VT[i] <= ~0x0000);
+    for (i = 0; i < N; i++)
+        ge[i] = sn[i] ? (~0x0000 >= VT[i]) : (VS[i] >= VT[i]);
+#else
+    for (i = 0; i < N; i++)
+        diff[i] = -VS[i] | -(sn[i] ^ 1);
+    for (i = 0; i < N; i++)
+        le[i] = VT[i] <= diff[i];
+    for (i = 0; i < N; i++)
+        diff[i] = +VS[i] | -(sn[i] ^ 0);
+    for (i = 0; i < N; i++)
+        ge[i] = diff[i] >= VT[i];
+#endif
+
+    for (i = 0; i < N; i++)
+        diff[i] = le[i] - ge[i];
+    for (i = 0; i < N; i++)
+        comp[i] = ge[i] + sn[i]*diff[i];
+    for (i = 0; i < N; i++)
+        diff[i] = VC[i] - VS[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = VS[i] + comp[i]*diff[i];
+    for (i = 0; i < N; i++)
+        VD[i] = VACC_L[i];
 
     for (i = 0; i < N; i++)
         clip[i] = ge[i];
@@ -40,7 +64,7 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         ne[i] = eq[i] ^ 1;
     for (i = 0; i < N; i++)
-        co[i] = sn[i] & 1;
+        co[i] = sn[i];
     return;
 }
 

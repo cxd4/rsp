@@ -2,8 +2,8 @@
 
 INLINE static void do_lt(short* VD, short* VS, short* VT)
 {
-    int eq[N];
-    int cn[N];
+    short cn[N];
+    short eq[N];
     short diff[N];
     register int i;
 
