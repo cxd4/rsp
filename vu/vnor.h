@@ -5,8 +5,9 @@ INLINE void do_nor(short* VD, short* VS, short* VT)
     register int i;
 
     for (i = 0; i < N; i++)
-        ACC_L(i) = ~(VS[i] | VT[i]);
-    memcpy(VD, VACC_L, N*sizeof(short));
+        VACC_L[i] = ~(VS[i] | VT[i]);
+    for (i = 0; i < N; i++)
+        VD[i] = VACC_L[i];
     return;
 }
 
