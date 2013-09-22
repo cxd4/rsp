@@ -8,14 +8,14 @@
  */
 INLINE static void do_abs(short* VD, short* VS, short* VT)
 {
-    signed int neg[N], pos[N];
-    signed int nez[N], cch[N]; /* corner case hack -- abs(-32768) == +32767 */
+    short neg[N], pos[N];
+    short nez[N], cch[N]; /* corner case hack -- abs(-32768) == +32767 */
     short res[N];
     register int i;
 
     for (i = 0; i < N; i++)
         res[i] = VT[i];
-#if (0)
+#ifndef ARCH_MIN_SSE2
 #define MASK_XOR
 #endif
     for (i = 0; i < N; i++)
@@ -51,9 +51,9 @@ INLINE static void do_abs(short* VD, short* VS, short* VT)
         res[i] -= cch[i];
 #endif
     for (i = 0; i < N; i++)
-        ACC_L(i) = res[i];
+        VACC_L[i] = res[i];
     for (i = 0; i < N; i++)
-        VD[i] = ACC_L(i);
+        VD[i] = VACC_L[i];
     return;
 }
 

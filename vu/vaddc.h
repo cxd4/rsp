@@ -1,29 +1,17 @@
 #include "vu.h"
 
-#if (0)
-#define SETCO(i)    (res[i] > 0x0000FFFF)
-#elif (1)
-#define SETCO(i)    (!!(res[i] & ~0x0000FFFF))
-#else
-#define SETCO(i)    (!!(res[i] & 0x00010000))
-/* Because MAX is 0xFFFF, and MAX + MAX < 0x00020000. */
-#endif
-
 INLINE static void set_co(short* VD, short* VS, short* VT)
 { /* set CARRY and carry out from sum */
-    unsigned int res[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        res[i] = (unsigned short)(VS[i]) + (unsigned short)(VT[i]);
+        VACC_L[i] = (unsigned short)(VS[i]) + (unsigned short)(VT[i]);
     for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(res[i]);
-    for (i = 0; i < N; i++)
-        VD[i] = ACC_L(i);
+        VD[i] = VACC_L[i];
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)
-        co[i] = SETCO(i);
+        co[i] = ((unsigned short)(VS[i]) + (unsigned short)(VT[i]) > 65535);
     return;
 }
 

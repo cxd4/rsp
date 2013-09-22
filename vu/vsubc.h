@@ -1,28 +1,17 @@
 #include "vu.h"
 
-#if (0)
-#define SETBI(i)    (res[i] < 0)
-#else
-#define SETBI(i)    (!!(res[i] & 0x80000000))
-#endif
-#define SETNE(i)    (res[i] != 0)
-
-#define BMASK(i)    ((i & 0x8) ? (ne[i-8] << i) : (bo[i-0] << i))
 INLINE static void set_bo(short* VD, short* VS, short* VT)
 { /* set CARRY and borrow out from difference */
-    unsigned int res[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        res[i] = (unsigned short)(VS[i]) - (unsigned short)(VT[i]);
+        VACC_L[i] = (unsigned short)(VS[i]) - (unsigned short)(VT[i]);
     for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(res[i]);
+        VD[i] = VACC_L[i];
     for (i = 0; i < N; i++)
-        VD[i] = ACC_L(i);
+        ne[i] = (VS[i] != VT[i]);
     for (i = 0; i < N; i++)
-        ne[i] = SETNE(i);
-    for (i = 0; i < N; i++)
-        co[i] = SETBI(i);
+        co[i] = ((unsigned short)(VS[i]) - (unsigned short)(VT[i]) < 0);
     return;
 }
 

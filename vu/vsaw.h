@@ -37,35 +37,44 @@ static void VSAW(void)
 {
     const int vd = inst.R.sa;
     const int e  = (inst.R.rs & 0xF) ^ 0x8; /* &= 7 */
+    register int i;
 
     if (e > 2)
     {
         message("VSAW\nInvalid mask.", 2);
-        memset(VR[vd], 0x00, N*sizeof(short));
+        for (i = 0; i < N; i++)
+            VR[vd][i] = 0x0000; /* override behavior (zilmar) */
         return;
     }
-    memcpy(VR[vd], VACC[e], N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VR[vd][i] = VACC[e][i];
     return;
 }
 
 static void VSAWH(void)
 {
     const int vd = inst.R.sa;
+    register int i;
 
-    memcpy(VR[vd], VACC_H, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VR[vd][i] = VACC_H[i];
     return;
 }
 static void VSAWM(void)
 {
     const int vd = inst.R.sa;
+    register int i;
 
-    memcpy(VR[vd], VACC_M, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VR[vd][i] = VACC_M[i];
     return;
 }
 static void VSAWL(void)
 {
     const int vd = inst.R.sa;
+    register int i;
 
-    memcpy(VR[vd], VACC_L, N*sizeof(short));
+    for (i = 0; i < N; i++)
+        VR[vd][i] = VACC_L[i];
     return;
 }

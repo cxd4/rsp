@@ -5,15 +5,13 @@ INLINE static void clr_ci(short* VD, short* VS, short* VT)
     register int i;
 
     for (i = 0; i < N; i++)
-        result[i] = VS[i] + VT[i];
+        VACC_L[i] = VS[i] + VT[i] + co[i];
     for (i = 0; i < N; i++)
-        result[i] += co[i];
+        result[i] = VS[i] + VT[i] + co[i];
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)
         co[i] = 0;
-    for (i = 0; i < N; i++)
-        ACC_L(i) = (short)(result[i]);
     SIGNED_CLAMP(VD, SM_ADD_A);
     return;
 }
