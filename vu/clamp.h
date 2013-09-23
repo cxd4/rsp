@@ -59,32 +59,12 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
             return;
         case SM_MUL_Q: /* possible DCT inverse quantization (VMACQ only) */
             for (i = 0; i < N; i++)
-                result[i] = (short)(ACC_H(i) << 31);
-            for (i = 0; i < N; i++)
-                result[i] = result[i] | (ACC_M(i) << 15);
-            for (i = 0; i < N; i++)
-                result[i] = result[i] | ((unsigned short)ACC_L(i) >> 1);
-            for (i = 0; i < N; i++)
-                if (result[i] < -32768)
-                    VD[i] = -32768 & ~0x000F;
-                else if (result[i] > +32767)
-                    VD[i] = +32767 & ~0x000F;
-                else
-                    VD[i] = result[i] & 0x0000FFF0;
+                VD[i]  = (VACC_H[i] << 15) | ((unsigned short)(VACC_M[i]) >> 1);
+            message("VMACQ\nClamping unimplemented.", 3);
+            VD[i] &= 0xFFF0;
             return;
         case SM_ADD_A: /* VADD and VSUB */
-            for (i = 0; i < N; i++)
-                VD[i]  = result[i] & 0x0000FFFF;
-            for (i = 0; i < N; i++)
-                lo[i] = (result[i] + 32768) >> 31;
-            for (i = 0; i < N; i++)
-                hi[i] = (32767 - result[i]) >> 31;
-            for (i = 0; i < N; i++)
-                VD[i] &= ~lo[i];
-            for (i = 0; i < N; i++)
-                VD[i] |=  hi[i];
-            for (i = 0; i < N; i++)
-                VD[i] ^= 0x8000 & (hi[i] | lo[i]);
+            message("ADD\nMoved.", 3);
             return;
     }
 }
