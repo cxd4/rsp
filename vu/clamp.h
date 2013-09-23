@@ -25,29 +25,37 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
     {
         case SM_MUL_X: /* typical sign-clamp of accumulator-mid (bits 31:16) */
             for (i = 0; i < N; i++)
-                VD[i]  = ACC_M(i);
+                lo[i]  = (VACC_H[i] < ~0);
             for (i = 0; i < N; i++)
-                lo[i] = (result[i] + 32768) >> 31;
+                lo[i] |= (VACC_H[i] < 0) & !(VACC_M[i] < 0);
             for (i = 0; i < N; i++)
-                hi[i] = (32767 - result[i]) >> 31;
+                hi[i]  = (VACC_H[i] >  0);
             for (i = 0; i < N; i++)
-                VD[i] &= ~lo[i];
+                hi[i] |= (VACC_H[i] == 0) & (VACC_M[i] < 0);
             for (i = 0; i < N; i++)
-                VD[i] |=  hi[i];
+                VD[i]  = VACC_M[i];
             for (i = 0; i < N; i++)
-                VD[i] ^= 0x8000 & (hi[i] | lo[i]);
+                VD[i] &= -(lo[i] ^ 1);
+            for (i = 0; i < N; i++)
+                VD[i] |= -(hi[i] ^ 0);
+            for (i = 0; i < N; i++)
+                VD[i] ^= 0x8000 * (hi[i] | lo[i]);
             return;
         case SM_MUL_Z: /* sign-clamp accumulator-low (bits 15:0) */
             for (i = 0; i < N; i++)
-                VD[i]  = ACC_L(i);
+                lo[i]  = (VACC_H[i] < ~0);
             for (i = 0; i < N; i++)
-                lo[i] = (result[i] + 32768) >> 31;
+                lo[i] |= (VACC_H[i] < 0) & !(VACC_M[i] < 0);
             for (i = 0; i < N; i++)
-                hi[i] = (32767 - result[i]) >> 31;
+                hi[i]  = (VACC_H[i] >  0);
             for (i = 0; i < N; i++)
-                VD[i] &= ~lo[i];
+                hi[i] |= (VACC_H[i] == 0) & (VACC_M[i] < 0);
             for (i = 0; i < N; i++)
-                VD[i] |=  hi[i];
+                VD[i]  = VACC_L[i];
+            for (i = 0; i < N; i++)
+                VD[i] &= -(lo[i] ^ 1);
+            for (i = 0; i < N; i++)
+                VD[i] |= -(hi[i] ^ 0);
             return;
         case SM_MUL_Q: /* possible DCT inverse quantization (VMACQ only) */
             for (i = 0; i < N; i++)

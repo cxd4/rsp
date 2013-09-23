@@ -2,14 +2,11 @@
 
 INLINE static void do_madl(short* VD, short* VS, short* VT)
 {
-    long product[N];
     unsigned long addend[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        product[i] = (unsigned short)(VS[i]) * (unsigned short)(VT[i]);
-    for (i = 0; i < N; i++)
-        addend[i] = (product[i] & 0x0000FFFF0000) >> 16;
+        addend[i] = (unsigned short)(VS[i])*(unsigned short)(VT[i]) >> 16;
     for (i = 0; i < N; i++)
         addend[i] = (unsigned short)(VACC_L[i]) + addend[i];
     for (i = 0; i < N; i++)
@@ -21,9 +18,7 @@ INLINE static void do_madl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         VACC_M[i] = (short)(addend[i]);
     for (i = 0; i < N; i++)
-        result[i] = (VACC_H[i] << 16) + addend[i];
-    for (i = 0; i < N; i++)
-        VACC_H[i] = (short)(result[i] >> 16);
+        VACC_H[i] += addend[i] >> 16;
     SIGNED_CLAMP(VD, SM_MUL_Z);
     return;
 }
