@@ -61,7 +61,8 @@ INLINE void SIGNED_CLAMP(short* VD, int mode)
             for (i = 0; i < N; i++)
                 VD[i]  = (VACC_H[i] << 15) | ((unsigned short)(VACC_M[i]) >> 1);
             message("VMACQ\nClamping unimplemented.", 3);
-            VD[i] &= 0xFFF0;
+            for (i = 0; i < N; i++)
+                VD[i] &= 0xFFF0;
             return;
         case SM_ADD_A: /* VADD and VSUB */
             message("ADD\nMoved.", 3);
