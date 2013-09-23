@@ -2,19 +2,16 @@
 
 INLINE static void do_mudl(short* VD, short* VS, short* VT)
 {
-    long acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = (unsigned short)(VS[i]) * (unsigned short)(VT[i]);
+        VACC_L[i] = (unsigned short)(VS[i])*(unsigned short)(VT[i]) >> 16;
     for (i = 0; i < N; i++)
-        ACC_L(i) = acc[i] >> 16;
+        VACC_M[i] = 0x0000;
     for (i = 0; i < N; i++)
-        ACC_M(i) = 0x0000;
+        VACC_H[i] = 0x0000;
     for (i = 0; i < N; i++)
-        ACC_H(i) = 0x0000;
-    for (i = 0; i < N; i++)
-        VD[i] = ACC_L(i); /* no possibilities to clamp */
+        VD[i] = VACC_L[i]; /* no possibilities to clamp */
     return;
 }
 

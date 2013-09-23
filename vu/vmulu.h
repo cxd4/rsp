@@ -8,19 +8,19 @@ INLINE static void do_mulu(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         acc[i] = VS[i] * VT[i];
     for (i = 0; i < N; i++)
-        ACC_H(i) = -(acc[i] < 0); /* (0x8000 * 0x8000) << 1 == 0x000080000000 */
+        VACC_H[i] = -(acc[i] < 0);
     for (i = 0; i < N; i++)
         acc[i] = (acc[i] << 1) + 0x8000;
     for (i = 0; i < N; i++)
-        ACC_L(i) = (acc[i] & 0x00000000FFFF) >>  0;
+        VACC_L[i] = (acc[i] & 0x00000000FFFF) >>  0;
     for (i = 0; i < N; i++)
-        ACC_M(i) = (acc[i] & 0x0000FFFF0000) >> 16;
+        VACC_M[i] = (acc[i] & 0x0000FFFF0000) >> 16;
     for (i = 0; i < N; i++)
-        VD[i]  = ACC_M(i);
+        VD[i]  =  (VACC_M[i]);
     for (i = 0; i < N; i++)
-        VD[i] |= ACC_M(i) >> 15; /* VD |= -(result == 0x000080008000) */
+        VD[i] |=  (VACC_M[i] >> 15); /* VD |= -(result == 0x000080008000) */
     for (i = 0; i < N; i++)
-        VD[i] &= ACC_H(i) ^  ~0; /* VD &= -(result >= 0x000000000000) */
+        VD[i] &= ~(VACC_H[i] ^ 0); /* VD &= -(result >= 0x000000000000) */
     return;
 }
 

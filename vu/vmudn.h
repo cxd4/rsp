@@ -2,19 +2,16 @@
 
 INLINE static void do_mudn(short* VD, short* VS, short* VT)
 {
-    long acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = (unsigned short)(VS[i]) * (signed short)(VT[i]);
+        VACC_L[i] = ((unsigned short)(VS[i])*VT[i] & 0x00000000FFFF) >>  0;
     for (i = 0; i < N; i++)
-        ACC_L(i) = (acc[i] & 0x00000000FFFF) >>  0;
+        VACC_M[i] = ((unsigned short)(VS[i])*VT[i] & 0x0000FFFF0000) >> 16;
     for (i = 0; i < N; i++)
-        ACC_M(i) = (acc[i] & 0x0000FFFF0000) >> 16;
+        VACC_H[i] = -(VACC_M[i] < 0);
     for (i = 0; i < N; i++)
-        ACC_H(i) = -(ACC_M(i) < 0); /* internal sign-extended shift */
-    for (i = 0; i < N; i++)
-        VD[i] = ACC_L(i); /* no possibilities to clamp */
+        VD[i] = VACC_L[i]; /* no possibilities to clamp */
     return;
 }
 
