@@ -1,23 +1,5 @@
 #include "vu.h"
 
-INLINE static void UNSIGNED_CLAMP(short* VD)
-{
-    short hi[N], lo[N];
-    register int i;
-
-    for (i = 0; i < N; i++)
-        VD[i] = ACC_M(i);
-    for (i = 0; i < N; i++)
-        lo[i] = -(result[i] < 0);
-    for (i = 0; i < N; i++)
-        hi[i] = (+0x7FFF - result[i]) >> 31;
-    for (i = 0; i < N; i++)
-        VD[i] = VD[i] & ~lo[i];
-    for (i = 0; i < N; i++)
-        VD[i] = VD[i] | hi[i];
-    return;
-}
-
 INLINE static void do_macu(short* VD, short* VS, short* VT)
 {
     long product[N];
@@ -27,25 +9,23 @@ INLINE static void do_macu(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         product[i] = VS[i] * VT[i];
     for (i = 0; i < N; i++)
-        ACC_H(i) = ACC_H(i) - (product[i] < 0); /* `... + (product[i] >> 31)` */
-    for (i = 0; i < N; i++)
         product[i] = product[i] << 1;
     for (i = 0; i < N; i++)
         addend[i] = (product[i] & 0x00000000FFFF) >>  0;
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)ACC_L(i) + addend[i];
+        addend[i] = (unsigned short)(VACC_L[i]) + addend[i];
     for (i = 0; i < N; i++)
-        ACC_L(i) = (short)addend[i];
+        VACC_L[i] = (short)(addend[i]);
     for (i = 0; i < N; i++)
         addend[i] = (addend[i] >> 16) + (unsigned short)(product[i] >> 16);
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)ACC_M(i) + addend[i];
+        addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
     for (i = 0; i < N; i++)
-        ACC_M(i) = (short)addend[i];
+        VACC_M[i] = (short)(addend[i]);
     for (i = 0; i < N; i++)
-        result[i] = (ACC_H(i) << 16) + addend[i];
+        VACC_H[i] -= (VS[i] * VT[i] < 0);
     for (i = 0; i < N; i++)
-        ACC_H(i) = (short)(result[i] >> 16);
+        VACC_H[i] += addend[i] >> 16;
     UNSIGNED_CLAMP(VD);
     return;
 }

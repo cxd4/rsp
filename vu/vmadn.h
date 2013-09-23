@@ -2,28 +2,23 @@
 
 INLINE static void do_madn(short* VD, short* VS, short* VT)
 {
-    long product[N];
     unsigned long addend[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        product[i] = (unsigned short)(VS[i]) * (signed short)(VT[i]);
+        addend[i] = (unsigned short)(VACC_L[i]) + (unsigned short)(VS[i]*VT[i]);
     for (i = 0; i < N; i++)
-        addend[i] = (product[i] & 0x00000000FFFF) >>  0;
+        VACC_L[i] += (short)(VS[i] * VT[i]);
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)ACC_L(i) + addend[i];
+        addend[i] = (addend[i] >> 16) + ((unsigned short)(VS[i])*VT[i] >> 16);
     for (i = 0; i < N; i++)
-        ACC_L(i) = (short)addend[i];
+        addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(addend[i] >> 16) + (product[i] >> 16);
+        VACC_M[i] = (short)addend[i];
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)ACC_M(i) + addend[i];
+        result[i] = (VACC_H[i] << 16) + addend[i];
     for (i = 0; i < N; i++)
-        ACC_M(i) = (short)addend[i];
-    for (i = 0; i < N; i++)
-        result[i] = (ACC_H(i) << 16) + addend[i];
-    for (i = 0; i < N; i++)
-        ACC_H(i) = (short)(result[i] >> 16);
+        VACC_H[i] = result[i] >> 16;
     SIGNED_CLAMP(VD, SM_MUL_Z);
     return;
 }

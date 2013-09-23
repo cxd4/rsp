@@ -11,19 +11,19 @@ INLINE static void do_madl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         addend[i] = (product[i] & 0x0000FFFF0000) >> 16;
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)ACC_L(i) + addend[i];
+        addend[i] = (unsigned short)(VACC_L[i]) + addend[i];
     for (i = 0; i < N; i++)
-        ACC_L(i) = (short)addend[i];
+        VACC_L[i] = (short)(addend[i]);
     for (i = 0; i < N; i++)
         addend[i] = (unsigned short)(addend[i] >> 16);
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)ACC_M(i) + addend[i];
+        addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
     for (i = 0; i < N; i++)
-        ACC_M(i) = (short)addend[i];
+        VACC_M[i] = (short)(addend[i]);
     for (i = 0; i < N; i++)
-        result[i] = (ACC_H(i) << 16) + addend[i];
+        result[i] = (VACC_H[i] << 16) + addend[i];
     for (i = 0; i < N; i++)
-        ACC_H(i) = (short)(result[i] >> 16);
+        VACC_H[i] = (short)(result[i] >> 16);
     SIGNED_CLAMP(VD, SM_MUL_Z);
     return;
 }

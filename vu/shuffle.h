@@ -1,6 +1,67 @@
 #ifndef _SHUFFLE_H
 #define _SHUFFLE_H
 
+#ifndef ARCH_MIN_SSE2
+/*
+ * vector-scalar element decoding
+ * Obsolete.  Consider using at least the SSE2 algorithms instead.
+ */
+static const int ei[16][8] = {
+    { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none (vector-only operand) */
+    { 00, 01, 02, 03, 04, 05, 06, 07 },
+    { 00, 00, 02, 02, 04, 04, 06, 06 }, /* 0Q */
+    { 01, 01, 03, 03, 05, 05, 07, 07 }, /* 1Q */
+    { 00, 00, 00, 00, 04, 04, 04, 04 }, /* 0H */
+    { 01, 01, 01, 01, 05, 05, 05, 05 }, /* 1H */
+    { 02, 02, 02, 02, 06, 06, 06, 06 }, /* 2H */
+    { 03, 03, 03, 03, 07, 07, 07, 07 }, /* 3H */
+    { 00, 00, 00, 00, 00, 00, 00, 00 }, /* 0 */
+    { 01, 01, 01, 01, 01, 01, 01, 01 }, /* 1 */
+    { 02, 02, 02, 02, 02, 02, 02, 02 }, /* 2 */
+    { 03, 03, 03, 03, 03, 03, 03, 03 }, /* 3 */
+    { 04, 04, 04, 04, 04, 04, 04, 04 }, /* 4 */
+    { 05, 05, 05, 05, 05, 05, 05, 05 }, /* 5 */
+    { 06, 06, 06, 06, 06, 06, 06, 06 }, /* 6 */
+    { 07, 07, 07, 07, 07, 07, 07, 07 }  /* 7 */
+};
+
+int sub_mask[16] = {
+    0x0,
+    0x0,
+    0x1, 0x1,
+    0x3, 0x3, 0x3, 0x3,
+    0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
+};
+
+INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
+{
+    short SV[8];
+    register int i, j;
+#if (0 == 0)
+    j = sub_mask[e];
+    e &= j;
+    j ^= 07;
+    for (i = 0; i < N; i++)
+        SV[i] = VT[(i & j) | e];
+#else
+    if (e & 0x8)
+        for (i = 0; i < N; i++)
+            SV[i] = VT[(i & 0x0) | (e & 0x7)];
+    else if (e & 0x4)
+        for (i = 0; i < N; i++)
+            SV[i] = VT[(i & 0xC) | (e & 0x3)];
+    else if (e & 0x2)
+        for (i = 0; i < N; i++)
+            SV[i] = VT[(i & 0xE) | (e & 0x1)];
+    else /* if ((e == 0b0000) || (e == 0b0001)) */
+        for (i = 0; i < N; i++)
+            SV[i] = VT[(i & 0x7) | (e & 0x0)];
+#endif
+    for (i = 0; i < N; i++)
+        *(VD + i) = *(SV + i);
+    return;
+}
+#else
 #include <emmintrin.h>
 /*
  * Another alternative for shuffling is to use SSSE3, but this shuffles on
@@ -13,7 +74,7 @@
 #define B(x)    ((x) & 3)
 #define SHUFFLE(a,b,c,d)    ((B(d)<<6) | (B(c)<<4) | (B(b)<<2) | (B(a)<<0))
 
-static const unsigned char simm[16] = {
+static const int simm[16] = {
     SHUFFLE(00, 01, 02, 03), /* vector operands */
     SHUFFLE(00, 01, 02, 03),
     SHUFFLE(00, 00, 02, 02), /* scalar quarters */
@@ -32,6 +93,7 @@ static const unsigned char simm[16] = {
     SHUFFLE(07, 07, 07, 07)
 };
 
+#if (1)
 static __m128i shuffle_none(__m128i xmm)
 {
     const int order = SHUFFLE(00, 01, 02, 03);
@@ -161,7 +223,6 @@ static __m128i (*SSE2_SHUFFLE_16[16])(__m128i) = {
     shuffle_4w, shuffle_5w, shuffle_6w, shuffle_7w
 };
 
-#if (1)
 INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
 {
     __m128i xmm;
@@ -171,7 +232,7 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     _mm_store_si128((__m128i *)VD, xmm);
     return;
 }
-#elif (1)
+#elif (0)
 INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
 {
     __m128i xmm;
@@ -271,5 +332,6 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     _mm_store_si128((__m128i *)VD, xmm);
     return;
 }
+#endif
 #endif
 #endif

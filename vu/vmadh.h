@@ -9,15 +9,13 @@ INLINE static void do_madh(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         product[i] = (signed short)(VS[i]) * (signed short)(VT[i]);
     for (i = 0; i < N; i++)
-        addend[i] = (product[i] & 0x0000FFFF) >>  0;
+        addend[i] = (unsigned short)(VACC_M[i]) + (unsigned short)(product[i]);
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)ACC_M(i) + addend[i];
+        VACC_M[i] += (short)(VS[i] * VT[i]);
     for (i = 0; i < N; i++)
-        ACC_M(i) = (short)addend[i];
+        result[i] = (VACC_H[i] << 16) + (product[i] & ~0x0000FFFF) + addend[i];
     for (i = 0; i < N; i++)
-        result[i] = (ACC_H(i) << 16) + (product[i] & ~0x0000FFFF) + addend[i];
-    for (i = 0; i < N; i++)
-        ACC_H(i) = (short)(result[i] >> 16);
+        VACC_H[i] += (addend[i] >> 16) + (product[i] >> 16);
     SIGNED_CLAMP(VD, SM_MUL_X);
     return;
 }
