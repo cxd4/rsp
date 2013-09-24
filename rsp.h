@@ -114,7 +114,7 @@ static int MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
-#include "su/su.h"
+#include "su.h"
 #include "vu/vu.h"
 
 extern void step_SP_commands(unsigned long inst);

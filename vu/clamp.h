@@ -2,6 +2,11 @@
 #define _CLAMP_H
 
 /*
+ * dependency for 48-bit accumulator access
+ */
+#include "vu.h"
+
+/*
  * modes of saturation (unofficial labels, just made up by file author)
  */
 enum {
