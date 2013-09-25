@@ -19,6 +19,21 @@ typedef struct HMENU__ *HMENU;
 struct HDC__ {int unused;};
 typedef struct HDC__ *HDC;
 
+typedef struct tagRECT {
+    long left;
+    long top;
+    long right;
+    long bottom;
+} RECT;
+typedef struct tagPAINTSTRUCT {
+    HDC hdc;
+    int fErase;
+    RECT rcPaint;
+    int fRestore;
+    int fIncUpdate;
+    unsigned char rgbReserved[32];
+} PAINTSTRUCT;
+
 typedef struct {
     unsigned short Version;        /* Should be set to 0x0101 */
     unsigned short Type;           /* Set to PLUGIN_TYPE_RSP */
@@ -60,28 +75,12 @@ typedef struct {
     unsigned long *DPC_PIPEBUSY_REG;
     unsigned long *DPC_TMEM_REG;
 
-    void (*CheckInterrupts)( void );
-    void (*ProcessDList)( void );
-    void (*ProcessAList)( void );
-    void (*ProcessRdpList)( void );
-    void (*ShowCFB)( void );
+    void (*CheckInterrupts)(void);
+    void (*ProcessDList)(void);
+    void (*ProcessAList)(void);
+    void (*ProcessRdpList)(void);
+    void (*ShowCFB)(void);
 } RSP_INFO;
-
-typedef struct tagRECT {
-    long left;
-    long top;
-    long right;
-    long bottom;
-} RECT;
-
-typedef struct tagPAINTSTRUCT {
-    HDC hdc;
-    int fErase;
-    RECT rcPaint;
-    int fRestore;
-    int fIncUpdate;
-    unsigned char rgbReserved[32];
-} PAINTSTRUCT;
 
 typedef struct {
     /* Menu */
@@ -92,13 +91,13 @@ typedef struct {
     /* Break Points */
     int UseBPoints;
     char BPPanelName[20];
-    void (*Add_BPoint)     (void);
-    void (*CreateBPPanel)  (HWND hDlg, RECT rcBox);
-    void (*HideBPPanel)    (void);
-    void (*PaintBPPanel)   (PAINTSTRUCT ps);
-    void (*ShowBPPanel)    (void);
-    void (*RefreshBpoints) (HWND hList);
-    void (*RemoveBpoint)   (HWND hList, int index);
+    void (*Add_BPoint)(void);
+    void (*CreateBPPanel)(HWND hDlg, RECT rcBox);
+    void (*HideBPPanel)(void);
+    void (*PaintBPPanel)(PAINTSTRUCT ps);
+    void (*ShowBPPanel)(void);
+    void (*RefreshBpoints)(HWND hList);
+    void (*RemoveBpoint)(HWND hList, int index);
     void (*RemoveAllBpoint)(void);
 
     /* RSP command Window */
@@ -112,15 +111,15 @@ typedef struct {
     void (*Enter_BPoint_Window)(void);
     void (*Enter_R4300i_Commands_Window)(void);
     void (*Enter_R4300i_Register_Window)(void);
-    void (*Enter_RSP_Commands_Window) (void);
+    void (*Enter_RSP_Commands_Window)(void);
     void (*Enter_Memory_Window)(void);
 } DEBUG_INFO;
 
 #if defined(WIN32)
-#define EXPORT __declspec(dllexport)
-#define CALL   __cdecl
+#define EXPORT      __declspec(dllexport)
+#define CALL        __cdecl
 #else
-#define EXPORT __attribute__((visibility("default")))
+#define EXPORT      __attribute__((visibility("default")))
 #define CALL
 #endif
 
