@@ -111,7 +111,7 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
         *CycleCount = 0x00000000;
     RSP = Rsp_Info;
-    *RSP.SP_PC_REG = 0x04001000 & ~0x00000FFF;
+    *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF; /* task init bug on Mupen64 */
 
     update_conf(CFG_FILE);
     if (RSP.DMEM == RSP.IMEM) /* usually dummy RSP data, not to start ROM */
