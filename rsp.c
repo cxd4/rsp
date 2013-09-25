@@ -5,6 +5,7 @@
 #include <string.h>
 #include "Rsp_#1.1.h"
 #include "rsp.h"
+#include "bench.h"
 
 EXPORT void CALL CloseDLL(void)
 {
