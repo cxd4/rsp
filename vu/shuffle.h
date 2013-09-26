@@ -47,10 +47,8 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     register int i, j;
 #if (0 == 0)
     j = sub_mask[e];
-    e &= j;
-    j ^= 07;
     for (i = 0; i < N; i++)
-        SV[i] = VT[(i & j) | e];
+        SV[i] = VT[(i & ~j) | (e & j)];
 #else
     if (e & 0x8)
         for (i = 0; i < N; i++)
