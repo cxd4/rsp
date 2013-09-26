@@ -1,3 +1,25 @@
+/******************************************************************************\
+* Project:  Simple Vector Unit Benchmark                                       *
+* Authors:  Iconoclast                                                         *
+* Release:  2013.09.26                                                         *
+* License:  none (public domain)                                               *
+\******************************************************************************/
+#ifndef _BENCH_H
+#define _BENCH_H
+
+/*
+ * Since operations on scalar registers are much more predictable,
+ * standardized, and documented, we don't really need to bench those.
+ *
+ * I was thinking I should also add MTC0 (SP DMA and writes to SP_STATUS_REG)
+ * and, due to the SSE-style flags register file, CFC2 and CTC2, but I mostly
+ * just wanted to hurry up and make this header quick with all the basics. :P
+ *
+ * Fortunately, because all the methods are static (no conditional jumps),
+ * we can lazily leave the instruction word set to 0x00000000 for all the
+ * op-codes we are benching, and it will make no difference in speed.
+ */
+
 #include <time.h>
 #include "rsp.h"
 
@@ -36,6 +58,10 @@ static void (*bench_tests[54])(void) = {
     VRCPH, VRSQH,
 
     VMOV, NOP
+/*
+ * Careful:  Not "VNOP", because I put a message there to find ROMs using it.
+ * We bench the normal NOP function from su.h to compare this dummy function.
+ */
 };
 
 const char test_names[54][8] = {
@@ -77,48 +103,47 @@ const char test_names[54][8] = {
 
 const char* notice_starting =
     "Ready to start benchmarks.\n"\
-    "Close this message to commence tests.  Testing could take minutes.\n";
+    "Close this message to commence tests.  Testing could take minutes.";
 const char* notice_finished =
     "Finished writing benchmark results.\n"\
     "Check working emulator directory for \"sp_bench.txt\".";
 
-unsigned char DMEM[4096], IMEM[4096];
+unsigned char t_DMEM[0xFFF + 1], t_IMEM[0xFFF + 1];
 
 EXPORT void CALL DllTest(HWND hParent)
 {
     FILE* log;
     clock_t t1, t2;
-    register int i;
-    register long j;
+    register int i, j;
+    register double delta, total;
 
     if (RSP.RDRAM != NULL)
     {
-        message("Cannot test the RSP while playing!", 3);
+        message("Cannot run RSP tests while playing!", 3);
         return;
     }
 
-/*
- * fake cache pointers for testing LWC2 and SWC2
- */
-    RSP.DMEM = DMEM;
-    RSP.IMEM = IMEM;
-
-/*
- * quick patch for testing VSAW elements
- */
-    inst.R.rs = 0x8;
+    RSP.DMEM = t_DMEM; /* ?WC2 needs, since DllTest must run before ROM open. */
+    inst.R.rs = 0x8; /* just to shut up VSAW illegal element warnings */
 
     message(notice_starting, 1);
     log = fopen("sp_bench.txt", "w");
+    fprintf(log, "RSP Vector Benchmarks Log\n\n");
+
+    total = 0.0;
     for (i = 0; i < 54; i++)
     {
         t1 = clock();
-        for (j = -0x100000; j < 0; j++)
+        for (j = -0x1000000; j < 0; j++)
             bench_tests[i]();
         t2 = clock();
-        fprintf(log, "%s:  %ld s\n", test_names[i], t2 - t1);
+        delta = (double)(t2 - t1) / CLOCKS_PER_SEC;
+        fprintf(log, "%s:  %.3f s\n", test_names[i], delta);
+        total += delta;
     }
+    fprintf(log, "Total time spent:  %.3f s\n", total);
     fclose(log);
     message(notice_finished, 1);
     return;
 }
+#endif
