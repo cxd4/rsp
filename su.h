@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Scalar Unit Operations                     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.08.18                                                         *
+* Release:  2013.09.27                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _SU_H
@@ -1882,20 +1882,67 @@ static void LRV(void)
 }
 static void SQV(void)
 {
-    register unsigned int i;
     register unsigned long addr;
+    register int b;
+    const int vt = inst.R.rt;
     const int e = inst.R.sa >> 1;
     const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
 
     addr = (SR[inst.R.rs] + 16*offset) & 0x00000FFF;
-    for (i = 0; i < 16 - addr%16; i++)
-        RSP.DMEM[BES((addr + i) & 0xFFF)] = VR_B(inst.R.rt, (e + i) & 0xF);
-    return; /* "Mia Hamm Soccer 64" SP exception override (Ville Linde) */
+    b = addr & 0x0000000F;
+    if (e != 0x0)
+    { /* happens with "Mia Hamm Soccer 64" */
+        register int i;
+
+        for (i = 0; i < 16 - addr%16; i++)
+            RSP.DMEM[BES((addr + i) & 0xFFF)] = VR_B(inst.R.rt, (e + i) & 0xF);
+        return;
+    }
+    switch (b)
+    {
+        case 00:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt][00];
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][01];
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][02];
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][03];
+            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][04];
+            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt][05];
+            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt][06];
+            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt][07];
+            return;
+        case 02:
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt][00];
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][01];
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][02];
+            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][03];
+            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt][04];
+            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt][05];
+            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt][06];
+            return;
+        case 04:
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt][00];
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][01];
+            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][02];
+            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt][03];
+            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt][04];
+            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt][05];
+            return;
+        case 06:
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt][00];
+            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt][01];
+            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt][02];
+            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt][03];
+            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt][04];
+            return;
+        default:
+            message("SQV\nWeird addr.", 3);
+            return;
+    }
 }
 static void SRV(void)
 {
-    register int b;
     register unsigned long addr;
+    register int b;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
     const signed int offset = -(inst.SW & 0x00000040) | inst.R.func;
@@ -1906,6 +1953,11 @@ static void SRV(void)
     if (e != 0x0)
     {
         message("SRV\nIllegal element.", 3);
+        return;
+    }
+    if (addr & 0x001)
+    {
+        message("SRV\nOdd addr.", 3);
         return;
     }
     switch (b/2)
