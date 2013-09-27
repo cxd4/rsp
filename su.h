@@ -1142,12 +1142,86 @@ static void SLV(void)
 }
 static void SDV(void)
 {
-#if (1)
-    LS_Group_I(1, 8);
-    return;
-#else
-    0 = 0 / 0;
-#endif
+    register unsigned long addr;
+    const int vt = inst.R.rt;
+    const int e  = inst.R.sa >> 1;
+    const signed int offset = SE(inst.SW, 6);
+
+    addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
+    if (e > 0x8)
+    { /* Happens with Boss Game Studios publications. */
+        LS_Group_I(1, 8);
+        return;
+    }
+    switch (addr & 07)
+    {
+        case 00:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR_S(vt, e+0x0);
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR_S(vt, e+0x2);
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR_S(vt, e+0x4);
+            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR_S(vt, e+0x6);
+            return;
+        case 01: /* "Tetrisphere" audio ucode */
+            *(short *)(RSP.DMEM + addr + 0x000) = VR_S(vt, e+0x0);
+            RSP.DMEM[addr + 0x002 - BES(0x000)] = VR_B(vt, e+0x2);
+            RSP.DMEM[addr + 0x003 + BES(0x000)] = VR_B(vt, e+0x3);
+            *(short *)(RSP.DMEM + addr + 0x004) = VR_S(vt, e+0x4);
+            RSP.DMEM[addr + 0x006 - BES(0x000)] = VR_B(vt, e+0x6);
+            addr += 0x007 + BES(0x000);
+            addr &= 0x00000FFF;
+            RSP.DMEM[addr] = VR_B(vt, e+0x7);
+            return;
+        case 02:
+            *(short *)(RSP.DMEM + addr + 0x000 - HES(0x000)) = VR_S(vt, e+0x0);
+            *(short *)(RSP.DMEM + addr + 0x002 + HES(0x000)) = VR_S(vt, e+0x2);
+            *(short *)(RSP.DMEM + addr + 0x004 - HES(0x000)) = VR_S(vt, e+0x4);
+            addr += 0x006 + HES(0x000);
+            addr &= 0x00000FFF;
+            *(short *)(RSP.DMEM + addr) = VR_S(vt, e+0x6);
+            return;
+        case 03: /* "Tetrisphere" audio ucode */
+            RSP.DMEM[addr + 0x000 - BES(0x000)] = VR_B(vt, e+0x0);
+            RSP.DMEM[addr + 0x001 + BES(0x000)] = VR_B(vt, e+0x1);
+            *(short *)(RSP.DMEM + addr + 0x002) = VR_S(vt, e+0x2);
+            RSP.DMEM[addr + 0x004 - BES(0x000)] = VR_B(vt, e+0x4);
+            addr += 0x005 + BES(0x000);
+            addr &= 0x00000FFF;
+            RSP.DMEM[addr] = VR_B(vt, e+0x5);
+            *(short *)(RSP.DMEM + addr + 0x001 - BES(0x000)) = VR_S(vt, 0x6);
+            return;
+        case 04:
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR_S(vt, e+0x0);
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR_S(vt, e+0x2);
+            addr = (addr + 0x004) & 0x00000FFF;
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR_S(vt, e+0x4);
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR_S(vt, e+0x6);
+            return;
+        case 05: /* "Tetrisphere" audio ucode */
+            *(short *)(RSP.DMEM + addr + 0x000) = VR_S(vt, e+0x0);
+            RSP.DMEM[addr + 0x002 - BES(0x000)] = VR_B(vt, e+0x2);
+            addr = (addr + 0x003) & 0x00000FFF;
+            RSP.DMEM[addr + BES(0x000)] = VR_B(vt, e+0x3);
+            *(short *)(RSP.DMEM + addr + 0x001) = VR_S(vt, e+0x4);
+            RSP.DMEM[addr + BES(0x003)] = VR_B(vt, e+0x6);
+            RSP.DMEM[addr + BES(0x004)] = VR_B(vt, e+0x7);
+            return;
+        case 06:
+            *(short *)(RSP.DMEM + addr - HES(0x000)) = VR_S(vt, e+0x0);
+            addr = (addr + 0x002) & 0x00000FFF;
+            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR_S(vt, e+0x2);
+            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR_S(vt, e+0x4);
+            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR_S(vt, e+0x6);
+            return;
+        case 07: /* "Tetrisphere" audio ucode */
+            RSP.DMEM[addr - BES(0x000)] = VR_B(vt, e+0x0);
+            addr = (addr + 0x001) & 0x00000FFF;
+            RSP.DMEM[addr + BES(0x000)] = VR_B(vt, e+0x1);
+            *(short *)(RSP.DMEM + addr + 0x001) = VR_S(vt, e+0x2);
+            RSP.DMEM[addr + BES(0x003)] = VR_B(vt, e+0x4);
+            RSP.DMEM[addr + BES(0x004)] = VR_B(vt, e+0x5);
+            *(short *)(RSP.DMEM + addr + 0x005) = VR_S(vt, e+0x6);
+            return;
+    }
 }
 
 /*
