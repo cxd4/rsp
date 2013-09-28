@@ -104,8 +104,31 @@ INLINE static void UNSIGNED_CLAMP(short* VD)
 }
 
 #ifndef ARCH_MIN_SSE2
+static INLINE void SIGNED_CLAMP_AM(short* VD)
+{ /* typical sign-clamp of accumulator-mid (bits 31:16) */
+    short hi[N], lo[N];
+    register int i;
+
+    for (i = 0; i < N; i++)
+        lo[i]  = (VACC_H[i] < ~0);
+    for (i = 0; i < N; i++)
+        lo[i] |= (VACC_H[i] < 0) & !(VACC_M[i] < 0);
+    for (i = 0; i < N; i++)
+        hi[i]  = (VACC_H[i] >  0);
+    for (i = 0; i < N; i++)
+        hi[i] |= (VACC_H[i] == 0) & (VACC_M[i] < 0);
+    for (i = 0; i < N; i++)
+        VD[i]  = VACC_M[i];
+    for (i = 0; i < N; i++)
+        VD[i] &= -(lo[i] ^ 1);
+    for (i = 0; i < N; i++)
+        VD[i] |= -(hi[i] ^ 0);
+    for (i = 0; i < N; i++)
+        VD[i] ^= 0x8000 * (hi[i] | lo[i]);
+    return;
+}
 static INLINE void _MM_sclampz_lo(short* VD)
-{
+{ /* sign-clamp accumulator-low (bits 15:0) */
     short hi[N], lo[N];
     register int i;
 
@@ -128,6 +151,21 @@ static INLINE void _MM_sclampz_lo(short* VD)
 #else
 #include <emmintrin.h>
 
+static INLINE void SIGNED_CLAMP_AM(short* VD)
+{ /* typical sign-clamp of accumulator-mid (bits 31:16) */
+    __m128i dst, src;
+    __m128i pvd, pvs;
+
+    pvs = _mm_load_si128((__m128i *)VACC_H);
+    pvd = _mm_load_si128((__m128i *)VACC_M);
+    dst = _mm_unpacklo_epi16(pvd, pvs);
+    src = _mm_unpackhi_epi16(pvd, pvs);
+
+    dst = _mm_packs_epi32(dst, src);
+    _mm_store_si128((__m128i *)VD, dst);
+    return;
+}
+
 /*
  * MarathonMan's accumulator-LOW signed clamp method (SSE2 subset)
  * All credit for the below code goes to CEN64 lead author, not me.
@@ -136,8 +174,8 @@ static INLINE void _MM_sclampz_lo(short* VD)
  * speed of his algorithm below, but using his intrinsics saved 10 instructs.
  * (And yes, the "_MM_" is a symbolic pun on the author, not MMX/SSE "_mm_".)
  */
-static INLINE void _MM_sclampz_lo(short* VD)
-{
+static INLINE void SIGNED_CLAMP_AL(short* VD)
+{ /* sign-clamp accumulator-low (bits 15:0) */
     __m128i accHi, accMid, accLow;
     __m128i negVal, posVal;
     __m128i negCheck, useValMask;

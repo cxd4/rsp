@@ -26,7 +26,7 @@ INLINE static void do_macf(short* VD, short* VS, short* VT)
         VACC_H[i] -= (VS[i] * VT[i] < 0);
     for (i = 0; i < N; i++)
         VACC_H[i] += addend[i] >> 16;
-    SIGNED_CLAMP(VD, SM_MUL_X);
+    SIGNED_CLAMP_AM(VD);
     return;
 }
 

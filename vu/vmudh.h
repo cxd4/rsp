@@ -10,7 +10,7 @@ INLINE static void do_mudh(short* VD, short* VS, short* VT)
         VACC_M[i] = (short)(VS[i]*VT[i] >>  0);
     for (i = 0; i < N; i++)
         VACC_H[i] = (short)(VS[i]*VT[i] >> 16);
-    SIGNED_CLAMP(VD, SM_MUL_X);
+    SIGNED_CLAMP_AM(VD);
     return;
 }
 

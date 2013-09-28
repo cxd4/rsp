@@ -17,7 +17,7 @@ INLINE static void do_madn(short* VD, short* VS, short* VT)
         VACC_M[i] = (short)addend[i];
     for (i = 0; i < N; i++)
         VACC_H[i] += addend[i] >> 16;
-    _MM_sclampz_lo(VD);
+    SIGNED_CLAMP_AL(VD);
     return;
 }
 
