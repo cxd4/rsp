@@ -46,14 +46,8 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
         ge[i] = diff[i] >= VT[i];
 #endif
 
-    for (i = 0; i < N; i++)
-        diff[i] = le[i] - ge[i];
-    for (i = 0; i < N; i++)
-        comp[i] = ge[i] + sn[i]*diff[i];
-    for (i = 0; i < N; i++)
-        diff[i] = VC[i] - VS[i];
-    for (i = 0; i < N; i++)
-        VACC_L[i] = VS[i] + comp[i]*diff[i];
+    merge(comp, sn, le, ge);
+    merge(VACC_L, comp, VC, VS);
     for (i = 0; i < N; i++)
         VD[i] = VACC_L[i];
 

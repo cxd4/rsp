@@ -11,8 +11,7 @@ INLINE static void do_ne(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         comp[i] = comp[i] | ne[i];
 #if (0)
-    for (i = 0; i < N; i++)
-        ACC_L(i) = comp[i] ? VS[i] : VT[i]; /* correct but redundant */
+    merge(VACC_L, comp, VS, VT); /* correct but redundant */
 #else
     for (i = 0; i < N; i++)
         ACC_L(i) = VS[i];

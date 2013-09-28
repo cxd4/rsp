@@ -2,13 +2,9 @@
 
 INLINE static void do_mrg(short* VD, short* VS, short* VT)
 {
-    short diff[N];
     register int i;
 
-    for (i = 0; i < N; i++)
-        diff[i] = VS[i] - VT[i];
-    for (i = 0; i < N; i++)
-        VACC_L[i] = VT[i] + comp[i]*diff[i];
+    merge(VACC_L, comp, VS, VT);
     for (i = 0; i < N; i++)
         VD[i] = VACC_L[i];
     return;

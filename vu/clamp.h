@@ -15,6 +15,36 @@
 #include "vu.h"
 
 /*
+ * vector select merge (`VMRG`) formula
+ *
+ * This is really just a vectorizer for ternary conditional storage.
+ * I've named it so because it directly maps to the VMRG op-code.
+ * -- example --
+ * for (i = 0; i < N; i++)
+ *     if (c_pass)
+ *         dest = element_a;
+ *     else
+ *         dest = element_b;
+ */
+static INLINE void merge(short* VD, short* cmp, short* pass, short* fail)
+{
+    register int i;
+#if (0)
+/* Do not use this version yet, as it still does not vectorize to SSE2. */
+    for (i = 0; i < N; i++)
+        VD[i] = (cmp[i] != 0) ? pass[i] : fail[i];
+#else
+    short diff[N];
+
+    for (i = 0; i < N; i++)
+        diff[i] = pass[i] - fail[i];
+    for (i = 0; i < N; i++)
+        VD[i] = fail[i] + cmp[i]*diff[i]; /* actually `(cmp[i] != 0)*diff[i]` */
+#endif
+    return;
+}
+
+/*
  * modes of saturation (unofficial labels, just made up by file author)
  */
 enum {
@@ -127,7 +157,7 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
         VD[i] ^= 0x8000 * (hi[i] | lo[i]);
     return;
 }
-static INLINE void _MM_sclampz_lo(short* VD)
+static INLINE void SIGNED_CLAMP_AL(short* VD)
 { /* sign-clamp accumulator-low (bits 15:0) */
     short hi[N], lo[N];
     register int i;
@@ -165,43 +195,18 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
     _mm_store_si128((__m128i *)VD, dst);
     return;
 }
-
-/*
- * MarathonMan's accumulator-LOW signed clamp method (SSE2 subset)
- * All credit for the below code goes to CEN64 lead author, not me.
- *
- * I was previously using an ANSI C loop which very closely approached the
- * speed of his algorithm below, but using his intrinsics saved 10 instructs.
- * (And yes, the "_MM_" is a symbolic pun on the author, not MMX/SSE "_mm_".)
- */
 static INLINE void SIGNED_CLAMP_AL(short* VD)
 { /* sign-clamp accumulator-low (bits 15:0) */
-    __m128i accHi, accMid, accLow;
-    __m128i negVal, posVal;
-    __m128i negCheck, useValMask;
-    __m128i setMask = _mm_cmpeq_epi16(_mm_setzero_si128(), _mm_setzero_si128());
+    short cond[N];
+    short temp[N];
+    register int i;
 
-    accHi  = _mm_load_si128((__m128i *)VACC_H);
-    accMid = _mm_load_si128((__m128i *)VACC_M);
-    accLow = _mm_load_si128((__m128i *)VACC_L);
-
-    /* Compute some common values ahead of time. */
-    negCheck = _mm_cmplt_epi16(accHi, _mm_setzero_si128());
-
-    /* If accumulator < 0, clamp to Val if Val != TMin. */
-    useValMask = _mm_and_si128(accHi, _mm_srai_epi16(accMid, 15));
-    useValMask = _mm_cmpeq_epi16(useValMask, setMask);
-    negVal = _mm_and_si128(useValMask, accLow);
-
-    /* Otherwise, clamp to ~0 if any high bits are set. */
-    useValMask = _mm_or_si128(accHi, _mm_srai_epi16(accMid, 15));
-    useValMask = _mm_cmpeq_epi16(useValMask, _mm_setzero_si128());
-    posVal = _mm_and_si128(useValMask, accLow);
-
-    negVal = _mm_and_si128(negCheck, negVal);
-    posVal = _mm_andnot_si128(negCheck, posVal);
-
-    _mm_store_si128((__m128i *)VD, _mm_or_si128(negVal, posVal));
+    SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */
+    for (i = 0; i < N; i++)
+        cond[i] = (temp[i] == VACC_M[i]); /* same storage as without clamping */
+    for (i = 0; i < N; i++)
+        temp[i] ^= 0x8000; /* half-assed unsigned saturation mix in the clamp */
+    merge(VD, cond, VACC_L, temp);
     return;
 }
 #endif

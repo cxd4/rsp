@@ -4,7 +4,7 @@ INLINE static void do_cr(short* VD, short* VS, short* VT)
 {
     short ge[N], le[N], sn[N];
     short VC[N];
-    short diff[N];
+    short cmp[N];
     register int i;
 
     for (i = 0; i < N; i++)
@@ -18,20 +18,17 @@ INLINE static void do_cr(short* VD, short* VS, short* VT)
         ge[i] = sn[i] ? (~0x0000 >= VT[i]) : (VS[i] >= VT[i]);
 #else
     for (i = 0; i < N; i++)
-        diff[i] = ~(VS[i] & sn[i]);
+        cmp[i] = ~(VS[i] & sn[i]);
     for (i = 0; i < N; i++)
-        le[i] = (VT[i] <= diff[i]);
+        le[i] = (VT[i] <= cmp[i]);
     for (i = 0; i < N; i++)
-        diff[i] = VS[i] | sn[i];
+        cmp[i] =  (VS[i] | sn[i]);
     for (i = 0; i < N; i++)
-        ge[i] = (diff[i] >= VT[i]);
+        ge[i] = (cmp[i] >= VT[i]);
 #endif
     for (i = 0; i < N; i++)
         VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
-    for (i = 0; i < N; i++)
-        diff[i] = VC[i] - VS[i];
-    for (i = 0; i < N; i++)
-        VACC_L[i] = VS[i] + le[i]*diff[i];
+    merge(VACC_L, le, VC, VS);
     for (i = 0; i < N; i++)
         VD[i] = VACC_L[i];
 

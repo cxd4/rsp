@@ -5,6 +5,7 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     short eq[N], ge[N], le[N];
     short gen[N], len[N], lz[N], uz[N], sn[N];
     short diff[N];
+    short cmp[N];
     unsigned short VB[N], VC[N];
     register int i;
 
@@ -13,10 +14,12 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         VC[i] = VT[i];
 
+/*
     for (i = 0; i < N; i++)
         ge[i] = clip[i];
     for (i = 0; i < N; i++)
         le[i] = comp[i];
+*/
     for (i = 0; i < N; i++)
         eq[i] = ne[i] ^ 1;
     for (i = 0; i < N; i++)
@@ -50,27 +53,15 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
         gen[i] = (VB[i] >= VC[i]);
 
     for (i = 0; i < N; i++)
-        comp[i] = eq[i] & sn[i];
-    for (i = 0; i < N; i++)
-        diff[i] = len[i] - le[i];
-    for (i = 0; i < N; i++)
-        le[i] = le[i] + comp[i]*diff[i];
+        cmp[i] = eq[i] & sn[i];
+    merge(le, cmp, len, comp);
 
     for (i = 0; i < N; i++)
-        comp[i] = eq[i] & (sn[i] ^ 1);
-    for (i = 0; i < N; i++)
-        diff[i] = gen[i] - ge[i];
-    for (i = 0; i < N; i++)
-        ge[i] = ge[i] + comp[i]*diff[i];
+        cmp[i] = eq[i] & (sn[i] ^ 1);
+    merge(ge, cmp, gen, clip);
 
-    for (i = 0; i < N; i++)
-        diff[i] = le[i] - ge[i];
-    for (i = 0; i < N; i++)
-        comp[i] = ge[i] + sn[i]*diff[i];
-    for (i = 0; i < N; i++)
-        diff[i] = VC[i] - VB[i];
-    for (i = 0; i < N; i++)
-        VACC_L[i] = VB[i] + comp[i]*diff[i];
+    merge(cmp, sn, le, ge);
+    merge(VACC_L, cmp, (short *)VC, VS);
 
     for (i = 0; i < N; i++)
         VD[i] = VACC_L[i];
