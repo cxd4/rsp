@@ -6,8 +6,7 @@ INLINE void do_or(short* VD, short* VS, short* VT)
 
     for (i = 0; i < N; i++)
         VACC_L[i] = VS[i] | VT[i];
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_L[i];
+    vector_copy(VD, VACC_L);
     return;
 }
 

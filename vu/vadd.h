@@ -22,8 +22,7 @@ INLINE static void clr_ci(short* VD, short* VS, short* VT)
         lo[i] = (sum[i] + 0x8000) >> 31;
     for (i = 0; i < N; i++)
         hi[i] = (0x7FFF - sum[i]) >> 31;
-    for (i = 0; i < N; i++)
-        VD[i]  = VACC_L[i];
+    vector_copy(VD, VACC_L);
     for (i = 0; i < N; i++)
         VD[i] &= ~lo[i];
     for (i = 0; i < N; i++)

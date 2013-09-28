@@ -2,11 +2,8 @@
 
 INLINE static void do_mrg(short* VD, short* VS, short* VT)
 {
-    register int i;
-
     merge(VACC_L, comp, VS, VT);
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_L[i];
+    vector_copy(VD, VACC_L);
     return;
 }
 

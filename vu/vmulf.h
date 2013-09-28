@@ -15,8 +15,7 @@ INLINE static void do_mulf(short* VD, short* VS, short* VT)
         VACC_L[i] = (acc[i] & 0x00000000FFFF) >>  0;
     for (i = 0; i < N; i++)
         VACC_M[i] = (acc[i] & 0x0000FFFF0000) >> 16;
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_M[i];
+    vector_copy(VD, VACC_M);
     for (i = 0; i < N; i++)
         VD[i] = VD[i] - (VACC_M[i] < 0); /* only possible product to clamp */
     return;

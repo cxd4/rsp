@@ -37,12 +37,10 @@ static void VRCP(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][inst.R.rs & 07];
     do_rcp(DivIn);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = ST[i];
+    vector_copy(VACC_L, ST);
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -52,12 +50,10 @@ static void VRCPv0(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][00];
     do_rcp(DivIn);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = VR[vt][i];
+    vector_copy(VACC_L, VR[vt]);
     VR[vd][de] = (short)DivOut;
     return;
 }
@@ -66,236 +62,178 @@ static void VRCPv1(void)
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][01];
     do_rcp(DivIn);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = VR[vt][i];
+    vector_copy(VACC_L, VR[vt]);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP0q(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][02];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0x2);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0x2);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP1q(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][03];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0x3);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0x3);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP0h(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][04];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0x4);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0x4);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP1h(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][05];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0x5);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0x5);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP2h(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][06];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0x6);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0x6);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP3h(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][07];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0x7);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0x7);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP0w(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][00];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0x8);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0x8);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP1w(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][01];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0x9);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0x9);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP2w(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][02];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0xA);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0xA);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP3w(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][03];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0xB);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0xB);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP4w(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][04];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0xC);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0xC);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP5w(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][05];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0xD);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0xD);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP6w(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][06];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0xE);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0xE);
     VR[vd][de] = (short)DivOut;
     return;
 }
 static void VRCP7w(void)
 {
-    short SV[N];
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
-    register int i;
 
     DivIn = (int)VR[vt][07];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(SV, VR[vt], 0xF);
-    for (i = 0; i < N; i++)
-        VACC_L[i] = SV[i];
+    SHUFFLE_VECTOR(VACC_L, VR[vt], 0xF);
     VR[vd][de] = (short)DivOut;
     return;
 }

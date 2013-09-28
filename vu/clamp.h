@@ -134,6 +134,19 @@ INLINE static void UNSIGNED_CLAMP(short* VD)
 }
 
 #ifndef ARCH_MIN_SSE2
+static INLINE void vector_copy(short* VD, short* VS)
+{
+#if (0)
+    memcpy(VD, VS, N*sizeof(short));
+#else
+    register int i;
+
+    for (i = 0; i < N; i++)
+        VD[i] = VS[i];
+#endif
+    return;
+}
+
 static INLINE void SIGNED_CLAMP_AM(short* VD)
 { /* typical sign-clamp of accumulator-mid (bits 31:16) */
     short hi[N], lo[N];
@@ -180,6 +193,26 @@ static INLINE void SIGNED_CLAMP_AL(short* VD)
 }
 #else
 #include <emmintrin.h>
+
+/*
+ * We actually need to write explicit SSE2 code for this because GCC 4.8.1
+ * (and possibly later versions) has a code generation bug with vectorizing
+ * the accumulator when it's a signed short (but not when it's unsigned, for
+ * some stupid and buggy reason).
+ *
+ * In addition, as of the more stable GCC 4.7.2 release, while vectorizing
+ * the accumulator write-backs into SSE2 for me is successfully done, we save
+ * just one extra scalar x86 instruction for every RSP vector op-code when we
+ * use SSE2 explicitly for this particular goal instead of letting GCC do it.
+ */
+static INLINE void vector_copy(short* VD, short* VS)
+{
+    __m128i xmm;
+
+    xmm = _mm_load_si128((__m128i *)VS);
+    _mm_store_si128((__m128i *)VD, xmm);
+    return;
+}
 
 static INLINE void SIGNED_CLAMP_AM(short* VD)
 { /* typical sign-clamp of accumulator-mid (bits 31:16) */

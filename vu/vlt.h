@@ -20,8 +20,7 @@ INLINE static void do_lt(short* VD, short* VS, short* VT)
         comp[i] = comp[i] | eq[i]; /* ... or equal (uncommonly) */
 
     merge(VACC_L, comp, VS, VT);
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_L[i];
+    vector_copy(VD, VACC_L);
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)

@@ -29,8 +29,7 @@ INLINE static void do_cr(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
     merge(VACC_L, le, VC, VS);
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_L[i];
+    vector_copy(VD, VACC_L);
 
     for (i = 0; i < N; i++)
         clip[i] = ge[i];

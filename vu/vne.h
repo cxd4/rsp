@@ -13,11 +13,9 @@ INLINE static void do_ne(short* VD, short* VS, short* VT)
 #if (0)
     merge(VACC_L, comp, VS, VT); /* correct but redundant */
 #else
-    for (i = 0; i < N; i++)
-        ACC_L(i) = VS[i];
+    vector_copy(VACC_L, VS);
 #endif
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_L[i];
+    vector_copy(VD, VACC_L);
 
     for (i = 0; i < N; i++)
         ne[i] = 0;

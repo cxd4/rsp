@@ -48,8 +48,7 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
 
     merge(comp, sn, le, ge);
     merge(VACC_L, comp, VC, VS);
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_L[i];
+    vector_copy(VD, VACC_L);
 
     for (i = 0; i < N; i++)
         clip[i] = ge[i];

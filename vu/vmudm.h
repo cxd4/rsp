@@ -10,8 +10,7 @@ INLINE static void do_mudm(short* VD, short* VS, short* VT)
         VACC_M[i] = (VS[i]*(unsigned short)(VT[i]) & 0x0000FFFF0000) >> 16;
     for (i = 0; i < N; i++)
         VACC_H[i] = -(VACC_M[i] < 0);
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_M[i]; /* no possibilities to clamp */
+    vector_copy(VD, VACC_M); /* no possibilities to clamp */
     return;
 }
 

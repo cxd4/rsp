@@ -13,8 +13,7 @@ INLINE static void do_abs(short* VD, short* VS, short* VT)
     short res[N];
     register int i;
 
-    for (i = 0; i < N; i++)
-        res[i] = VT[i];
+    vector_copy(res, VT);
 #ifndef ARCH_MIN_SSE2
 #define MASK_XOR
 #endif
@@ -50,10 +49,8 @@ INLINE static void do_abs(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         res[i] -= cch[i];
 #endif
-    for (i = 0; i < N; i++)
-        VACC_L[i] = res[i];
-    for (i = 0; i < N; i++)
-        VD[i] = VACC_L[i];
+    vector_copy(VACC_L, res);
+    vector_copy(VD, VACC_L);
     return;
 }
 
