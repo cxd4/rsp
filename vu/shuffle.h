@@ -2,7 +2,7 @@
 #define _SHUFFLE_H
 
 /*
- * for ANSI compliance (null INLINE attribute if not already set to inline)
+ * for ANSI compliance (null INLINE attribute if not already set to `inline`)
  * Include "rsp.h" for active, non-ANSI inline definition.
  */
 #ifndef INLINE

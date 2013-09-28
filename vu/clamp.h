@@ -2,6 +2,14 @@
 #define _CLAMP_H
 
 /*
+ * for ANSI compliance (null INLINE attribute if not already set to `inline`)
+ * Include "rsp.h" for active, non-ANSI inline definition.
+ */
+#ifndef INLINE
+#define INLINE
+#endif
+
+/*
  * dependency for 48-bit accumulator access
  */
 #include "vu.h"
@@ -94,4 +102,69 @@ INLINE static void UNSIGNED_CLAMP(short* VD)
         VD[i] &= ~lo[i]; /* in this case, must do AFTER |= hi (See NOTE.) */
     return;
 }
+
+#ifndef ARCH_MIN_SSE2
+static INLINE void _MM_sclampz_lo(short* VD)
+{
+    short hi[N], lo[N];
+    register int i;
+
+    for (i = 0; i < N; i++)
+        lo[i]  = (VACC_H[i] < ~0);
+    for (i = 0; i < N; i++)
+        lo[i] |= (VACC_H[i] < 0) & !(VACC_M[i] < 0);
+    for (i = 0; i < N; i++)
+        hi[i]  = (VACC_H[i] >  0);
+    for (i = 0; i < N; i++)
+        hi[i] |= (VACC_H[i] == 0) & (VACC_M[i] < 0);
+    for (i = 0; i < N; i++)
+        VD[i]  = VACC_L[i];
+    for (i = 0; i < N; i++)
+        VD[i] &= -(lo[i] ^ 1);
+    for (i = 0; i < N; i++)
+        VD[i] |= -(hi[i] ^ 0);
+    return;
+}
+#else
+#include <emmintrin.h>
+
+/*
+ * MarathonMan's accumulator-LOW signed clamp method (SSE2 subset)
+ * All credit for the below code goes to CEN64 lead author, not me.
+ *
+ * I was previously using an ANSI C loop which very closely approached the
+ * speed of his algorithm below, but using his intrinsics saved 10 instructs.
+ * (And yes, the "_MM_" is a symbolic pun on the author, not MMX/SSE "_mm_".)
+ */
+static INLINE void _MM_sclampz_lo(short* VD)
+{
+    __m128i accHi, accMid, accLow;
+    __m128i negVal, posVal;
+    __m128i negCheck, useValMask;
+    __m128i setMask = _mm_cmpeq_epi16(_mm_setzero_si128(), _mm_setzero_si128());
+
+    accHi  = _mm_load_si128((__m128i *)VACC_H);
+    accMid = _mm_load_si128((__m128i *)VACC_M);
+    accLow = _mm_load_si128((__m128i *)VACC_L);
+
+    /* Compute some common values ahead of time. */
+    negCheck = _mm_cmplt_epi16(accHi, _mm_setzero_si128());
+
+    /* If accumulator < 0, clamp to Val if Val != TMin. */
+    useValMask = _mm_and_si128(accHi, _mm_srai_epi16(accMid, 15));
+    useValMask = _mm_cmpeq_epi16(useValMask, setMask);
+    negVal = _mm_and_si128(useValMask, accLow);
+
+    /* Otherwise, clamp to ~0 if any high bits are set. */
+    useValMask = _mm_or_si128(accHi, _mm_srai_epi16(accMid, 15));
+    useValMask = _mm_cmpeq_epi16(useValMask, _mm_setzero_si128());
+    posVal = _mm_and_si128(useValMask, accLow);
+
+    negVal = _mm_and_si128(negCheck, negVal);
+    posVal = _mm_andnot_si128(negCheck, posVal);
+
+    _mm_store_si128((__m128i *)VD, _mm_or_si128(negVal, posVal));
+    return;
+}
+#endif
 #endif
