@@ -2,33 +2,15 @@
 
 INLINE static void clr_ci(short* VD, short* VS, short* VT)
 { /* clear CARRY and carry in to accumulators */
-    signed int sum[N];
-    short hi[N], lo[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        sum[i] = VS[i] + VT[i] + co[i];
-    for (i = 0; i < N; i++)
         VACC_L[i] = VS[i] + VT[i] + co[i];
+    SIGNED_CLAMP_ADD(VD, VS, VT);
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)
         co[i] = 0;
-
-/*
- * SIGNED_CLAMP(VD, SM_ADD_A);
- */
-    for (i = 0; i < N; i++)
-        lo[i] = (sum[i] + 0x8000) >> 31;
-    for (i = 0; i < N; i++)
-        hi[i] = (0x7FFF - sum[i]) >> 31;
-    vector_copy(VD, VACC_L);
-    for (i = 0; i < N; i++)
-        VD[i] &= ~lo[i];
-    for (i = 0; i < N; i++)
-        VD[i] |=  hi[i];
-    for (i = 0; i < N; i++)
-        VD[i] ^= 0x8000 & (hi[i] | lo[i]);
     return;
 }
 

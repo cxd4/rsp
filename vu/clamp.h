@@ -133,6 +133,8 @@ INLINE static void UNSIGNED_CLAMP(short* VD)
     return;
 }
 
+extern short co[N];
+
 #ifndef ARCH_MIN_SSE2
 static INLINE void vector_copy(short* VD, short* VS)
 {
@@ -147,6 +149,46 @@ static INLINE void vector_copy(short* VD, short* VS)
     return;
 }
 
+static INLINE void SIGNED_CLAMP_ADD(short* VD, short* VS, short* VT)
+{
+    long sum[N];
+    short hi[N], lo[N];
+
+    for (i = 0; i < N; i++)
+        sum[i] = VS[i] + VT[i] + co[i];
+    for (i = 0; i < N; i++)
+        lo[i] = (sum[i] + 0x8000) >> 31;
+    for (i = 0; i < N; i++)
+        hi[i] = (0x7FFF - sum[i]) >> 31;
+    vector_copy(VD, VACC_L);
+    for (i = 0; i < N; i++)
+        VD[i] &= ~lo[i];
+    for (i = 0; i < N; i++)
+        VD[i] |=  hi[i];
+    for (i = 0; i < N; i++)
+        VD[i] ^= 0x8000 & (hi[i] | lo[i]);
+    return;
+}
+static INLINE void SIGNED_CLAMP_SUB(short* VD, short* VS, short* VT)
+{
+    long dif[N];
+    short hi[N], lo[N];
+
+    for (i = 0; i < N; i++)
+        dif[i] = VS[i] - VT[i] - co[i];
+    for (i = 0; i < N; i++)
+        lo[i] = (dif[i] + 0x8000) >> 31;
+    for (i = 0; i < N; i++)
+        hi[i] = (0x7FFF - dif[i]) >> 31;
+    vector_copy(VD, VACC_L);
+    for (i = 0; i < N; i++)
+        VD[i] &= ~lo[i];
+    for (i = 0; i < N; i++)
+        VD[i] |=  hi[i];
+    for (i = 0; i < N; i++)
+        VD[i] ^= 0x8000 & (hi[i] | lo[i]);
+    return;
+}
 static INLINE void SIGNED_CLAMP_AM(short* VD)
 { /* typical sign-clamp of accumulator-mid (bits 31:16) */
     short hi[N], lo[N];
@@ -214,6 +256,32 @@ static INLINE void vector_copy(short* VD, short* VS)
     return;
 }
 
+static INLINE void SIGNED_CLAMP_ADD(short* VD, short* VS, short* VT)
+{
+    __m128i dst, src, vco;
+
+    src = _mm_load_si128((__m128i *)VS);
+    dst = _mm_load_si128((__m128i *)VT);
+    vco = _mm_load_si128((__m128i *)co);
+
+    src = _mm_adds_epi16(src, dst);
+    dst = _mm_adds_epi16(src, vco);
+    _mm_store_si128((__m128i *)VD, dst);
+    return;
+}
+static INLINE void SIGNED_CLAMP_SUB(short* VD, short* VS, short* VT)
+{
+    __m128i dst, src, vco;
+
+    src = _mm_load_si128((__m128i *)VS);
+    dst = _mm_load_si128((__m128i *)VT);
+    vco = _mm_load_si128((__m128i *)co);
+
+    src = _mm_subs_epi16(src, dst);
+    dst = _mm_subs_epi16(src, vco);
+    _mm_store_si128((__m128i *)VD, dst);
+    return;
+}
 static INLINE void SIGNED_CLAMP_AM(short* VD)
 { /* typical sign-clamp of accumulator-mid (bits 31:16) */
     __m128i dst, src;
