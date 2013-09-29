@@ -99,7 +99,7 @@ static const int simm[16] = {
     SHUFFLE(07, 07, 07, 07)
 };
 
-#if (1)
+#if (0)
 static __m128i shuffle_none(__m128i xmm)
 {
     const int order = SHUFFLE(00, 01, 02, 03);
@@ -275,68 +275,79 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     {
         case 0x0:
         case 0x1:
-            xmm = _mm_shufflehi_epi16(xmm, simm[0x0]);
-            xmm = _mm_shufflelo_epi16(xmm, simm[0x0]);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0x2:
             xmm = _mm_shufflehi_epi16(xmm, simm[0x2]);
             xmm = _mm_shufflelo_epi16(xmm, simm[0x2]);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0x3:
             xmm = _mm_shufflehi_epi16(xmm, simm[0x3]);
             xmm = _mm_shufflelo_epi16(xmm, simm[0x3]);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0x4:
             xmm = _mm_shufflehi_epi16(xmm, simm[0x4]);
             xmm = _mm_shufflelo_epi16(xmm, simm[0x4]);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0x5:
             xmm = _mm_shufflehi_epi16(xmm, simm[0x5]);
             xmm = _mm_shufflelo_epi16(xmm, simm[0x5]);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0x6:
             xmm = _mm_shufflehi_epi16(xmm, simm[0x6]);
             xmm = _mm_shufflelo_epi16(xmm, simm[0x6]);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0x7:
             xmm = _mm_shufflehi_epi16(xmm, simm[0x7]);
             xmm = _mm_shufflelo_epi16(xmm, simm[0x7]);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0x8:
             xmm = _mm_shufflelo_epi16(xmm, simm[0x8]);
             xmm = _mm_unpacklo_epi16(xmm, xmm);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0x9:
             xmm = _mm_shufflelo_epi16(xmm, simm[0x9]);
             xmm = _mm_unpacklo_epi16(xmm, xmm);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0xA:
             xmm = _mm_shufflelo_epi16(xmm, simm[0xA]);
             xmm = _mm_unpacklo_epi16(xmm, xmm);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0xB:
             xmm = _mm_shufflelo_epi16(xmm, simm[0xB]);
             xmm = _mm_unpacklo_epi16(xmm, xmm);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0xC:
             xmm = _mm_shufflehi_epi16(xmm, simm[0xC]);
             xmm = _mm_unpackhi_epi16(xmm, xmm);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0xD:
             xmm = _mm_shufflehi_epi16(xmm, simm[0xD]);
             xmm = _mm_unpackhi_epi16(xmm, xmm);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0xE:
             xmm = _mm_shufflehi_epi16(xmm, simm[0xE]);
             xmm = _mm_unpackhi_epi16(xmm, xmm);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
         case 0xF:
             xmm = _mm_shufflehi_epi16(xmm, simm[0xF]);
             xmm = _mm_unpackhi_epi16(xmm, xmm);
-            break;
+            _mm_store_si128((__m128i *)VD, xmm);
+            return;
     }
-    _mm_store_si128((__m128i *)VD, xmm);
-    return;
 }
 #endif
 #endif
