@@ -44,75 +44,6 @@ static INLINE void merge(short* VD, short* cmp, short* pass, short* fail)
     return;
 }
 
-/*
- * modes of saturation (unofficial labels, just made up by file author)
- */
-enum {
-    SM_MUL_X, /* clamp acc. bits 31:16, crossing through zero (0x8000:0x7FFF) */
-    SM_MUL_Z, /* clamp acc. bits 15:0 with zero-extension (0x0000:0xFFFF) */
-    SM_MUL_Q, /* oddified DCT inverse quantization (for N64 SP, VMACQ only) */
-    SM_MUL_I, /* (reserved) for VMULI and VMACI (VRNDP and VRNDN) */
-    SM_ADD_A, /* VADD and VSUB arithmetic */
-    SM_ADD_L, /* VABS dynamic inversion/negation logic */
-    SM_DIV_R, /* reciprocal of the vector */
-    SM_DIV_S, /* square root of the vector reciprocal */
-    EOL /* more stuff here if you want */
-};
-
-INLINE void SIGNED_CLAMP(short* VD, int mode)
-{
-    short hi[N], lo[N];
-    register int i;
-
-    switch (mode)
-    {
-        case SM_MUL_X: /* typical sign-clamp of accumulator-mid (bits 31:16) */
-            for (i = 0; i < N; i++)
-                lo[i]  = (VACC_H[i] < ~0);
-            for (i = 0; i < N; i++)
-                lo[i] |= (VACC_H[i] < 0) & !(VACC_M[i] < 0);
-            for (i = 0; i < N; i++)
-                hi[i]  = (VACC_H[i] >  0);
-            for (i = 0; i < N; i++)
-                hi[i] |= (VACC_H[i] == 0) & (VACC_M[i] < 0);
-            for (i = 0; i < N; i++)
-                VD[i]  = VACC_M[i];
-            for (i = 0; i < N; i++)
-                VD[i] &= -(lo[i] ^ 1);
-            for (i = 0; i < N; i++)
-                VD[i] |= -(hi[i] ^ 0);
-            for (i = 0; i < N; i++)
-                VD[i] ^= 0x8000 * (hi[i] | lo[i]);
-            return;
-        case SM_MUL_Z: /* sign-clamp accumulator-low (bits 15:0) */
-            for (i = 0; i < N; i++)
-                lo[i]  = (VACC_H[i] < ~0);
-            for (i = 0; i < N; i++)
-                lo[i] |= (VACC_H[i] < 0) & !(VACC_M[i] < 0);
-            for (i = 0; i < N; i++)
-                hi[i]  = (VACC_H[i] >  0);
-            for (i = 0; i < N; i++)
-                hi[i] |= (VACC_H[i] == 0) & (VACC_M[i] < 0);
-            for (i = 0; i < N; i++)
-                VD[i]  = VACC_L[i];
-            for (i = 0; i < N; i++)
-                VD[i] &= -(lo[i] ^ 1);
-            for (i = 0; i < N; i++)
-                VD[i] |= -(hi[i] ^ 0);
-            return;
-        case SM_MUL_Q: /* possible DCT inverse quantization (VMACQ only) */
-            for (i = 0; i < N; i++)
-                VD[i]  = (VACC_H[i] << 15) | ((unsigned short)(VACC_M[i]) >> 1);
-            message("VMACQ\nClamping unimplemented.", 3);
-            for (i = 0; i < N; i++)
-                VD[i] &= 0xFFF0;
-            return;
-        case SM_ADD_A: /* VADD and VSUB */
-            message("ADD\nMoved.", 3);
-            return;
-    }
-}
-
 INLINE static void UNSIGNED_CLAMP(short* VD)
 {
     short hi[N], lo[N];
@@ -153,6 +84,7 @@ static INLINE void SIGNED_CLAMP_ADD(short* VD, short* VS, short* VT)
 {
     long sum[N];
     short hi[N], lo[N];
+    register int i;
 
     for (i = 0; i < N; i++)
         sum[i] = VS[i] + VT[i] + co[i];
@@ -173,6 +105,7 @@ static INLINE void SIGNED_CLAMP_SUB(short* VD, short* VS, short* VT)
 {
     long dif[N];
     short hi[N], lo[N];
+    register int i;
 
     for (i = 0; i < N; i++)
         dif[i] = VS[i] - VT[i] - co[i];
@@ -202,8 +135,7 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
         hi[i]  = (VACC_H[i] >  0);
     for (i = 0; i < N; i++)
         hi[i] |= (VACC_H[i] == 0) & (VACC_M[i] < 0);
-    for (i = 0; i < N; i++)
-        VD[i]  = VACC_M[i];
+    vector_copy(VD, VACC_M);
     for (i = 0; i < N; i++)
         VD[i] &= -(lo[i] ^ 1);
     for (i = 0; i < N; i++)
@@ -225,8 +157,7 @@ static INLINE void SIGNED_CLAMP_AL(short* VD)
         hi[i]  = (VACC_H[i] >  0);
     for (i = 0; i < N; i++)
         hi[i] |= (VACC_H[i] == 0) & (VACC_M[i] < 0);
-    for (i = 0; i < N; i++)
-        VD[i]  = VACC_L[i];
+    vector_copy(VD, VACC_L);
     for (i = 0; i < N; i++)
         VD[i] &= -(lo[i] ^ 1);
     for (i = 0; i < N; i++)
@@ -259,27 +190,52 @@ static INLINE void vector_copy(short* VD, short* VS)
 static INLINE void SIGNED_CLAMP_ADD(short* VD, short* VS, short* VT)
 {
     __m128i dst, src, vco;
+    __m128i max, min;
 
     src = _mm_load_si128((__m128i *)VS);
     dst = _mm_load_si128((__m128i *)VT);
     vco = _mm_load_si128((__m128i *)co);
 
-    src = _mm_adds_epi16(src, dst);
-    dst = _mm_adds_epi16(src, vco);
-    _mm_store_si128((__m128i *)VD, dst);
+/*
+ * Due to premature clamping in between adds, sometimes we need to add the
+ * LESSER of two integers, either VS or VT, to the carry-in flag matching the
+ * current vector register slice, BEFORE finally adding the greater integer.
+ */
+    max = _mm_max_epi16(dst, src);
+    min = _mm_min_epi16(dst, src);
+
+    min = _mm_adds_epi16(min, vco);
+    max = _mm_adds_epi16(max, min);
+    _mm_store_si128((__m128i *)VD, max);
     return;
 }
 static INLINE void SIGNED_CLAMP_SUB(short* VD, short* VS, short* VT)
 {
     __m128i dst, src, vco;
+    __m128i dif, res, xmm;
 
     src = _mm_load_si128((__m128i *)VS);
     dst = _mm_load_si128((__m128i *)VT);
     vco = _mm_load_si128((__m128i *)co);
 
-    src = _mm_subs_epi16(src, dst);
-    dst = _mm_subs_epi16(src, vco);
-    _mm_store_si128((__m128i *)VD, dst);
+    res = _mm_subs_epi16(src, dst);
+
+/*
+ * Due to premature clamps in-between subtracting two of the three operands,
+ * we must be careful not to offset the result accidentally when subtracting
+ * the corresponding VCO flag AFTER the saturation from doing (VS - VT).
+ */
+    dif = _mm_add_epi16(res, vco);
+    dif = _mm_xor_si128(dif, res); /* Adding one suddenly inverts the sign? */
+    dif = _mm_and_si128(dif, dst); /* Sign change due to subtracting a neg. */
+    xmm = _mm_sub_epi16(src, dst);
+    src = _mm_andnot_si128(src, dif); /* VS must be >= 0x0000 for overflow. */
+    xmm = _mm_and_si128(xmm, src); /* VS + VT != INT16_MIN; VS + VT >= +32768 */
+    xmm = _mm_srli_epi16(xmm, 15); /* src = (INT16_MAX + 1 === INT16_MIN) ? */
+
+    xmm = _mm_andnot_si128(xmm, vco); /* If it's NOT overflow, keep flag. */
+    res = _mm_subs_epi16(res, xmm);
+    _mm_store_si128((__m128i *)VD, res);
     return;
 }
 static INLINE void SIGNED_CLAMP_AM(short* VD)
