@@ -5,12 +5,12 @@ INLINE static void set_bo(short* VD, short* VS, short* VT)
     register int i;
 
     for (i = 0; i < N; i++)
-        VACC_L[i] = (unsigned short)(VS[i]) - (unsigned short)(VT[i]);
+        VACC_L[i] = VS[i] - VT[i];
     vector_copy(VD, VACC_L);
     for (i = 0; i < N; i++)
         ne[i] = (VS[i] != VT[i]);
     for (i = 0; i < N; i++)
-        co[i] = ((unsigned short)(VS[i]) - (unsigned short)(VT[i]) < 0);
+        co[i] = ((unsigned short)VS[i] < (unsigned short)VT[i]);
     return;
 }
 
