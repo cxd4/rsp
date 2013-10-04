@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.23                                                         *
+* Release:  2013.10.03                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _VU_H
@@ -42,129 +42,10 @@ ALIGNED static short VACC[3][N];
  * Un-define this if your environment lacks the SSE2 instruction set.
  */
 #define ARCH_MIN_SSE2
+
 #include "shuffle.h"
 #include "clamp.h"
-
-/*
- * special-purpose, vector control registers
- * (traditionally called "VCF" for "vector condition flags" outside of SGI)
- *
- * These normally should have type `int` because they are Boolean T/F arrays.
- * However, since SSE2 uses 128-bit XMM's, and Win32 `int` storage is 32-bit,
- * we have the problem of 32*N > 128 bits, so we use `short` to reduce packs.
- */
-short ne[N]; /* $vco:  vector carry out register (high byte:  NOTEQUAL) */
-short co[N]; /* $vco:  vector carry out register (low byte:  cry./borrow I/O) */
-short clip[N]; /* $vcc:  vector compare code register (high byte:  clip only) */
-short comp[N]; /* $vcc:  vector compare code register (low byte:  compare) */
-short vce[N]; /* $vce:  vector compare extension register (one byte) */
-
-/*
- * Note about the third vector condition flags register (VCE).
- *
- * Only CFC2, CTC2, and VCH may set this value without clearing.
- * My personal method of saying it:
- *     VCE[i] = (VS[slice] == ~VT[slice]); // || (VT[slice] == ~VS[slice])
- *
- * Literally, the honest algorithm is:
- *     if ((VS[slice] ^ VT[slice]) < 0)
- *         if (VS[slice] + VT[slice] == -1)
- *             VCE[i] = true;
- *         else
- *             VCE[i] = false;
- *     else
- *         VCE[i] = false;
- */
-
-unsigned short get_VCO(void)
-{
-    register unsigned short VCO;
-
-    VCO = 0x0000
-      | (ne[0xF % N] << 0xF)
-      | (ne[0xE % N] << 0xE)
-      | (ne[0xD % N] << 0xD)
-      | (ne[0xC % N] << 0xC)
-      | (ne[0xB % N] << 0xB)
-      | (ne[0xA % N] << 0xA)
-      | (ne[0x9 % N] << 0x9)
-      | (ne[0x8 % N] << 0x8)
-      | (co[0x7 % N] << 0x7)
-      | (co[0x6 % N] << 0x6)
-      | (co[0x5 % N] << 0x5)
-      | (co[0x4 % N] << 0x4)
-      | (co[0x3 % N] << 0x3)
-      | (co[0x2 % N] << 0x2)
-      | (co[0x1 % N] << 0x1)
-      | (co[0x0 % N] << 0x0);
-    return (VCO); /* Big endian becomes little. */
-}
-unsigned short get_VCC(void)
-{
-    register unsigned short VCC;
-
-    VCC = 0x0000
-      | (clip[0xF % N] << 0xF)
-      | (clip[0xE % N] << 0xE)
-      | (clip[0xD % N] << 0xD)
-      | (clip[0xC % N] << 0xC)
-      | (clip[0xB % N] << 0xB)
-      | (clip[0xA % N] << 0xA)
-      | (clip[0x9 % N] << 0x9)
-      | (clip[0x8 % N] << 0x8)
-      | (comp[0x7 % N] << 0x7)
-      | (comp[0x6 % N] << 0x6)
-      | (comp[0x5 % N] << 0x5)
-      | (comp[0x4 % N] << 0x4)
-      | (comp[0x3 % N] << 0x3)
-      | (comp[0x2 % N] << 0x2)
-      | (comp[0x1 % N] << 0x1)
-      | (comp[0x0 % N] << 0x0);
-    return (VCC); /* Big endian becomes little. */
-}
-unsigned char get_VCE(void)
-{
-    register unsigned char VCE;
-
-    VCE = 0x00
-      | (vce[07] << 0x7)
-      | (vce[06] << 0x6)
-      | (vce[05] << 0x5)
-      | (vce[04] << 0x4)
-      | (vce[03] << 0x3)
-      | (vce[02] << 0x2)
-      | (vce[01] << 0x1)
-      | (vce[00] << 0x0);
-    return (VCE); /* Big endian becomes little. */
-}
-void set_VCO(unsigned short VCO)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        co[i] = (VCO >> (i + 0x0)) & 1;
-    for (i = 0; i < N; i++)
-        ne[i] = (VCO >> (i + 0x8)) & 1;
-    return; /* Little endian becomes big. */
-}
-void set_VCC(unsigned short VCC)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        comp[i] = (VCC >> (i + 0x0)) & 1;
-    for (i = 0; i < N; i++)
-        clip[i] = (VCC >> (i + 0x8)) & 1;
-    return; /* Little endian becomes big. */
-}
-void set_VCE(unsigned char VCE)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        vce[i] = (VCE >> i) & 1;
-    return; /* Little endian becomes big. */
-}
+#include "cf.h"
 
 static void res_V(void)
 {
