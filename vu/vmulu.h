@@ -1,25 +1,36 @@
 #include "vu.h"
 
+#ifndef SEMIFRAC
+/*
+ * acc = VS * VT;
+ * acc = acc + 0x8000; // rounding value
+ * acc = acc << 1; // partial value shifting
+ *
+ * Wrong:  ACC(HI) = -((INT32)(acc) < 0)
+ * Right:  ACC(HI) = -(SEMIFRAC < 0)
+ */
+#define SEMIFRAC    (VS[i]*VT[i]*2/2 + 0x8000/2)
+#endif
+
 INLINE static void do_mulu(short* VD, short* VS, short* VT)
 {
-    long acc[N];
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = VS[i] * VT[i];
+        VACC_L[i] = (SEMIFRAC << 1) >>  0;
     for (i = 0; i < N; i++)
-        VACC_H[i] = -(acc[i] < 0);
+        VACC_M[i] = (SEMIFRAC << 1) >> 16;
     for (i = 0; i < N; i++)
-        acc[i] = (acc[i] << 1) + 0x8000;
-    for (i = 0; i < N; i++)
-        VACC_L[i] = (acc[i] & 0x00000000FFFF) >>  0;
-    for (i = 0; i < N; i++)
-        VACC_M[i] = (acc[i] & 0x0000FFFF0000) >> 16;
+        VACC_H[i] = -((VACC_M[i] < 0) & (VS[i] != VT[i])); /* -32768 * -32768 */
+#ifndef ARCH_MIN_SSE2
     vector_copy(VD, VACC_M);
     for (i = 0; i < N; i++)
         VD[i] |=  (VACC_M[i] >> 15); /* VD |= -(result == 0x000080008000) */
     for (i = 0; i < N; i++)
         VD[i] &= ~(VACC_H[i] ^ 0); /* VD &= -(result >= 0x000000000000) */
+#else
+    UNSIGNED_CLAMP(VD);
+#endif
     return;
 }
 
