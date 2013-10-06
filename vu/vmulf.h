@@ -6,18 +6,21 @@ INLINE static void do_mulf(short* VD, short* VS, short* VT)
     register int i;
 
     for (i = 0; i < N; i++)
-        acc[i] = VS[i] * VT[i];
-    for (i = 0; i < N; i++)
-        VACC_H[i] = -(acc[i] < 0);
-    for (i = 0; i < N; i++)
-        acc[i] = (acc[i] << 1) + 0x8000;
+        acc[i] = (VS[i]*VT[i] << 1) + 0x8000;
     for (i = 0; i < N; i++)
         VACC_L[i] = (acc[i] & 0x00000000FFFF) >>  0;
     for (i = 0; i < N; i++)
         VACC_M[i] = (acc[i] & 0x0000FFFF0000) >> 16;
-    vector_copy(VD, VACC_M);
     for (i = 0; i < N; i++)
-        VD[i] = VD[i] - (VACC_M[i] < 0); /* only possible product to clamp */
+        VACC_H[i] = -((VACC_M[i] < 0) & (VS[i] != VT[i])); /* -32768 * -32768 */
+#ifndef ARCH_MIN_SSE2
+    for (i = 0; i < N; i++)
+        VD[i]  = VACC_M[i];
+    for (i = 0; i < N; i++)
+        VD[i] -= (VACC_M[i] < 0) & (VS[i] == VT[i]); /* ACC b 31 set, min*min */
+#else
+    SIGNED_CLAMP_AM(VD);
+#endif
     return;
 }
 
