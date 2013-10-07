@@ -213,6 +213,21 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
 }
 #endif
 
+static INLINE void UNSIGNED_CLAMP(short* VD)
+{ /* sign-zero hybrid clamp of accumulator-mid (bits 31:16) */
+    short cond[N];
+    short temp[N];
+    register int i;
+
+    SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */
+    for (i = 0; i < N; i++)
+        cond[i] = -(temp[i] >  VACC_M[i]); /* VD |= -(ACC47..16 > +32767) */
+    for (i = 0; i < N; i++)
+        VD[i] = temp[i] & ~(temp[i] >> 15); /* Only this clamp is unsigned. */
+    for (i = 0; i < N; i++)
+        VD[i] = VD[i] | cond[i];
+    return;
+}
 static INLINE void SIGNED_CLAMP_AL(short* VD)
 { /* sign-clamp accumulator-low (bits 15:0) */
     short cond[N];
@@ -225,16 +240,6 @@ static INLINE void SIGNED_CLAMP_AL(short* VD)
     for (i = 0; i < N; i++)
         temp[i] ^= 0x8000; /* half-assed unsigned saturation mix in the clamp */
     merge(VD, cond, temp, VACC_L);
-    return;
-}
-static INLINE void UNSIGNED_CLAMP(short* VD)
-{ /* sign-zero hybrid clamp of accumulator-mid (bits 31:16) */
-    short temp[N];
-    register int i;
-
-    SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */
-    for (i = 0; i < N; i++)
-        VD[i] = temp[i] & ~(temp[i] >> 15); /* Only this clamp is unsigned. */
     return;
 }
 #endif
