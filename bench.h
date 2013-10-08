@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Simple Vector Unit Benchmark                                       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.26                                                         *
+* Release:  2013.10.08                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _BENCH_H
@@ -23,16 +23,9 @@
 #include <time.h>
 #include "rsp.h"
 
-static void (*bench_tests[54])(void) = {
-    LBV, SBV,
-    LSV, SSV,
-    LLV, SLV,
-    LDV, SDV,
-    LQV, SQV,
-    LRV, SRV,
-    LPV, SPV,
-    LUV, SUV,
+#define NUMBER_OF_VU_OPCODES    38
 
+static void (*bench_tests[NUMBER_OF_VU_OPCODES])(void) = {
     VMULF, VMACF, /* signed single-precision fractions */
     VMULU, VMACU, /* unsigned single-precision fractions */
 
@@ -64,16 +57,7 @@ static void (*bench_tests[54])(void) = {
  */
 };
 
-const char test_names[54][8] = {
-    "LBV    ","SBV    ",
-    "LSV    ","SSV    ",
-    "LLV    ","SLV    ",
-    "LDV    ","SDV    ",
-    "LQV    ","SQV    ",
-    "LRV    ","SRV    ",
-    "LPV    ","SPV    ",
-    "LUV    ","SUV    ",
-
+const char test_names[NUMBER_OF_VU_OPCODES][8] = {
     "VMULF  ","VMACF  ",
     "VMULU  ","VMACU  ",
 
@@ -115,15 +99,13 @@ EXPORT void CALL DllTest(HWND hParent)
     FILE* log;
     clock_t t1, t2;
     register int i, j;
-    register double delta, total;
+    register float delta, total;
 
     if (RSP.RDRAM != NULL)
     {
         message("Cannot run RSP tests while playing!", 3);
         return;
     }
-
-    RSP.DMEM = t_DMEM; /* ?WC2 needs, since DllTest must run before ROM open. */
     inst.R.rs = 0x8; /* just to shut up VSAW illegal element warnings */
 
     message(notice_starting, 1);
@@ -131,13 +113,13 @@ EXPORT void CALL DllTest(HWND hParent)
     fprintf(log, "RSP Vector Benchmarks Log\n\n");
 
     total = 0.0;
-    for (i = 0; i < 54; i++)
+    for (i = 0; i < NUMBER_OF_VU_OPCODES; i++)
     {
         t1 = clock();
         for (j = -0x1000000; j < 0; j++)
             bench_tests[i]();
         t2 = clock();
-        delta = (double)(t2 - t1) / CLOCKS_PER_SEC;
+        delta = (float)(t2 - t1) / CLOCKS_PER_SEC;
         fprintf(log, "%s:  %.3f s\n", test_names[i], delta);
         total += delta;
     }
