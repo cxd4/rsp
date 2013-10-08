@@ -68,14 +68,6 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     return;
 }
 #else
-/*
- * Another alternative for shuffling is to use SSSE3, but this shuffles on
- * 8-bit iterations, which is less accurate for the 16-bit-slice RSP vectors.
- *
- * SSE2 intrinsics are more than sufficient for RSP vector decoding.
- * The only problem is that they cannot be wielded dynamically per element.
- */
-
 #ifdef ARCH_MIN_SSSE3
 static const unsigned char smask[16][16] = {
     {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE,0xF},
@@ -108,7 +100,6 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     return;
 }
 #else
-#include <emmintrin.h>
 #define B(x)    ((x) & 3)
 #define SHUFFLE(a,b,c,d)    ((B(d)<<6) | (B(c)<<4) | (B(b)<<2) | (B(a)<<0))
 

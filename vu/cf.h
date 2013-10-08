@@ -96,8 +96,6 @@ unsigned char get_VCE(void)
     return (VCE); /* Big endian becomes little. */
 }
 #else
-#include <emmintrin.h>
-
 unsigned short get_VCO(void)
 {
     __m128i xmm, hi, lo;

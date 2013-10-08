@@ -38,11 +38,6 @@ ALIGNED static short VACC[3][N];
 #define ACC_M(i)    (VACC_M[i])
 #define ACC_H(i)    (VACC_H[i])
 
-/*
- * Un-define this if your environment lacks the SSE2 instruction set.
- */
-#define ARCH_MIN_SSE2
-
 #include "shuffle.h"
 #include "clamp.h"
 #include "cf.h"

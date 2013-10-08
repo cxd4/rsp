@@ -124,8 +124,6 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
     return;
 }
 #else
-#include <emmintrin.h>
-
 /*
  * We actually need to write explicit SSE2 code for this because GCC 4.8.1
  * (and possibly later versions) has a code generation bug with vectorizing
