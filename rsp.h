@@ -18,6 +18,17 @@ RSP_INFO RSP;
 #define ALIGNED     __attribute__((aligned(16)))
 #endif
 
+/*
+ * Streaming SIMD Extensions version import management
+ */
+#ifdef ARCH_MIN_SSSE3
+#define ARCH_MIN_SSE2
+#include <tmmintrin.h>
+#endif
+#ifdef ARCH_MIN_SSE2
+#include <emmintrin.h>
+#endif
+
 #ifdef WINUSERAPI
 __declspec(dllimport) int __stdcall MessageBoxA(
     HWND hWnd,
