@@ -100,7 +100,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
     PluginInfo -> Version = 0x0101; /* zilmar #1.1 (only standard RSP spec) */
     PluginInfo -> Type = PLUGIN_TYPE_RSP;
-strcpy(/* Not meant to be a CRT dependency--should optimize to QWORD moves. */
+strcpy(
     PluginInfo -> Name, DLL_name);
     PluginInfo -> NormalMemory = 0;
     PluginInfo -> MemoryBswaped = 1;
@@ -110,15 +110,17 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
 {
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
         *CycleCount = 0x00000000;
-    RSP = Rsp_Info;
-    *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF; /* task init bug on Mupen64 */
-
     update_conf(CFG_FILE);
+
+    RSP.DMEM = Rsp_Info.DMEM;
+    RSP.IMEM = Rsp_Info.IMEM;
     if (RSP.DMEM == RSP.IMEM) /* usually dummy RSP data, not to start ROM */
         return; /* DMA is not executed just because plugin initiates. */
-    else
-        while (RSP.IMEM != RSP.DMEM + 4096)
-            message("Virtual host map noncontiguity.", 3);
+    while (RSP.IMEM != RSP.DMEM + 4096)
+        message("Virtual host map noncontiguity.", 3);
+
+    RSP = Rsp_Info;
+    *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF; /* task init bug on Mupen64 */
     return;
 }
 EXPORT void CALL InitiateRSPDebugger(DEBUG_INFO DebugInfo)
@@ -128,6 +130,7 @@ EXPORT void CALL InitiateRSPDebugger(DEBUG_INFO DebugInfo)
 }
 EXPORT void CALL RomClosed(void)
 {
+    RSP.RDRAM = NULL; /* so DllTest benchmark doesn't think ROM is still open */
     *RSP.SP_PC_REG = 0x00000000;
     return;
 }
