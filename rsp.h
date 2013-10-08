@@ -9,10 +9,6 @@ RSP_INFO RSP;
 #define NOINLINE    __declspec(noinline)
 #define ALIGNED     _declspec(align(16))
 #else
-/*
- * #define INLINE      __attribute__((always_inline))
- * This way is more ANSI-compliant than saying "inline" all the time.
- */
 #define INLINE      inline
 #define NOINLINE    __attribute__((noinline))
 #define ALIGNED     __attribute__((aligned(16)))
@@ -29,37 +25,21 @@ RSP_INFO RSP;
 #include <emmintrin.h>
 #endif
 
-#ifdef WINUSERAPI
-__declspec(dllimport) int __stdcall MessageBoxA(
-    HWND hWnd,
-    const char *lpText,
-    const char *lpCaption,
-    unsigned int uType);
-/* No need to import the Windows API, just a message trace function. */
-const unsigned int type_index[4] = {
-    0x00000000, /* no icon or effect `MB_OK`, for O.K. encounters */
-    0x00000020, /* MB_ICONQUESTION -- curious situation in emulator */
-    0x00000030, /* MB_ICONEXCLAMATION -- might be missing RSP support */
-    0x00000010  /* MB_ICONHAND -- definite error or problem in emulator */
-};
-NOINLINE void message(const char* body, int priority)
-{
-    priority &= 03;
-    if (priority < MINIMUM_MESSAGE_PRIORITY)
-        return;
-    MessageBoxA(NULL, body, NULL, type_index[priority]);
-    return;
-}
-#else
 NOINLINE void message(const char* body, int priority)
 { /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
-    char argv[4096] = "CMD /D /S /Q /T:0E /K \"ECHO ";
+    char argv[4096] = "CMD /D /S /Q /T:0E /C \"TITLE RSP Message && ECHO ";
     int i = 0;
     int j = strlen(argv);
 
     priority &= 03;
     if (priority < MINIMUM_MESSAGE_PRIORITY)
         return;
+
+/*
+ * I'm just using system() to call the Windows command shell to print text.
+ * When the OS permits it, just use printf to trace messages, not this crap.
+ * I don't use WIN32 MessageBox because that's just extra OS dependencies. :P
+ */
     while (body[i] != '\0')
     {
         if (body[i] == '\n')
@@ -76,10 +56,9 @@ NOINLINE void message(const char* body, int priority)
         }
         argv[j++] = body[i++];
     }
-    strcat(argv, "\"");
+    strcat(argv, " && PAUSE\"");
     system(argv);
 }
-#endif
 
 /*
  * Update RSP configuration memory from local file resource.
