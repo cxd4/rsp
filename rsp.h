@@ -157,25 +157,67 @@ void step_SP_commands(unsigned long inst)
     }
 }
 
+void export_data_cache(void)
+{
+    FILE* out;
+    register unsigned long addr;
+    const int m = 0x7FFF % sizeof(unsigned int); /* swap mask */
+
+    out = fopen("rcpcache.dhex", "wb");
+    for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000001)
+        fputc(RSP.DMEM[(addr & 0x00000FFF) ^ m], out);
+    fclose(out);
+    message("Finished DMEM export.  Look for \"rcpcache.dhex\".", 1);
+    return;
+}
+void export_instruction_cache(void)
+{
+    FILE* out;
+    register unsigned long addr;
+    const int m = 0x7FFF % sizeof(unsigned int); /* swap mask */
+
+    out = fopen("rcpcache.ihex", "wb");
+    for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000001)
+        fputc(RSP.IMEM[(addr & 0x00000FFF) ^ m], out);
+    fclose(out);
+    message("Finished IMEM export.  Look for \"rcpcache.ihex\".", 1);
+    return;
+}
+void export_DRAM(void)
+{
+    FILE* out;
+    register unsigned long addr;
+    const int m = 0x7FFF % sizeof(unsigned int); /* swap mask */
+    const int MiB = 8; /* to-do:  any way to detect RDRAM size in MB? */
+    const int limit = MiB * 1024 * 1024;
+
+    out = fopen("RDRAM.BIN", "wb");
+    for (addr = 0x000000; addr < limit; addr += 0x000001)
+        fputc(RSP.RDRAM[(addr % limit) ^ m], out);
+    fclose(out);
+    message("Finished DRAM export.  Look for \"RDRAM.BIN\".", 1);
+    return;
+}
 void export_SP_memory(void)
 { /* cache memory and dynamic RAM shared by CPU */
-    FILE *out = fopen("SP_CACHE.BIN", "wb");
-    fwrite(RSP.DMEM, sizeof(unsigned char), 0x1FFF + 1, out);
-    fclose(out);
-    out = fopen("SP_DRAM.BIN", "wb");
-    fwrite(RSP.RDRAM, sizeof(unsigned char), 0x3FFFFF + 1, out);
+    export_data_cache();
+    export_instruction_cache();
+    export_DRAM();
     return;
 }
 
 void trace_RSP_registers(void)
-{ /* no interface--using file I/O only */
+{
     register int i;
-    FILE *out = fopen("SP_STATE.TXT", "w");
+    FILE* out;
 
+    out = fopen("SP_STATE.TXT", "w");
     fprintf(out, "RCP Communications Register Display\n\n");
     fclose(out);
+
     out = fopen("SP_STATE.TXT", "a");
-/* The precise names for RSP CP0 registers are somewhat difficult to define.
+/*
+ * The precise names for RSP CP0 registers are somewhat difficult to define.
  * Generally, I have tried to adhere to the names shared from bpoint/zilmar,
  * while also merging the concrete purpose and correct assembler references.
  * Whether or not you find these names agreeable is mostly a matter of seeing
@@ -197,14 +239,15 @@ void trace_RSP_registers(void)
         *RSP.SP_DMA_BUSY_REG, *RSP.DPC_PIPEBUSY_REG);
     fprintf(out, "SP_SEMAPHORE:   %08lX    CMD_TMEM_BUSY:  %08lX\n",
         *RSP.SP_SEMAPHORE_REG, *RSP.DPC_TMEM_REG);
-    fprintf(out, "SP_PC_REG:      04001%03lX\n\n", *RSP.SP_PC_REG & 0x00000FFF);
+    fprintf(out, "SP_PC_REG:      %08lX\n\n", *RSP.SP_PC_REG);
 /* (PC is only from the CPU point of view, mapped between both halves.) */
-/* There is no memory map for remaining registers not shared by the CPU.
+/*
+ * There is no memory map for remaining registers not shared by the CPU.
  * The scalar register (SR) file is straightforward and based on the
  * GPR file in the MIPS ISA.  However, the RSP assembly language is still
  * different enough from the MIPS assembly language, in that tokens such as
  * "$zero" and "$s0" are no longer valid.  "$k0", for example, is not a valid
- * RSP register name because on MIPS it was kernel-use, but on the RSP free.
+ * RSP register name because on MIPS it was kernel-use, but on the RSP, free.
  * To be colorful/readable, however, I have set the modern MIPS names anyway.
  */
     fprintf(out, "zero  %08X,  s0:  %08X,\n", SR[ 0], SR[16]);
@@ -239,26 +282,35 @@ void trace_RSP_registers(void)
             VR[i][00], VR[i][01], VR[i][02], VR[i][03],
             VR[i][04], VR[i][05], VR[i][06], VR[i][07]);
     fprintf(out, "\n");
+
 /*
  * The SU has its fair share of registers, but the VU has its counterparts.
  * Just like we have the scalar 16 system control registers for the RSP CP0,
  * we have also a tiny group of special-purpose, vector control registers.
  */
-    fprintf(out, "$vco:  0x%04X\n", get_VCO());
+    fprintf(out, "\n$vco:  0x%04X\n", get_VCO());
     fprintf(out, "$vcc:  0x%04X\n", get_VCC());
-    fprintf(out, "$vce:  0x%02X\n", get_VCE());
-    fprintf(out, "\n");
+    fprintf(out, "$vce:  0x%02X\n\n", get_VCE());
+
+/*
+ * 48-bit RSP accumulators
+ * Most vector unit patents traditionally call this register file "VACC".
+ * However, typically in discussion about SGI's implementation, we say "ACC".
+ */
     for (i = 0; i < 8; i++)
         fprintf(
             out, "ACC[%o]:  [%04X][%04X][%04X]\n", i,
-            ACC_H(i), ACC_M(i), ACC_L(i));
-    fprintf(out, "\n");
-    fprintf(out, "DivIn:  %i\n", DivIn);
+            VACC_H[i], VACC_M[i], VACC_L[i]);
+
+/*
+ * special-purpose vector unit registers for vector divide operations only
+ */
+    fprintf(out, "\nDivIn:  %i\n", DivIn);
     fprintf(out, "DivOut:  %i\n", DivOut);
     /* MovIn:  This reg. might exist for VMOV, but it is obsolete to emulate. */
     fprintf(out, DPH ? "DPH:  true\n" : "DPH:  false\n");
     fclose(out);
+    message("Finished tracing RSP registers.  Look for \"SP_STATE.TXT\".", 1);
     return;
 }
-
 #endif

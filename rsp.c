@@ -24,30 +24,21 @@ EXPORT void CALL DllAbout(HWND hParent)
     message(DLL_about, 3);
     return;
 }
-#ifdef SP_EXECUTE_LOG
-EXPORT void CALL DllConfig(HWND hParent)
-{
-    trace_RSP_registers();
-    export_SP_memory();
-    if (output_log == NULL)
-    {
-        output_log = fopen("simd_log.bin", "ab");
-        return;
-    }
-    fclose(output_log);
-    output_log = NULL;
-    hParent = NULL;
-    return;
-}
-#else
 EXPORT void CALL DllConfig(HWND hParent)
 {
     hParent = NULL;
-    system("sp_cfgui");
+    system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
     update_conf(CFG_FILE);
+    if (CFG_QUEUE_E_DRAM)
+        export_DRAM();
+    if (CFG_QUEUE_E_DMEM)
+        export_data_cache();
+    if (CFG_QUEUE_E_IMEM) /* to-do:  Make it also write the disassembly? */
+        export_instruction_cache();
+    if (CFG_TRACE_RSP_REGISTERS) /* to-do:  Make this counter of delay slots? */
+        trace_RSP_registers();
     return;
 }
-#endif
 EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
 {
     if (*RSP.SP_STATUS_REG & 0x00000003)

@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
-/* This is only here for people using modern Microsoft compilers.
+/*
+ * This is only here for people using modern Microsoft compilers.
  * Usually the default warning level complains over "deprecated" CRT methods.
  * It's basically Microsoft's way of saying they're better than everyone.
  */
@@ -46,11 +47,24 @@ static unsigned char conf[32];
  */
 
 /*
- * Anything between 0x01 and 0x0F of the config file, I have not yet found a
+ * Anything between 0x01 and 0x03 of the config file, I have not yet found a
  * use for.  That section of bits is currently all reserved for new settings.
  */
 
+/*
+ * Schedule binary dump exports to the DllConfig schedule delay queue.
+ */
+#define CFG_QUEUE_E_DRAM    (*(int *)(conf + 0x04))
+#define CFG_QUEUE_E_DMEM    (*(int *)(conf + 0x08))
+#define CFG_QUEUE_E_IMEM    (*(int *)(conf + 0x0C))
+
+/*
+ * Special switches.
+ * (generally for correcting RSP clock behavior on Project64 2.x)
+ * Also includes RSP register states debugger.
+ * Also includes entirely useless, custom bit-wise checksum security.
+ */
 #define CFG_WAIT_FOR_CPU_HOST       (*(int *)(conf + 0x10))
 #define CFG_MEND_SEMAPHORE_LOCK     (*(int *)(conf + 0x14))
-#define CFG_RESERVED                (*(int *)(conf + 0x18))
+#define CFG_TRACE_RSP_REGISTERS     (*(int *)(conf + 0x18))
 #define CFG_CHECKSUM                (*(conf + 0x1F))
