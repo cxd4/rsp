@@ -27,7 +27,7 @@ RSP_INFO RSP;
 
 NOINLINE void message(const char* body, int priority)
 { /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
-    char argv[4096] = "CMD /D /S /Q /T:0E /C \"TITLE RSP Message && ECHO ";
+    char argv[4096] = "CMD /Q /D /C \"TITLE RSP Message&&ECHO ";
     int i = 0;
     int j = strlen(argv);
 
@@ -44,20 +44,22 @@ NOINLINE void message(const char* body, int priority)
     {
         if (body[i] == '\n')
         {
-            argv[j++] = '&';
-            argv[j++] = '&';
-            argv[j++] = 'E';
-            argv[j++] = 'C';
-            argv[j++] = 'H';
-            argv[j++] = 'O';
-            argv[j++] = ' ';
+            argv[j + 0] = '&';
+            argv[j + 1] = '&';
+            argv[j + 2] = 'E';
+            argv[j + 3] = 'C';
+            argv[j + 4] = 'H';
+            argv[j + 5] = 'O';
+            argv[j + 6] = ' ';
             ++i;
+            j += 7;
             continue;
         }
         argv[j++] = body[i++];
     }
-    strcat(argv, " && PAUSE\"");
+    strcat(argv, "&&PAUSE&&EXIT\"");
     system(argv);
+    return;
 }
 
 /*
