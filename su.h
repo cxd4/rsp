@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Scalar Unit Operations                     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.27                                                         *
+* Release:  2013.10.10                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _SU_H
@@ -1971,7 +1971,8 @@ static void SRV(void)
  * TV and SWV (As of RCP implementation, LTWV opcode was undesired.)
  */
 static void LTV(void)
-{ /* Warning:  N64 has bugged LTV behavior from normal SGI one.  (STV is OK.) */
+{
+    register int i;
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
@@ -1993,89 +1994,9 @@ static void LTV(void)
         message("LTV\nIllegal element.", 3);
         return;
     }
-    switch (e/2)
-    {
-        case 0x0/2:
-            VR[vt+0][00] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][01] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][02] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][03] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][04] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][05] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][06] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][07] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x2/2:
-            VR[vt+0][07] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][00] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][01] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][02] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][03] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][04] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][05] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][06] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x4/2:
-            VR[vt+0][06] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][07] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][00] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][01] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][02] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][03] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][04] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][05] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x6/2:
-            VR[vt+0][05] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][06] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][07] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][00] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][01] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][02] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][03] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][04] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0x8/2:
-            VR[vt+0][04] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][05] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][06] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][07] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][00] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][01] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][02] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][03] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xA/2:
-            VR[vt+0][03] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][04] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][05] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][06] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][07] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][00] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][01] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][02] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xC/2:
-            VR[vt+0][02] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][03] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][04] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][05] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][06] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][07] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][00] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][01] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-        case 0xE/2:
-            VR[vt+0][01] = *(short *)(RSP.DMEM + addr + HES(0x000));
-            VR[vt+1][02] = *(short *)(RSP.DMEM + addr + HES(0x002));
-            VR[vt+2][03] = *(short *)(RSP.DMEM + addr + HES(0x004));
-            VR[vt+3][04] = *(short *)(RSP.DMEM + addr + HES(0x006));
-            VR[vt+4][05] = *(short *)(RSP.DMEM + addr + HES(0x008));
-            VR[vt+5][06] = *(short *)(RSP.DMEM + addr + HES(0x00A));
-            VR[vt+6][07] = *(short *)(RSP.DMEM + addr + HES(0x00C));
-            VR[vt+7][00] = *(short *)(RSP.DMEM + addr + HES(0x00E));
-            return;
-    }
+    for (i = 0; i < 8; i++) /* SGI screwed LTV up on N64.  See STV instead. */
+        VR[vt+i][(-e/2 + i) & 07] = *(short *)(RSP.DMEM + addr + HES(2*i));
+    return;
 }
 static void SWV(void)
 { /* Dummy implementation only:  Do any games execute this? */
@@ -2097,9 +2018,7 @@ static void SWV(void)
 }
 static void STV(void)
 {
-#if (0)
     register int i;
-#endif
     register unsigned long addr;
     const int e = inst.R.sa >> 1;
     const int vt = inst.R.rt;
@@ -2121,95 +2040,9 @@ static void STV(void)
         message("STV\nIllegal element.", 3);
         return;
     }
-    addr &= ~0x0000000F;
-#if (0)
-    for (i = 0; i < 16; i++)
-        *(short *)(RSP.DMEM + addr + HES(2*i)) = VR[vt + e/2%8][i];
+    for (i = 0; i < 8; i++)
+        *(short *)(RSP.DMEM + addr + HES(2*i)) = VR[vt + (e/2 + i)%8][i];
     return;
-#endif
-    switch (e/2)
-    {
-        case 0x0/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt+0][00];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt+1][01];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt+2][02];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt+3][03];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt+4][04];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt+5][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt+6][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt+7][07];
-            return;
-        case 0x2/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt+1][00];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt+2][01];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt+3][02];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt+4][03];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt+5][04];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt+6][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt+7][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt+0][07];
-            return;
-        case 0x4/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt+2][00];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt+3][01];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt+4][02];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt+5][03];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt+6][04];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt+7][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt+0][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt+1][07];
-            return;
-        case 0x6/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt+3][00];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt+4][01];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt+5][02];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt+6][03];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt+7][04];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt+0][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt+1][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt+2][07];
-            return;
-        case 0x8/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt+4][00];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt+5][01];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt+6][02];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt+7][03];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt+0][04];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt+1][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt+2][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt+3][07];
-            return;
-        case 0xA/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt+5][00];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt+6][01];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt+7][02];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt+0][03];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt+1][04];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt+2][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt+3][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt+4][07];
-            return;
-        case 0xC/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt+6][00];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt+7][01];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt+0][02];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt+1][03];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt+2][04];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt+3][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt+4][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt+5][07];
-            return;
-        case 0xE/2:
-            *(short *)(RSP.DMEM + addr + HES(0x000)) = VR[vt+7][00];
-            *(short *)(RSP.DMEM + addr + HES(0x002)) = VR[vt+0][01];
-            *(short *)(RSP.DMEM + addr + HES(0x004)) = VR[vt+1][02];
-            *(short *)(RSP.DMEM + addr + HES(0x006)) = VR[vt+2][03];
-            *(short *)(RSP.DMEM + addr + HES(0x008)) = VR[vt+3][04];
-            *(short *)(RSP.DMEM + addr + HES(0x00A)) = VR[vt+4][05];
-            *(short *)(RSP.DMEM + addr + HES(0x00C)) = VR[vt+5][06];
-            *(short *)(RSP.DMEM + addr + HES(0x00E)) = VR[vt+6][07];
-            return;
-    }
 }
 
 /*** Modern pseudo-operations (not real instructions, but nice shortcuts) ***/
@@ -3044,5 +2877,4 @@ const int sub_op_table[64] = {
     OFF_OPCODE,
     OFF_OPCODE
 };
-
 #endif
