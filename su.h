@@ -376,9 +376,7 @@ static void LB(void) /* 100000 sssss ttttt iiiiiiiiiiiiiiii */
 
     addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
     SR[inst.I.rt] = (signed char)(RSP.DMEM[addr]);
-#if (0)
-    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LB. */
-#endif
+    SR[0] = 0x00000000;
     return;
 }
 static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
@@ -388,11 +386,6 @@ static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (0)
-    SR_B(rt, 2) = RSP.DMEM[BES(addr)];
-    addr = (addr + 0x001) & 0xFFF;
-    SR_B(rt, 3) = RSP.DMEM[BES(addr)];
-#else
     if (addr%4 == 0x003)
     {
         SR_B(rt, 2) = RSP.DMEM[addr - BES(0x000)];
@@ -401,11 +394,8 @@ static void LH(void) /* 100001 sssss ttttt iiiiiiiiiiiiiiii */
     }
     else
         SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
-#endif
     SR[rt] = (signed short)(SR[rt]);
-#if (0)
-    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LH. */
-#endif
+    SR[0] = 0x00000000;
     return;
 }
 extern void ULW(int rd, unsigned long addr);
@@ -422,9 +412,7 @@ static void LW(void) /* 100011 sssss ttttt iiiiiiiiiiiiiiii */
         return;
     }
     SR[rt] = *(long *)(RSP.DMEM + addr);
-#if (0)
-    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LW. */
-#endif
+    SR[0] = 0x00000000;
     return;
 }
 static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
@@ -434,9 +422,7 @@ static void LBU(void) /* 100100 sssss ttttt iiiiiiiiiiiiiiii */
 
     addr = BES(SR[inst.I.rs] + offset) & 0x00000FFF;
     SR[inst.I.rt] = (unsigned char)(RSP.DMEM[addr]);
-#if (0)
-    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LBU. */
-#endif
+    SR[0] = 0x00000000;
     return;
 }
 static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
@@ -446,11 +432,6 @@ static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (0)
-    SR_B(rt, 2) = RSP.DMEM[BES(addr)];
-    addr = (addr + 0x001) & 0xFFF;
-    SR_B(rt, 3) = RSP.DMEM[BES(addr)];
-#else
     if (addr%4 == 0x003)
     {
         SR[rt]  = RSP.DMEM[addr - BES(0x000)] << 8;
@@ -458,12 +439,8 @@ static void LHU(void) /* 100101 sssss ttttt iiiiiiiiiiiiiiii */
         SR[rt] |= RSP.DMEM[addr + BES(0x000)];
         return;
     }
-    SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
-#endif
-    SR[rt] = (unsigned short)(SR[rt]);
-#if (0)
-    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not LHU. */
-#endif
+    SR[rt] = *(unsigned short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
+    SR[0] = 0x00000000;
     return;
 }
 static void SB(void) /* 101000 sssss ttttt iiiiiiiiiiiiiiii */
@@ -482,11 +459,6 @@ static void SH(void) /* 101001 sssss ttttt iiiiiiiiiiiiiiii */
     const signed int offset = (signed short)(inst.I.imm);
 
     addr = (SR[inst.I.rs] + offset) & 0x00000FFF;
-#if (0)
-    RSP.DMEM[BES(addr)] = SR_B(rt, 2);
-    addr = (addr + 0x001) & 0xFFF;
-    RSP.DMEM[BES(addr)] = SR_B(rt, 3);
-#else
     if (addr%4 == 0x003)
     {
         RSP.DMEM[addr - BES(0x000)] = SR_B(rt, 2);
@@ -495,7 +467,6 @@ static void SH(void) /* 101001 sssss ttttt iiiiiiiiiiiiiiii */
         return;
     }
     *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1)) = (short)(SR[rt]);
-#endif
     return;
 }
 extern void USW(int rs, unsigned long addr);
@@ -1099,6 +1070,10 @@ static void SLV(void)
 }
 static void SDV(void)
 {
+#if (0)
+    LS_Group_I(1, 8);
+    return;
+#else
     register unsigned long addr;
     const int vt = inst.R.rt;
     const int e  = inst.R.sa >> 1;
@@ -1179,6 +1154,7 @@ static void SDV(void)
             *(short *)(RSP.DMEM + addr + 0x005) = VR_S(vt, e+0x6);
             return;
     }
+#endif
 }
 
 /*
@@ -2155,6 +2131,120 @@ static void LZI(void)
     SR[0] = 0x00000000;
     return;
 }
+static void LBA(void)
+{ /* "Load Byte from Absolute Address" (unofficial, created by me) */
+    register unsigned long addr;
+    const signed int offset = (signed short)(inst.I.imm);
+
+    addr = BES(0x00000000 + offset) & 0x00000FFF;
+    SR[inst.I.rt] = (signed char)(RSP.DMEM[addr]);
+    SR[0] = 0x00000000;
+    return;
+}
+static void LHA(void)
+{ /* "Load Halfword from Absolute Address" (unofficial, created by me) */
+    register unsigned long addr;
+    const int rt = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
+
+    addr = (0x00000000 + offset) & 0x00000FFF;
+    if (addr%4 == 0x003)
+    {
+        SR_B(rt, 2) = RSP.DMEM[addr - BES(0x000)];
+        addr = (addr + 0x001) & 0xFFF;
+        SR_B(rt, 3) = RSP.DMEM[addr + BES(0x000)];
+    }
+    else
+        SR[rt] = *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
+    SR[rt] = (signed short)(SR[rt]);
+    SR[0] = 0x00000000;
+    return;
+}
+static void LWA(void)
+{ /* "Load Word from Absolute Address" (unofficial, created by me) */
+    register unsigned long addr;
+    const int rt = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
+
+    addr = (0x00000000 + offset) & 0x00000FFF;
+    if (addr & 0x00000003)
+    {
+        ULW(rt, addr); /* Address Error exception:  RSP bypass MIPS pseudo-op */
+        return;
+    }
+    SR[rt] = *(long *)(RSP.DMEM + addr);
+    SR[0] = 0x00000000;
+    return;
+}
+static void LBUA(void)
+{ /* "Load Byte Unsigned from Absolute Address" (unofficial, created by me) */
+    register unsigned long addr;
+    const signed int offset = (signed short)(inst.I.imm);
+
+    addr = BES(0x00000000 + offset) & 0x00000FFF;
+    SR[inst.I.rt] = (unsigned char)(RSP.DMEM[addr]);
+    SR[0] = 0x00000000;
+    return;
+}
+static void LHUA(void)
+{ /* "Load Halfword Unsigned from Absolute Address" (unofficial...) */
+    register unsigned long addr;
+    const int rt = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
+
+    addr = (0x00000000 + offset) & 0x00000FFF;
+    if (addr%4 == 0x003)
+    {
+        SR[rt]  = RSP.DMEM[addr - BES(0x000)] << 8;
+        addr = (addr + 0x001) & 0xFFF;
+        SR[rt] |= RSP.DMEM[addr + BES(0x000)];
+        return;
+    }
+    SR[rt] = *(unsigned short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1));
+    SR[0] = 0x00000000;
+    return;
+}
+static void SBA(void)
+{ /* "Store Byte from Absolute Address" (unofficial, created by me) */
+    register unsigned long addr;
+    const signed int offset = (signed short)(inst.I.imm);
+
+    addr = BES(0x00000000 + offset) & 0x00000FFF;
+    RSP.DMEM[addr] = (unsigned char)(SR[inst.I.rt]);
+    return;
+}
+static void SHA(void)
+{ /* "Store Halfword from Absolute Address" (unofficial, created by me) */
+    register unsigned long addr;
+    const int rt = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
+
+    addr = (0x00000000 + offset) & 0x00000FFF;
+    if (addr%4 == 0x003)
+    {
+        RSP.DMEM[addr - BES(0x000)] = SR_B(rt, 2);
+        addr = (addr + 0x001) & 0xFFF;
+        RSP.DMEM[addr + BES(0x000)] = SR_B(rt, 3);
+        return;
+    }
+    *(short *)(RSP.DMEM + addr - HES(0x000)*(addr%4 - 1)) = (short)(SR[rt]);
+    return;
+}
+static void SWA(void)
+{ /* "Store Word from Absolute Address" (unofficial, created by me) */
+    register unsigned long addr;
+    const int rt = inst.I.rt;
+    const signed int offset = (signed short)(inst.I.imm);
+
+    addr = (0x00000000 + offset) & 0x00000FFF;
+    if (addr & 0x00000003)
+    {
+        USW(rt, addr); /* Address Error exception:  RSP bypass MIPS pseudo-op */
+        return;
+    }
+    *(long *)(RSP.DMEM + addr) = SR[rt];
+    return;
+}
 
 static void (*EX_SCALAR[64][64])(void) = {
     { /* SPECIAL */
@@ -2481,21 +2571,21 @@ static void (*EX_SCALAR[64][64])(void) = {
         res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S
     },
     { /* Load Byte */
-        NOP    ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
+        LBA    ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
-        NOP    ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
+        LBA    ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,
         LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB     ,LB
     },
     { /* Load Halfword */
-        NOP    ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
+        LHA    ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
-        NOP    ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
+        LHA    ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,
         LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH     ,LH
@@ -2511,31 +2601,31 @@ static void (*EX_SCALAR[64][64])(void) = {
         res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S
     },
     { /* Load Word */
-        NOP    ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
+        LWA    ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
-        NOP    ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
+        LWA    ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,
         LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW     ,LW
     },
     { /* Load Byte Unsigned */
-        NOP    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
+        LBUA   ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
-        NOP    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
+        LBUA   ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,
         LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU    ,LBU
     },
     { /* Load Halfword Unsigned */
-        NOP    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
+        LHUA   ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
-        NOP    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
+        LHUA   ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,
         LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU    ,LHU
@@ -2561,21 +2651,21 @@ static void (*EX_SCALAR[64][64])(void) = {
         res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S
     },
     { /* Store Byte */
+        SBA    ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
         SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
         SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
         SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
-        SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
-        SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
+        SBA    ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
         SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
         SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,
         SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB     ,SB
     },
     { /* Store Halfword */
+        SHA    ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
         SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
         SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
         SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
-        SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
-        SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
+        SHA    ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
         SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
         SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,
         SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH     ,SH
@@ -2591,11 +2681,11 @@ static void (*EX_SCALAR[64][64])(void) = {
         res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S  ,res_S
     },
     { /* Store Word */
+        SWA    ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
         SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
         SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
         SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
-        SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
-        SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
+        SWA    ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
         SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
         SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,
         SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW     ,SW
@@ -2844,18 +2934,18 @@ const int sub_op_table[64] = {
     OFF_OPCODE,
     OFF_OPCODE,
     OFF_OPCODE,
-    OFF_RT, /* LB */
-    OFF_RT, /* LH */
+    OFF_RS, /* LB */
+    OFF_RS, /* LH */
     OFF_OPCODE,
-    OFF_RT, /* LW */
-    OFF_RT, /* LBU */
-    OFF_RT, /* LHU */
+    OFF_RS, /* LW */
+    OFF_RS, /* LBU */
+    OFF_RS, /* LHU */
     OFF_OPCODE,
     OFF_OPCODE,
-    OFF_OPCODE, /* SB */
-    OFF_OPCODE, /* SH */
+    OFF_RS, /* SB */
+    OFF_RS, /* SH */
     OFF_OPCODE,
-    OFF_OPCODE, /* SW */
+    OFF_RS, /* SW */
     OFF_OPCODE,
     OFF_OPCODE,
     OFF_OPCODE,
