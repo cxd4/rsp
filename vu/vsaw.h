@@ -35,7 +35,7 @@ static void VSAR(int vd, int vs, int vt, int e)
 
 static void VSAW(void)
 {
-    const int vd = inst.R.sa;
+    const int vd = (inst.W >> 6) & 31;
     const int e  = (inst.R.rs & 0xF) ^ 0x8; /* &= 7 */
 
     if (e > 0x2)

@@ -17,7 +17,7 @@ INLINE static void set_co(short* VD, short* VS, short* VT)
 static void VADDC(void)
 {
     short ST[N];
-    const int vd = inst.R.sa;
+    const int vd = (inst.W >> 6) & 31;
     const int vs = inst.R.rd;
     const int vt = inst.R.rt;
 

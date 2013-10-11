@@ -2,7 +2,7 @@
 
 static void VMOV(void)
 {
-    const int vd = inst.R.sa;
+    const int vd = (inst.W >> 6) & 31;
     const int de = inst.R.rd & 07;
     const int vt = inst.R.rt;
 

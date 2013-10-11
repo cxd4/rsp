@@ -41,13 +41,22 @@ ALIGNED static short VACC[3][N];
 #include "clamp.h"
 #include "cf.h"
 
+/*
+ * Due to GCC's interpretation of `inst.R.sa` persisting across many
+ * versions to-date, adding in one extra garbage move, we usually are not
+ * going to write "inst.R.sa" out as the vector destination specifier decode.
+ *
+ * (inst.W >> 6) & 31 || (inst.W & 0x07FF) >> 6 || (inst.I.imm & 0x07FF) >> 6
+ * // inst.R.sa
+ */
+
 static void res_V(void)
 {
     register int i;
 
     message("C2\nRESERVED", 2); /* uncertain how to handle reserved, untested */
     for (i = 0; i < N; i++)
-        VR[inst.R.sa][i] = 0x0000; /* override behavior (Michael Tedder) */
+        VR[(inst.W >> 6) & 31][i] = 0x0000; /* override behavior (bpoint) */
     return;
 }
 static void res_M(void)
