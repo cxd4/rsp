@@ -15,10 +15,9 @@
 #if (0)
 #define SP_EXECUTE_LOG
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ
-#define SSE2_SHUFFLE_JUMP_DIMENSION
 #endif
 
-const char* DLL_name = "Iconoclast's SP Interpreter";
+const char DLL_name[100] = "Iconoclast's SP Interpreter";
 
 static unsigned char conf[32];
 #define CFG_FILE    "rsp_conf.bin"

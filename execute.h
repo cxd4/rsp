@@ -34,19 +34,12 @@ void run_task(void)
 #endif
         if (inst.W >> 25 == 0x25) /* is a VU instruction */
         {
-#ifdef SSE2_SHUFFLE_JUMP_DIMENSION
-            EX_VECTOR[inst.R.func][inst.R.rs & 0xF]();
-#else
             SHUFFLE_VECTOR(ST, VR[inst.R.rt], inst.R.rs & 0xF);
             COP2_C2[inst.R.func]();
-#endif
         }
         else
         {
-#if (0)
-            if (SR[0] != 0x00000000)
-                message("$0", 3); /* tried to overwrite MIPS GPR $zero */
-#endif
+         /* SR[0] = 0x00000000; // already handled on per-instruction basis */
             EX_SCALAR[inst.W >> 26][inst.W>>sub_op_table[inst.W >> 26] & 077]();
         }
 #ifndef EMULATE_STATIC_PC
