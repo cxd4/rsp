@@ -8,11 +8,14 @@
 void run_task(void)
 {
     register int PC;
-    register int i;
 
     if (CFG_WAIT_FOR_CPU_HOST != 0)
+    {
+        register int i;
+
         for (i = 0; i < 32; i++)
             MFC0_count[i] = 0;
+    }
     PC = *RSP.SP_PC_REG & 0x00000FFC;
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
     {
@@ -21,7 +24,7 @@ void run_task(void)
         if (stage != 0) /* stage == 1 */
         {
             PC = *RSP.SP_PC_REG & 0x00000FFC;
-            --stage;
+            stage = 0;
         }
         else
         {
