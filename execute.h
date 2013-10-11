@@ -35,7 +35,7 @@ void run_task(void)
         if (inst.W >> 25 == 0x25) /* is a VU instruction */
         {
             SHUFFLE_VECTOR(ST, VR[inst.R.rt], inst.R.rs & 0xF);
-            COP2_C2[inst.R.func]();
+            COP2_C2[inst.W & 077]();
         }
         else
         {
