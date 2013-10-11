@@ -4,8 +4,9 @@ static void VMOV(void)
 {
     const int vd = inst.R.sa;
     const int de = inst.R.rd & 07;
+    const int vt = inst.R.rt;
 
-    vector_copy(VACC_L, ST);
+    SHUFFLE_VECTOR(VACC_L, VR[vt], inst.R.rs & 0xF);
     VR[vd][de] = VACC_L[inst.R.rs & 07];
     return;
 }

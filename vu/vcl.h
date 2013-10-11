@@ -79,9 +79,12 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
 
 static void VCL(void)
 {
+    short ST[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
+    const int vt = inst.R.rt;
 
+    SHUFFLE_VECTOR(ST, VR[vt], inst.R.rs & 0xF);
     do_cl(VR[vd], VR[vs], ST);
     return;
 }

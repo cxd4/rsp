@@ -16,9 +16,12 @@ INLINE static void set_bo(short* VD, short* VS, short* VT)
 
 static void VSUBC(void)
 {
+    short ST[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
+    const int vt = inst.R.rt;
 
+    SHUFFLE_VECTOR(ST, VR[vt], inst.R.rs & 0xF);
     set_bo(VR[vd], VR[vs], ST);
     return;
 }

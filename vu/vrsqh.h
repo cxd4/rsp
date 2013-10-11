@@ -8,7 +8,7 @@ static void VRSQH(void)
     const int vt = inst.R.rt;
 
     DivIn = VR[vt][inst.R.rs & 07] << 16;
-    vector_copy(VACC_L, ST);
+    SHUFFLE_VECTOR(VACC_L, VR[vt], inst.R.rs & 0xF);
     VR[vd][de] = DivOut >> 16;
     DPH = 1;
     return;

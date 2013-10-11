@@ -12,9 +12,12 @@ INLINE void do_nxor(short* VD, short* VS, short* VT)
 
 static void VNXOR(void)
 {
+    short ST[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
+    const int vt = inst.R.rt;
 
+    SHUFFLE_VECTOR(ST, VR[vt], inst.R.rs & 0xF);
     do_nxor(VR[vd], VR[vs], ST);
     return;
 }

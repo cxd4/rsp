@@ -30,9 +30,12 @@ INLINE static void do_lt(short* VD, short* VS, short* VT)
 
 static void VLT(void)
 {
+    short ST[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
+    const int vt = inst.R.rt;
 
+    SHUFFLE_VECTOR(ST, VR[vt], inst.R.rs & 0xF);
     do_lt(VR[vd], VR[vs], ST);
     return;
 }

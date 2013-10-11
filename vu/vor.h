@@ -12,9 +12,12 @@ INLINE void do_or(short* VD, short* VS, short* VT)
 
 static void VOR(void)
 {
+    short ST[N];
     const int vd = inst.R.sa;
     const int vs = inst.R.rd;
+    const int vt = inst.R.rt;
 
+    SHUFFLE_VECTOR(ST, VR[vt], inst.R.rs & 0xF);
     do_or(VR[vd], VR[vs], ST);
     return;
 }

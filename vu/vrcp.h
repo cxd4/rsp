@@ -40,7 +40,7 @@ static void VRCP(void)
 
     DivIn = (int)VR[vt][inst.R.rs & 07];
     do_rcp(DivIn);
-    vector_copy(VACC_L, ST);
+    SHUFFLE_VECTOR(VACC_L, VR[vt], inst.R.rs & 0xF);
     VR[vd][de] = (short)DivOut;
     return;
 }
