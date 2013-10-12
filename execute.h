@@ -42,7 +42,7 @@ void run_task(void)
         else
         {
          /* SR[0] = 0x00000000; // already handled on per-instruction basis */
-            EX_SCALAR[inst.W >> 26][inst.W>>sub_op_table[inst.W >> 26] & 077]();
+            EX_SCALAR[inst.W >> 26][inst.W>>sub_op_table[inst.W >> 26] & 037]();
         }
 #ifndef EMULATE_STATIC_PC
         if (stage == 2) /* branch phase of scheduler */
