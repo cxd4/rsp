@@ -379,19 +379,25 @@ static void NOR(void) /* 000000 sssss ttttt ddddd ----- 100111 */
 static void ANDI(void) /* 001100 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] & inst.I.imm;
-    SR[0] = 0x00000000;
+#if (0)
+    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not ANDI. */
+#endif
     return;
 }
 static void ORI(void) /* 001101 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] | inst.I.imm;
-    SR[0] = 0x00000000;
+#if (0)
+    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not ORI. */
+#endif
     return;
 }
 static void XORI(void) /* 001110 sssss ttttt iiiiiiiiiiiiiiii */
 {
     SR[inst.I.rt] = SR[inst.I.rs] ^ inst.I.imm;
-    SR[0] = 0x00000000;
+#if (0)
+    SR[0] = 0x00000000; /* if (rt == 0), then NOP is called, not XORI. */
+#endif
     return;
 }
 static void LUI(void) /* 001111 ----- ttttt iiiiiiiiiiiiiiii */
@@ -2088,6 +2094,7 @@ static void STV(void)
  * LI      `ORI     rd, $at, imm_lo`       "Load Immediate" (LUI $at, imm_hi)
  * MOVE    `ADD     rd, src, $zero`        "Move"
  * NEGU    `SUB     rd, $zero, src`        "Negate without Overflow"
+ * CLEAR   `AND     rd, $zero, $zero`      "Clear"
  */
 static void NOP(void)
 { /* "No Operation" */
@@ -2171,23 +2178,12 @@ void USW(int rs, unsigned long addr)
 /*
  * All below pseudo-op-codes are unofficial and were invented by me.
  */
-static void CLEAR(void)
-{ /* based on an existing "CLEAR" pseudo-op, but translates differently */
-    SR[inst.I.rt] = 0x00000000 & inst.I.imm;
-    return;
-} /* officially `AND rd, $zero, $zero`; implemented as `ANDI rt, $zero, imm` */
 static void LXI(void)
 { /* "Load Sign-Extended Lower Immediate" (unofficial, created by me) */
     SR[inst.I.rt] = (signed short)(inst.I.imm);
     SR[0] = 0x00000000;
     return;
-}
-static void LZI(void)
-{ /* "Load Zero-Extended Lower Immediate" (unofficial, created by me) */
-    SR[inst.I.rt] = (0x0000 << 16) | inst.I.imm;
-    SR[0] = 0x00000000;
-    return;
-}
+} /* should translate to `ADDI[U] rt, $zero, imm` */
 static void LBA(void)
 { /* "Load Byte from Absolute Address" (unofficial, created by me) */
     register unsigned long addr;
@@ -2387,19 +2383,19 @@ static void (*EX_SCALAR[64][32])(void) = {
         SLTIU  ,SLTIU  ,SLTIU  ,SLTIU  ,SLTIU  ,SLTIU  ,SLTIU  ,SLTIU  ,
     },
     { /* And Immediate */
-        CLEAR  ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,
+        NOP    ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,
         ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,
         ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,
         ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,ANDI   ,
     },
     { /* Or Immediate */
-        LZI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,
+        NOP    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,
         ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,
         ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,
         ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,ORI    ,
     },
     { /* Exclusive Or Immediate */
-        LZI    ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,
+        NOP    ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,
         XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,
         XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,
         XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,XORI   ,
@@ -2718,11 +2714,11 @@ const int sub_op_table[64] = {
     OFF_RS, /* BGTZ (if rs is 0, then 0 > 0 is NOP) */
     OFF_RS, /* ADDI (if rs is 0, then load sign-extended lower imm) */
     OFF_RS, /* ADDIU (if rs is 0, then load sign-extended lower imm) */
-    OFF_OPCODE, /* SLTI */
-    OFF_OPCODE, /* SLTIU */
-    OFF_RS, /* ANDI (if rs is 0, then clear destination register) */
-    OFF_RS, /* ORI (if rs is 0, then load zero-extended lower imm) */
-    OFF_RS, /* XORI (if rs is 0, then load zero-extended lower imm) */
+    OFF_RT, /* SLTI */
+    OFF_RT, /* SLTIU */
+    OFF_RT, /* ANDI */
+    OFF_RT, /* ORI */
+    OFF_RT, /* XORI */
     OFF_RT, /* LUI */
     OFF_RS, /* COP0 */
     OFF_RS,
