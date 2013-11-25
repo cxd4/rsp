@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Scalar Unit Operations                     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.11.24                                                         *
+* Release:  2013.11.25                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _SU_H
@@ -999,11 +999,11 @@ static void LLV(void)
     const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 4*offset) & 0x00000FFF;
-    if (e & 0x3)
+    if (e & 0x1)
     {
-        message("LLV\nIllegal element.", 3);
+        message("LLV\nOdd element.", 3);
         return;
-    }
+    } /* Illegal (but still even) elements are used by Boss Game Studios. */
     if (addr%0x004 == 0x003)
     {
         message("LLV\nWeird addr.", 3);
@@ -1028,11 +1028,11 @@ static void LDV(void)
     const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
-    if (e & 0x7)
+    if (e & 0x1)
     {
-        message("LDV\nIllegal element.", 3);
+        message("LDV\nOdd element.", 3);
         return;
-    }
+    } /* Illegal (but still even) elements are used by Boss Game Studios. */
     switch (addr & 07)
     {
         case 00:
@@ -1152,7 +1152,7 @@ static void SLV(void)
     const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 4*offset) & 0x00000FFF;
-    if (e % 0x2 || e > 0xC) /* must support illegal, odd elements in F3DEX2 */
+    if ((e & 0x1) || e > 0xC) /* must support illegal, odd elements in F3DEX2 */
     {
         message("SLV\nIllegal element.", 3);
         return;
@@ -1181,7 +1181,7 @@ static void SDV(void)
     const signed int offset = SE(inst.SW, 6);
 
     addr = (SR[inst.R.rs] + 8*offset) & 0x00000FFF;
-    if (e & 0x7)
+    if ((e & 0x1) || e > 0x8)
     { /* Illegal elements with Boss Game Studios publications. */
         LS_Group_I(1, 8);
         return;
