@@ -35,16 +35,12 @@ FOUND_MSB:
     return;
 }
 
-static void VRSQL(void)
+static void VRSQL(int vd, int de, int vt, int e)
 {
-    const int vd = (inst.W >> 6) & 31;
-    const int de = inst.R.rd & 07;
-    const int vt = inst.R.rt;
-
     DivIn &= -DPH;
-    DivIn |= (unsigned short)VR[vt][inst.R.rs & 07];
+    DivIn |= (unsigned short)VR[vt][e & 07];
     do_rsql(DivIn);
-    SHUFFLE_VECTOR(VACC_L, VR[vt], inst.R.rs & 0xF);
-    VR[vd][de] = (short)DivOut;
+    SHUFFLE_VECTOR(VACC_L, VR[vt], e);
+    VR[vd][de &= 07] = (short)DivOut;
     return;
 }

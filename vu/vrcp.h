@@ -32,15 +32,11 @@ FOUND_MSB:
     return;
 }
 
-static void VRCP(void)
+static void VRCP(int vd, int de, int vt, int e)
 {
-    const int vd = (inst.W >> 6) & 31;
-    const int de = inst.R.rd & 07;
-    const int vt = inst.R.rt;
-
-    DivIn = (int)VR[vt][inst.R.rs & 07];
+    DivIn = (int)VR[vt][e & 07];
     do_rcp(DivIn);
-    SHUFFLE_VECTOR(VACC_L, VR[vt], inst.R.rs & 0xF);
-    VR[vd][de] = (short)DivOut;
+    SHUFFLE_VECTOR(VACC_L, VR[vt], e);
+    VR[vd][de &= 07] = (short)DivOut;
     return;
 }
