@@ -15,9 +15,9 @@ EXPORT void CALL CloseDLL(void)
 static const char DLL_about[] =
     "RSP Interpreter by Iconoclast&&ECHO."\
     "&&ECHO "\
-    "Thanks for test RDP:  Jabo, ziggy, and angrylion\n"\
-    "RSP driver examples:  bpoint, zilmar, and Ville Linde\n"\
-    "Helpful shenanigans:  MarathonMan, dsx, and mudlord";
+    "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
+    "RSP driver examples:  bpoint, zilmar, Ville Linde\n"\
+    "Helpful shenanigans:  mudlord, MarathonMan, Garteal";
 EXPORT void CALL DllAbout(HWND hParent)
 {
     hParent = NULL;
@@ -29,14 +29,9 @@ EXPORT void CALL DllConfig(HWND hParent)
     hParent = NULL;
     system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
     update_conf(CFG_FILE);
-    if (CFG_QUEUE_E_DRAM)
-        export_DRAM();
-    if (CFG_QUEUE_E_DMEM)
-        export_data_cache();
-    if (CFG_QUEUE_E_IMEM) /* to-do:  Make it also write the disassembly? */
-        export_instruction_cache();
-    if (CFG_TRACE_RSP_REGISTERS) /* to-do:  Make this counter of delay slots? */
-        trace_RSP_registers();
+    export_data_cache();
+    export_instruction_cache();
+    trace_RSP_registers();
     return;
 }
 EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
@@ -97,6 +92,8 @@ strcpy(
     PluginInfo -> MemoryBswaped = 1;
     return;
 }
+
+unsigned long* CR[16];
 EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
 {
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
@@ -112,6 +109,22 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
 
     RSP = Rsp_Info;
     *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF; /* task init bug on Mupen64 */
+    CR[0x0] = RSP.SP_MEM_ADDR_REG;
+    CR[0x1] = RSP.SP_DRAM_ADDR_REG;
+    CR[0x2] = RSP.SP_RD_LEN_REG;
+    CR[0x3] = RSP.SP_WR_LEN_REG;
+    CR[0x4] = RSP.SP_STATUS_REG;
+    CR[0x5] = RSP.SP_DMA_FULL_REG;
+    CR[0x6] = RSP.SP_DMA_BUSY_REG;
+    CR[0x7] = RSP.SP_SEMAPHORE_REG;
+    CR[0x8] = RSP.DPC_START_REG;
+    CR[0x9] = RSP.DPC_END_REG;
+    CR[0xA] = RSP.DPC_CURRENT_REG;
+    CR[0xB] = RSP.DPC_STATUS_REG;
+    CR[0xC] = RSP.DPC_CLOCK_REG;
+    CR[0xD] = RSP.DPC_BUFBUSY_REG;
+    CR[0xE] = RSP.DPC_PIPEBUSY_REG;
+    CR[0xF] = RSP.DPC_TMEM_REG;
     return;
 }
 EXPORT void CALL InitiateRSPDebugger(DEBUG_INFO DebugInfo)

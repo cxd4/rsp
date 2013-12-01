@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Simple Vector Unit Benchmark                                       *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.11.26                                                         *
+* Release:  2013.12.01                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _BENCH_H
@@ -88,8 +88,6 @@ const char* notice_finished =
     "Finished writing benchmark results.\n"\
     "Check working emulator directory for \"sp_bench.txt\".";
 
-unsigned char t_DMEM[0xFFF + 1], t_IMEM[0xFFF + 1];
-
 EXPORT void CALL DllTest(HWND hParent)
 {
     FILE* log;
@@ -102,8 +100,6 @@ EXPORT void CALL DllTest(HWND hParent)
         message("Cannot run RSP tests while playing!", 3);
         return;
     }
-    inst.W = 0x00000000;
-    inst.R.rs = 0x8; /* just to shut up VSAW illegal element warnings */
 
     message(notice_starting, 1);
     log = fopen("sp_bench.txt", "w");

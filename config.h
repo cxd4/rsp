@@ -12,6 +12,12 @@
 #define WAIT_FOR_CPU_HOST
 #define EMULATE_STATIC_PC
 
+#ifdef EMULATE_STATIC_PC
+#define CONTINUE    {continue;}
+#else
+#define CONTINUE    {break;}
+#endif
+
 #if (0)
 #define SP_EXECUTE_LOG
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ

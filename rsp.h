@@ -109,13 +109,13 @@ static int MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
-#include "su.h"
-#include "vu/vu.h"
-
 extern void step_SP_commands(unsigned long inst);
 extern void export_SP_memory(void);
 extern void trace_RSP_registers(void);
 static FILE *output_log;
+
+#include "su.h"
+#include "vu/vu.h"
 
 /* Allocate the RSP CPU loop to its own functional space. */
 extern void run_task(void);
@@ -183,26 +183,10 @@ void export_instruction_cache(void)
     message("Finished IMEM export.  Look for \"rcpcache.ihex\".", 1);
     return;
 }
-void export_DRAM(void)
-{
-    FILE* out;
-    register unsigned long addr;
-    const int m = 0x7FFF % sizeof(unsigned int); /* swap mask */
-    const int MiB = 8; /* to-do:  any way to detect RDRAM size in MB? */
-    const int limit = MiB * 1024 * 1024;
-
-    out = fopen("RDRAM.BIN", "wb");
-    for (addr = 0x000000; addr < limit; addr += 0x000001)
-        fputc(RSP.RDRAM[(addr % limit) ^ m], out);
-    fclose(out);
-    message("Finished DRAM export.  Look for \"RDRAM.BIN\".", 1);
-    return;
-}
 void export_SP_memory(void)
-{ /* cache memory and dynamic RAM shared by CPU */
+{
     export_data_cache();
     export_instruction_cache();
-    export_DRAM();
     return;
 }
 
@@ -288,7 +272,7 @@ void trace_RSP_registers(void)
  * Just like we have the scalar 16 system control registers for the RSP CP0,
  * we have also a tiny group of special-purpose, vector control registers.
  */
-    fprintf(out, "\n$vco:  0x%04X\n", get_VCO());
+    fprintf(out, "$vco:  0x%04X\n", get_VCO());
     fprintf(out, "$vcc:  0x%04X\n", get_VCC());
     fprintf(out, "$vce:  0x%02X\n\n", get_VCE());
 
@@ -310,7 +294,6 @@ void trace_RSP_registers(void)
     /* MovIn:  This reg. might exist for VMOV, but it is obsolete to emulate. */
     fprintf(out, DPH ? "DPH:  true\n" : "DPH:  false\n");
     fclose(out);
-    message("Finished tracing RSP registers.  Look for \"SP_STATE.TXT\".", 1);
     return;
 }
 #endif
