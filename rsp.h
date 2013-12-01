@@ -118,7 +118,7 @@ static FILE *output_log;
 #include "vu/vu.h"
 
 /* Allocate the RSP CPU loop to its own functional space. */
-extern void run_task(void);
+NOINLINE extern void run_task(void);
 #include "execute.h"
 
 void step_SP_commands(unsigned long inst)
@@ -157,30 +157,46 @@ void step_SP_commands(unsigned long inst)
     }
 }
 
-void export_data_cache(void)
+NOINLINE void export_data_cache(void)
 {
     FILE* out;
     register unsigned long addr;
-    const int m = 0x7FFF % sizeof(unsigned int); /* swap mask */
 
     out = fopen("rcpcache.dhex", "wb");
+#if (0)
     for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000001)
-        fputc(RSP.DMEM[(addr & 0x00000FFF) ^ m], out);
+        fputc(RSP.DMEM[BES(addr & 0x00000FFF)], out);
+#else
+    for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000004)
+    {
+        fputc(RSP.DMEM[addr + 0x000 + BES(0x000)], out);
+        fputc(RSP.DMEM[addr + 0x001 + MES(0x000)], out);
+        fputc(RSP.DMEM[addr + 0x002 - MES(0x000)], out);
+        fputc(RSP.DMEM[addr + 0x003 - BES(0x000)], out);
+    }
+#endif
     fclose(out);
-    message("Finished DMEM export.  Look for \"rcpcache.dhex\".", 1);
     return;
 }
-void export_instruction_cache(void)
+NOINLINE void export_instruction_cache(void)
 {
     FILE* out;
     register unsigned long addr;
-    const int m = 0x7FFF % sizeof(unsigned int); /* swap mask */
 
     out = fopen("rcpcache.ihex", "wb");
+#if (0)
     for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000001)
-        fputc(RSP.IMEM[(addr & 0x00000FFF) ^ m], out);
+        fputc(RSP.IMEM[BES(addr & 0x00000FFF)], out);
+#else
+    for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000004)
+    {
+        fputc(RSP.IMEM[addr + 0x000 + BES(0x000)], out);
+        fputc(RSP.IMEM[addr + 0x001 + MES(0x000)], out);
+        fputc(RSP.IMEM[addr + 0x002 - MES(0x000)], out);
+        fputc(RSP.IMEM[addr + 0x003 - BES(0x000)], out);
+    }
+#endif
     fclose(out);
-    message("Finished IMEM export.  Look for \"rcpcache.ihex\".", 1);
     return;
 }
 void export_SP_memory(void)

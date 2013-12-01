@@ -29,9 +29,7 @@ EXPORT void CALL DllConfig(HWND hParent)
     hParent = NULL;
     system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
     update_conf(CFG_FILE);
-    export_data_cache();
-    export_instruction_cache();
-    trace_RSP_registers();
+    export_SP_memory();
     return;
 }
 EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)

@@ -5,7 +5,7 @@
 #include "vu/vu.h"
 #include "matrix.h"
 
-void run_task(void)
+NOINLINE void run_task(void)
 {
     register int PC;
 
