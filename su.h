@@ -66,14 +66,14 @@ void set_PC(int address)
 #else
 #define ENDIAN  ~0
 #endif
-#define BES(address) ((address) ^ ((ENDIAN) & 03))
-#define HES(address) ((address) ^ ((ENDIAN) & 02))
-#define MES(address) ((address) ^ ((ENDIAN) & 01))
-#define WES(address) ((address) ^ ((ENDIAN) & 00))
-#define SR_B(s, i) (*(unsigned char *)(((unsigned char *)(SR + s)) + BES(i)))
-#define SR_S(s, i) (*(short *)(((unsigned char *)(SR + s)) + HES(i)))
-#define SE(x, b)    (-(x & (1 << b)) | (x & ~(~0 << b)))
-#define ZE(x, b)    (+(x & (1 << b)) | (x & ~(~0 << b)))
+#define BES(address)    ((address) ^ ((ENDIAN) & 03))
+#define HES(address)    ((address) ^ ((ENDIAN) & 02))
+#define MES(address)    ((address) ^ ((ENDIAN) & 01))
+#define WES(address)    ((address) ^ ((ENDIAN) & 00))
+#define SR_B(s, i)      (*(byte *)(((byte *)(SR + s)) + BES(i)))
+#define SR_S(s, i)      (*(short *)(((byte *)(SR + s)) + HES(i)))
+#define SE(x, b)        (-(x & (1 << b)) | (x & ~(~0 << b)))
+#define ZE(x, b)        (+(x & (1 << b)) | (x & ~(~0 << b)))
 
 static union {
     unsigned char B[4];
@@ -302,7 +302,6 @@ void SP_DMA_WRITE(void)
 
 extern ALIGNED short VR[32][8];
 
-typedef unsigned char byte;
 /*
  * Since RSP vectors are stored 100% accurately as big-endian arrays for the
  * proper vector operation math to be done, LWC2 and SWC2 emulation code will

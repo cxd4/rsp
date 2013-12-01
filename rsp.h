@@ -25,6 +25,8 @@ RSP_INFO RSP;
 #include <emmintrin.h>
 #endif
 
+typedef unsigned char byte;
+
 NOINLINE void message(const char* body, int priority)
 { /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
     char argv[4096] = "CMD /Q /D /C \"TITLE RSP Message&&ECHO ";
@@ -37,7 +39,7 @@ NOINLINE void message(const char* body, int priority)
 
 /*
  * I'm just using system() to call the Windows command shell to print text.
- * When the OS permits it, just use printf to trace messages, not this crap.
+ * When the subsystem permits, use printf to trace messages, not this crap.
  * I don't use WIN32 MessageBox because that's just extra OS dependencies. :P
  */
     while (body[i] != '\0')
@@ -65,41 +67,54 @@ NOINLINE void message(const char* body, int priority)
 /*
  * Update RSP configuration memory from local file resource.
  */
-void update_conf(const char* source)
+#define CHARACTERS_PER_LINE     (80)
+/* typical standard DOS text file limit per line */
+NOINLINE void update_conf(const char* source)
 {
     FILE* stream;
-    unsigned char checksum;
+    char line[CHARACTERS_PER_LINE] = "";
+    char key[CHARACTERS_PER_LINE], value[CHARACTERS_PER_LINE];
     register int i, test;
 
-    stream = fopen(source, "rb");
+    stream = fopen(source, "r");
     if (stream == NULL)
     { /* try GetModulePath or whatever to correct the path? */
         message("Failed to read config.", 3);
         return;
     }
-    for (i = 0; i < 32; i++)
+    do
     {
-        test = fgetc(stream);
-        conf[i] = (unsigned char)(test);
-    }
-    /* my own little checksum code, not really useful :P */
-    checksum = 0x00000000;
-    for (i = 0; i < 31; i++)
-        checksum = checksum
-                 + !!(conf[i] & 0x80)
-                 + !!(conf[i] & 0x40)
-                 + !!(conf[i] & 0x20)
-                 + !!(conf[i] & 0x10)
-                 + !!(conf[i] & 0x08)
-                 + !!(conf[i] & 0x04)
-                 + !!(conf[i] & 0x02)
-                 + !!(conf[i] & 0x01);
-    if (checksum != CFG_CHECKSUM)
-    {
-        message("Checksum mismatch.", 3);
-        memset(conf, 0x00, 32);
-        return;
-    }
+        int bvalue;
+
+        line[0] = '\0';
+        key[0] = '\0';
+        value[0] = '\0';
+        for (i = 0; i < CHARACTERS_PER_LINE; i++)
+        {
+            test = fgetc(stream);
+            if (test < 0) /* either EOF or invalid ASCII characters */
+                return;
+            line[i] = (char)(test);
+            if (line[i] == '\n')
+                break;
+        }
+        line[i] = '\0';
+
+        for (i = 0; i < CHARACTERS_PER_LINE && line[i] != '='; i++);
+        line[i] = '\0';
+        strcpy(key, line);
+        strcpy(value, line + i + 1);
+
+        bvalue = atoi(value);
+        if (strcmp(key, "DisplayListToGraphicsPlugin") == 0)
+            CFG_HLE_GFX = (byte)(bvalue);
+        else if (strcmp(key, "AudioListToAudioPlugin") == 0)
+            CFG_HLE_AUD = (byte)(bvalue);
+        else if (strcmp(key, "WaitForCPUHost") == 0)
+            CFG_WAIT_FOR_CPU_HOST = bvalue;
+        else if (strcmp(key, "SupportCPUSemaphoreLock") == 0)
+            CFG_MEND_SEMAPHORE_LOCK = bvalue;
+    } while (test != EOF);
     return;
 }
 
