@@ -26,10 +26,26 @@ EXPORT void CALL DllAbout(HWND hParent)
 }
 EXPORT void CALL DllConfig(HWND hParent)
 {
+    FILE* stream;
+    register int PC;
+
     hParent = NULL;
     system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
     update_conf(CFG_FILE);
     export_SP_memory();
+    trace_RSP_registers();
+
+    stream = fopen("rsp_task.txt", "w");
+    fprintf(stream, "off   inst             disassembled\n");
+    fprintf(stream, "--- -------- --------------------------------\n");
+    for (PC = 0; PC < 4096; PC += 4)
+    {
+        const unsigned long inst = *(long *)(RSP.IMEM + PC);
+
+        disassemble(inst);
+        fprintf(stream, "%03X %08lX %s\n", PC, inst, disasm);
+    }
+    fclose(stream);
     return;
 }
 EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
