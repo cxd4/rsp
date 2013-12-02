@@ -120,14 +120,14 @@ NOINLINE void update_conf(const char* source)
 
 static int stage;
 #ifdef WAIT_FOR_CPU_HOST
-static int MFC0_count[32];
+static short MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
+static FILE *output_log;
 extern void step_SP_commands(unsigned long inst);
 extern void export_SP_memory(void);
-extern void trace_RSP_registers(void);
-static FILE *output_log;
+NOINLINE void trace_RSP_registers(void);
 
 #include "su.h"
 #include "vu/vu.h"
@@ -221,7 +221,20 @@ void export_SP_memory(void)
     return;
 }
 
-void trace_RSP_registers(void)
+const char CR_names[16][14] = {
+    "SP_MEM_ADDR  ","SP_DRAM_ADDR ","SP_DMA_RD_LEN","SP_DMA_WR_LEN",
+    "SP_STATUS    ","SP_DMA_FULL  ","SP_DMA_BUSY  ","SP_SEMAPHORE ",
+    "CMD_START    ","CMD_END      ","CMD_CURRENT  ","CMD_STATUS   ",
+    "CMD_CLOCK    ","CMD_BUSY     ","CMD_PIPE_BUSY","CMD_TMEM_BUSY",
+};
+const char SR_names[32][5] = {
+    "zero","$at:"," v0:"," v1:"," a0:"," a1:"," a2:"," a3:",
+    " t0:"," t1:"," t2:"," t3:"," t4:"," t5:"," t6:"," t7:",
+    " s0:"," s1:"," s2:"," s3:"," s4:"," s5:"," s6:"," s7:",
+    " t8:"," t9:"," k0:"," k1:"," gp:","$sp:","$s8:","$ra:",
+};
+
+NOINLINE void trace_RSP_registers(void)
 {
     register int i;
     FILE* out;
@@ -238,22 +251,9 @@ void trace_RSP_registers(void)
  * Whether or not you find these names agreeable is mostly a matter of seeing
  * them from the RCP's point of view or the CPU host's mapped point of view.
  */
-    fprintf(out, "SP_MEM_ADDR:    %08lX    CMD_START:      %08lX\n",
-        *RSP.SP_MEM_ADDR_REG, *RSP.DPC_START_REG);
-    fprintf(out, "SP_DRAM_ADDR:   %08lX    CMD_END:        %08lX\n",
-        *RSP.SP_DRAM_ADDR_REG, *RSP.DPC_END_REG);
-    fprintf(out, "SP_DMA_RD_LEN:  %08lX    CMD_CURRENT:    %08lX\n",
-        *RSP.SP_RD_LEN_REG, *RSP.DPC_CURRENT_REG);
-    fprintf(out, "SP_DMA_WR_LEN:  %08lX    CMD_STATUS:     %08lX\n",
-        *RSP.SP_WR_LEN_REG, *RSP.DPC_STATUS_REG);
-    fprintf(out, "SP_STATUS:      %08lX    CMD_CLOCK:      %08lX\n",
-        *RSP.SP_STATUS_REG, *RSP.DPC_CLOCK_REG);
-    fprintf(out, "SP_DMA_FULL:    %08lX    CMD_BUSY:       %08lX\n",
-        *RSP.SP_DMA_FULL_REG, *RSP.DPC_BUFBUSY_REG);
-    fprintf(out, "SP_DMA_BUSY:    %08lX    CMD_PIPE_BUSY:  %08lX\n",
-        *RSP.SP_DMA_BUSY_REG, *RSP.DPC_PIPEBUSY_REG);
-    fprintf(out, "SP_SEMAPHORE:   %08lX    CMD_TMEM_BUSY:  %08lX\n",
-        *RSP.SP_SEMAPHORE_REG, *RSP.DPC_TMEM_REG);
+    for (i = 0; i < 8; i++)
+        fprintf(out, "%s:  %08lX    %s:  %08lX\n",
+            CR_names[i+0], *(CR[i+0]), CR_names[i+8], *(CR[i+8]));
     fprintf(out, "SP_PC_REG:      %08lX\n\n", *RSP.SP_PC_REG);
 /* (PC is only from the CPU point of view, mapped between both halves.) */
 /*
@@ -265,22 +265,10 @@ void trace_RSP_registers(void)
  * RSP register name because on MIPS it was kernel-use, but on the RSP, free.
  * To be colorful/readable, however, I have set the modern MIPS names anyway.
  */
-    fprintf(out, "zero  %08X,  s0:  %08X,\n", SR[ 0], SR[16]);
-    fprintf(out, "$at:  %08X,  s1:  %08X,\n", SR[ 1], SR[17]);
-    fprintf(out, " v0:  %08X,  s2:  %08X,\n", SR[ 2], SR[18]);
-    fprintf(out, " v1:  %08X,  s3:  %08X,\n", SR[ 3], SR[19]);
-    fprintf(out, " a0:  %08X,  s4:  %08X,\n", SR[ 4], SR[20]);
-    fprintf(out, " a1:  %08X,  s5:  %08X,\n", SR[ 5], SR[21]);
-    fprintf(out, " a2:  %08X,  s6:  %08X,\n", SR[ 6], SR[22]);
-    fprintf(out, " a3:  %08X,  s7:  %08X,\n", SR[ 7], SR[23]);
-    fprintf(out, " t0:  %08X,  t8:  %08X,\n", SR[ 8], SR[24]);
-    fprintf(out, " t1:  %08X,  t9:  %08X,\n", SR[ 9], SR[25]);
-    fprintf(out, " t2:  %08X,  k0:  %08X,\n", SR[10], SR[26]);
-    fprintf(out, " t3:  %08X,  k1:  %08X,\n", SR[11], SR[27]);
-    fprintf(out, " t4:  %08X,  gp:  %08X,\n", SR[12], SR[28]);
-    fprintf(out, " t5:  %08X, $sp:  %08X,\n", SR[13], SR[29]);
-    fprintf(out, " t6:  %08X, $s8:  %08X,\n", SR[14], SR[30]);
-    fprintf(out, " t7:  %08X, $ra:  %08X\n\n", SR[15], SR[31]);
+    for (i = 0; i < 16; i++)
+        fprintf(out, "%s  %08X,  %s  %08X,\n",
+            SR_names[i+0], SR[i+0], SR_names[i+16], SR[i+16]);
+    fprintf(out, "\n");
 
     for (i = 0; i < 10; i++)
         fprintf(

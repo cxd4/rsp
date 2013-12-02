@@ -20,7 +20,7 @@ NOINLINE void run_task(void)
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
     {
         const unsigned long inst = *(long *)(RSP.IMEM + PC);
-        const unsigned short imm = *(short *)(RSP.IMEM + PC + HES(0x002));
+        const unsigned short imm = (unsigned short)inst;
         const short IW_upper_16  = *(short *)(RSP.IMEM + PC + HES(0x000));
 
 #ifdef EMULATE_STATIC_PC
@@ -32,7 +32,7 @@ NOINLINE void run_task(void)
         else
         {
             PC = (PC + 0x004) & 0xFFC;
-            *RSP.SP_PC_REG = 0x04001000 + PC;
+         /* *RSP.SP_PC_REG = 0x04001000 + PC; // commented only for perf */
         }
 #endif
 #ifdef SP_EXECUTE_LOG
@@ -54,10 +54,8 @@ NOINLINE void run_task(void)
             const int rs = inst >> 21; /* &= 31 */
             const int rt = IW_upper_16 & 31;
             const int rd = imm >> 11;
-            const int sa = (inst/*& 0x000007FF*/) >> 6;
-            const int func = (inst & 0x0000003F) >> 0;
-            const int element = (sa & 31) >> 1;
-            const int base = rs & 31;
+            const int element = (inst & 0x000007FF) >> 7;
+            const int base = (inst >> 21) & 31;
 
 #if (0)
             SR[0] = 0x00000000; /* already handled on per-instruction basis */
@@ -68,20 +66,18 @@ NOINLINE void run_task(void)
                 register unsigned long addr;
 
                 case 000: /* SPECIAL */
-                    if (imm == 0)
-                        CONTINUE
-                    switch (func)
+                    switch (inst % 64)
                     {
                         case 000: /* SLL */
-                            SR[rd] = SR[rt] << MASK_SA(imm >> 6);
+                            SR[rd] = SR[rt] << MASK_SA(inst >> 6);
                             SR[0] = 0x00000000;
                             CONTINUE
                         case 002: /* SRL */
-                            SR[rd] = (unsigned)(SR[rt]) >> MASK_SA(imm >> 6);
+                            SR[rd] = (unsigned)(SR[rt]) >> MASK_SA(inst >> 6);
                             SR[0] = 0x00000000;
                             CONTINUE
                         case 003: /* SRA */
-                            SR[rd] = (signed)(SR[rt]) >> MASK_SA(imm >> 6);
+                            SR[rd] = (signed)(SR[rt]) >> MASK_SA(inst >> 6);
                             SR[0] = 0x00000000;
                             CONTINUE
                         case 004: /* SLLV */
@@ -97,7 +93,7 @@ NOINLINE void run_task(void)
                             SR[0] = 0x00000000;
                             CONTINUE
                         case 011: /* JALR */
-                            SR[rd] = (*RSP.SP_PC_REG + LINK_OFF) & 0x00000FFC;
+                            SR[rd] = (PC + LINK_OFF) & 0x00000FFC;
                             SR[0] = 0x00000000;
                         case 010: /* JR */
                             set_PC(SR[rs]);
@@ -153,18 +149,18 @@ NOINLINE void run_task(void)
                     switch (rt)
                     {
                         case 020: /* BLTZAL */
-                            SR[31] = (*RSP.SP_PC_REG + LINK_OFF) & 0x00000FFC;
+                            SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                         case 000: /* BLTZ */
-                            if (!(SR[rs & 31] < 0))
+                            if (!(SR[base] < 0))
                                 CONTINUE
-                            set_PC(*RSP.SP_PC_REG + 4*imm + SLOT_OFF);
+                            set_PC(PC + 4*imm + SLOT_OFF);
                             CONTINUE
                         case 021: /* BGEZAL */
-                            SR[31] = (*RSP.SP_PC_REG + LINK_OFF) & 0x00000FFC;
+                            SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                         case 001: /* BGEZ */
-                            if (!(SR[rs & 31] >= 0))
+                            if (!(SR[base] >= 0))
                                 CONTINUE
-                            set_PC(*RSP.SP_PC_REG + 4*imm + SLOT_OFF);
+                            set_PC(PC + 4*imm + SLOT_OFF);
                             CONTINUE
                         default:
                             res_S();
@@ -172,53 +168,53 @@ NOINLINE void run_task(void)
                     }
                     CONTINUE
                 case 003: /* JAL */
-                    SR[31] = (*RSP.SP_PC_REG + LINK_OFF) & 0x00000FFC;
+                    SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                 case 002: /* J */
                     set_PC(4*imm);
                     CONTINUE
                 case 004: /* BEQ */
-                    if (!(SR[rs & 31] == SR[rt]))
+                    if (!(SR[base] == SR[rt]))
                         CONTINUE
-                    set_PC(*RSP.SP_PC_REG + 4*imm + SLOT_OFF);
+                    set_PC(PC + 4*imm + SLOT_OFF);
                     CONTINUE
                 case 005: /* BNE */
-                    if (!(SR[rs & 31] != SR[rt]))
+                    if (!(SR[base] != SR[rt]))
                         CONTINUE
-                    set_PC(*RSP.SP_PC_REG + 4*imm + SLOT_OFF);
+                    set_PC(PC + 4*imm + SLOT_OFF);
                     CONTINUE
                 case 006: /* BLEZ */
-                    if (!((signed)SR[rs & 31] <= 0x00000000))
+                    if (!((signed)SR[base] <= 0x00000000))
                         CONTINUE
-                    set_PC(*RSP.SP_PC_REG + 4*imm + SLOT_OFF);
+                    set_PC(PC + 4*imm + SLOT_OFF);
                     CONTINUE
                 case 007: /* BGTZ */
-                    if (!((signed)SR[rs & 31] >  0x00000000))
+                    if (!((signed)SR[base] >  0x00000000))
                         CONTINUE
-                    set_PC(*RSP.SP_PC_REG + 4*imm + SLOT_OFF);
+                    set_PC(PC + 4*imm + SLOT_OFF);
                     CONTINUE
                 case 010: /* ADDI */
                 case 011: /* ADDIU */
-                    SR[rt] = SR[rs & 31] + (signed short)(imm);
+                    SR[rt] = SR[base] + (signed short)(imm);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 012: /* SLTI */
-                    SR[rt] = ((signed)(SR[rs & 31]) < (signed short)(imm));
+                    SR[rt] = ((signed)(SR[base]) < (signed short)(imm));
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 013: /* SLTIU */
-                    SR[rt] = ((unsigned)(SR[rs & 31]) < imm);
+                    SR[rt] = ((unsigned)(SR[base]) < imm);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 014: /* ANDI */
-                    SR[rt] = SR[rs & 31] & imm;
+                    SR[rt] = SR[base] & imm;
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 015: /* ORI */
-                    SR[rt] = SR[rs & 31] | imm;
+                    SR[rt] = SR[base] | imm;
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 016: /* XORI */
-                    SR[rt] = SR[rs & 31] ^ imm;
+                    SR[rt] = SR[base] ^ imm;
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 017: /* LUI */
@@ -226,7 +222,7 @@ NOINLINE void run_task(void)
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 020: /* COP0 */
-                    switch (rs & 31)
+                    switch (base)
                     {
                         case 000: /* MFC0 */
                             MFC0(rt, rd & 0xF);
@@ -240,7 +236,7 @@ NOINLINE void run_task(void)
                     }
                     CONTINUE
                 case 022: /* COP2 */
-                    switch (rs & 31)
+                    switch (base)
                     {
                         case 000: /* MFC2 */
                             MFC2(rt, rd, element);
