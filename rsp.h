@@ -125,8 +125,10 @@ static short MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
+#ifdef SP_EXECUTE_LOG
 static FILE *output_log;
 extern void step_SP_commands(unsigned long inst);
+#endif
 extern void export_SP_memory(void);
 NOINLINE void trace_RSP_registers(void);
 
@@ -137,6 +139,7 @@ NOINLINE void trace_RSP_registers(void);
 NOINLINE extern void run_task(void);
 #include "execute.h"
 
+#ifdef SP_EXECUTE_LOG
 void step_SP_commands(unsigned long inst)
 {
     if (output_log)
@@ -172,6 +175,7 @@ void step_SP_commands(unsigned long inst)
             fwrite(endian_swap, 4, 1, output_log);
     }
 }
+#endif
 
 NOINLINE void export_data_cache(void)
 {
