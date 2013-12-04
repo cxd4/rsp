@@ -5,9 +5,11 @@
 #include "vu/vu.h"
 #include "matrix.h"
 
+#define FIT_IMEM(PC)    (PC & 0xFFC)
+
 NOINLINE void run_task(void)
 {
-    register int PC;
+    int PC;
 
     if (CFG_WAIT_FOR_CPU_HOST != 0)
     {
@@ -19,14 +21,13 @@ NOINLINE void run_task(void)
     PC = *RSP.SP_PC_REG & 0x00000FFC;
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
     {
-        const unsigned long inst = *(long *)(RSP.IMEM + PC);
-        const unsigned short imm = (unsigned short)inst;
-        const short IW_upper_16  = *(short *)(RSP.IMEM + PC + HES(0x000));
+        register unsigned long inst;
 
+        inst = *(long *)(RSP.IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
         if (stage != 0) /* stage == 1 */
         {
-            PC = *RSP.SP_PC_REG & 0x00000FFC;
+            PC = temp_PC & 0x00000FFC;
             stage = 0;
         }
         else
@@ -42,9 +43,9 @@ NOINLINE void run_task(void)
         {
             const int opcode = inst % 64; /* inst.R.func */
             const int vd = (inst & 0x000007FF) >> 6; /* inst.R.sa */
-            const int vs = imm >> 11; /* inst.R.rd */
-            const int vt = IW_upper_16 & 31; /* inst.R.rt */
-            const int e  = (inst & 0x01FFFFFF) >> 21; /* rs & 0xF */
+            const int vs = (unsigned short)(inst) >> 11; /* inst.R.rd */
+            const int vt = (inst >> 16) & 31; /* inst.R.rt */
+            const int e  = (inst >> 21) & 0xF; /* rs & 0xF */
 
             COP2_C2[opcode](vd, vs, vt, e);
         }
@@ -52,8 +53,8 @@ NOINLINE void run_task(void)
         {
             const int op = inst >> 26;
             const int rs = inst >> 21; /* &= 31 */
-            const int rt = IW_upper_16 & 31;
-            const int rd = imm >> 11;
+            const int rt = (inst >> 16) & 31;
+            const int rd = (unsigned short)(inst) >> 11;
             const int element = (inst & 0x000007FF) >> 7;
             const int base = (inst >> 21) & 31;
 
@@ -153,14 +154,14 @@ NOINLINE void run_task(void)
                         case 000: /* BLTZ */
                             if (!(SR[base] < 0))
                                 CONTINUE
-                            set_PC(PC + 4*imm + SLOT_OFF);
+                            set_PC(PC + 4*inst + SLOT_OFF);
                             CONTINUE
                         case 021: /* BGEZAL */
                             SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                         case 001: /* BGEZ */
                             if (!(SR[base] >= 0))
                                 CONTINUE
-                            set_PC(PC + 4*imm + SLOT_OFF);
+                            set_PC(PC + 4*inst + SLOT_OFF);
                             CONTINUE
                         default:
                             res_S();
@@ -170,55 +171,55 @@ NOINLINE void run_task(void)
                 case 003: /* JAL */
                     SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                 case 002: /* J */
-                    set_PC(4*imm);
+                    set_PC(4*inst);
                     CONTINUE
                 case 004: /* BEQ */
                     if (!(SR[base] == SR[rt]))
                         CONTINUE
-                    set_PC(PC + 4*imm + SLOT_OFF);
+                    set_PC(PC + 4*inst + SLOT_OFF);
                     CONTINUE
                 case 005: /* BNE */
                     if (!(SR[base] != SR[rt]))
                         CONTINUE
-                    set_PC(PC + 4*imm + SLOT_OFF);
+                    set_PC(PC + 4*inst + SLOT_OFF);
                     CONTINUE
                 case 006: /* BLEZ */
                     if (!((signed)SR[base] <= 0x00000000))
                         CONTINUE
-                    set_PC(PC + 4*imm + SLOT_OFF);
+                    set_PC(PC + 4*inst + SLOT_OFF);
                     CONTINUE
                 case 007: /* BGTZ */
                     if (!((signed)SR[base] >  0x00000000))
                         CONTINUE
-                    set_PC(PC + 4*imm + SLOT_OFF);
+                    set_PC(PC + 4*inst + SLOT_OFF);
                     CONTINUE
                 case 010: /* ADDI */
                 case 011: /* ADDIU */
-                    SR[rt] = SR[base] + (signed short)(imm);
+                    SR[rt] = SR[base] + (signed short)(inst);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 012: /* SLTI */
-                    SR[rt] = ((signed)(SR[base]) < (signed short)(imm));
+                    SR[rt] = ((signed)(SR[base]) < (signed short)(inst));
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 013: /* SLTIU */
-                    SR[rt] = ((unsigned)(SR[base]) < imm);
+                    SR[rt] = ((unsigned)(SR[base]) < (unsigned short)(inst));
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 014: /* ANDI */
-                    SR[rt] = SR[base] & imm;
+                    SR[rt] = SR[base] & (unsigned short)(inst);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 015: /* ORI */
-                    SR[rt] = SR[base] | imm;
+                    SR[rt] = SR[base] | (unsigned short)(inst);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 016: /* XORI */
-                    SR[rt] = SR[base] ^ imm;
+                    SR[rt] = SR[base] ^ (unsigned short)(inst);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 017: /* LUI */
-                    SR[rt] = imm << 16;
+                    SR[rt] = inst << 16;
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 020: /* COP0 */
@@ -256,14 +257,14 @@ NOINLINE void run_task(void)
                     }
                     CONTINUE
                 case 040: /* LB */
-                    offset = (signed short)(imm);
+                    offset = (signed short)(inst);
                     addr = (SR[base] + offset) & 0x00000FFF;
                     SR[rt] = RSP.DMEM[BES(addr)];
                     SR[rt] = (signed char)(SR[rt]);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 041: /* LH */
-                    offset = (signed short)(imm);
+                    offset = (signed short)(inst);
                     addr = (SR[base] + offset) & 0x00000FFF;
                     if (addr%0x004 == 0x003)
                     {
@@ -280,7 +281,7 @@ NOINLINE void run_task(void)
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 043: /* LW */
-                    offset = (signed short)(imm);
+                    offset = (signed short)(inst);
                     addr = (SR[base] + offset) & 0x00000FFF;
                     if (addr%0x004 != 0x000)
                         ULW(rt, addr);
@@ -289,14 +290,14 @@ NOINLINE void run_task(void)
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 044: /* LBU */
-                    offset = (signed short)(imm);
+                    offset = (signed short)(inst);
                     addr = (SR[base] + offset) & 0x00000FFF;
                     SR[rt] = RSP.DMEM[BES(addr)];
                     SR[rt] = (unsigned char)(SR[rt]);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 045: /* LHU */
-                    offset = (signed short)(imm);
+                    offset = (signed short)(inst);
                     addr = (SR[base] + offset) & 0x00000FFF;
                     if (addr%0x004 == 0x003)
                     {
@@ -313,12 +314,12 @@ NOINLINE void run_task(void)
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 050: /* SB */
-                    offset = (signed short)(imm);
+                    offset = (signed short)(inst);
                     addr = (SR[base] + offset) & 0x00000FFF;
                     RSP.DMEM[BES(addr)] = (unsigned char)(SR[rt]);
                     CONTINUE
                 case 051: /* SH */
-                    offset = (signed short)(imm);
+                    offset = (signed short)(inst);
                     addr = (SR[base] + offset) & 0x00000FFF;
                     if (addr%0x004 == 0x003)
                     {
@@ -331,7 +332,7 @@ NOINLINE void run_task(void)
                     *(short *)(RSP.DMEM + addr) = (short)(SR[rt]);
                     CONTINUE
                 case 053: /* SW */
-                    offset = (signed short)(imm);
+                    offset = (signed short)(inst);
                     addr = (SR[base] + offset) & 0x00000FFF;
                     if (addr%0x004 != 0x000)
                         USW(rt, addr);
@@ -339,7 +340,7 @@ NOINLINE void run_task(void)
                         *(long *)(RSP.DMEM + addr) = SR[rt];
                     CONTINUE
                 case 062: /* LWC2 */
-                    offset = SE(imm, 6);
+                    offset = SE(inst, 6);
                     switch (rd)
                     {
                         case 000: /* LBV */
@@ -381,7 +382,7 @@ NOINLINE void run_task(void)
                     }
                     CONTINUE
                 case 072: /* SWC2 */
-                    offset = SE(imm, 6);
+                    offset = SE(inst, 6);
                     switch (rd)
                     {
                         case 000: /* SBV */
