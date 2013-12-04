@@ -25,12 +25,9 @@ static int SR[32];
 
 NOINLINE static void res_S(void)
 {
-    char text[64];
-
-    sprintf(text, "RESERVED\nSee SP_STATE.TXT.");
     export_SP_memory();
     trace_RSP_registers();
-    message(text, 3);
+    message("RESERVED\nSee SP_STATE.TXT.", 3);
     return;
 }
 
@@ -1118,13 +1115,13 @@ static void SHV(int vt, int element, int offset, int base)
 
     if (e != 0x0)
     {
-        message("LHV\nIllegal element.", 3);
+        message("SHV\nIllegal element.", 3);
         return;
     }
     addr = (SR[base] + 16*offset) & 0x00000FFF;
     if (addr & 0x0000000E)
     {
-        message("LHV\nIllegal addr.", 3);
+        message("SHV\nIllegal addr.", 3);
         return;
     }
     addr ^= MES(00);
