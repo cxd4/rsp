@@ -262,8 +262,7 @@ NOINLINE void trace_RSP_registers(void)
     for (i = 0; i < 8; i++)
         fprintf(out, "%s:  %08lX    %s:  %08lX\n",
             CR_names[i+0], *(CR[i+0]), CR_names[i+8], *(CR[i+8]));
-    fprintf(out, "SP_PC_REG:      %08lX\n\n", *RSP.SP_PC_REG);
-/* (PC is only from the CPU point of view, mapped between both halves.) */
+    fprintf(out, "\n");
 /*
  * There is no memory map for remaining registers not shared by the CPU.
  * The scalar register (SR) file is straightforward and based on the

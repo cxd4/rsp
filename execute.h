@@ -9,7 +9,7 @@
 
 NOINLINE void run_task(void)
 {
-    int PC;
+    register int PC;
 
     if (CFG_WAIT_FOR_CPU_HOST != 0)
     {
@@ -18,15 +18,15 @@ NOINLINE void run_task(void)
         for (i = 0; i < 32; i++)
             MFC0_count[i] = 0;
     }
-    PC = *RSP.SP_PC_REG & 0x00000FFC;
+    PC = FIT_IMEM(0x04001000);
+    *RSP.SP_PC_REG = 0x04001000 | FIT_IMEM(PC);
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
     {
         register unsigned long inst;
 
         inst = *(long *)(RSP.IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
-        PC = (PC + 0x004)/*&0xFFC*/;
-     /* *RSP.SP_PC_REG = 0x04001000 + PC; // commented only for perf */
+        PC = (PC + 0x004);
 EX:
 #endif
 #ifdef SP_EXECUTE_LOG

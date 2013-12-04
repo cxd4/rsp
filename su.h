@@ -41,8 +41,7 @@ NOINLINE static void res_S(void)
 #define LINK_OFF    (BASE_OFF + 0x004)
 void set_PC(int address)
 {
-    *RSP.SP_PC_REG = 0x04001000 + (address & 0xFFC);
-    temp_PC = *RSP.SP_PC_REG;
+    temp_PC = 0x04001000 + (address & 0xFFC);
 #ifndef EMULATE_STATIC_PC
     stage = 1;
 #endif
