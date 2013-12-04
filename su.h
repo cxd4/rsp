@@ -43,7 +43,9 @@ void set_PC(int address)
 {
     *RSP.SP_PC_REG = 0x04001000 + (address & 0xFFC);
     temp_PC = *RSP.SP_PC_REG;
+#ifndef EMULATE_STATIC_PC
     stage = 1;
+#endif
     return;
 }
 

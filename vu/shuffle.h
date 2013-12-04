@@ -94,7 +94,7 @@ INLINE static void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     __m128i key;
 
     xmm = _mm_load_si128((__m128i *)VT);
-    key = _mm_load_si128((__m128i *)smask[e & 0xF]);
+    key = _mm_load_si128((__m128i *)(smask[e]));
     xmm = _mm_shuffle_epi8(xmm, key);
     _mm_store_si128((__m128i *)VD, xmm);
     return;

@@ -5,7 +5,7 @@
 #include "vu/vu.h"
 #include "matrix.h"
 
-#define FIT_IMEM(PC)    (PC & 0xFFC)
+#define FIT_IMEM(PC)    (PC & 0xFFF & 0xFFC)
 
 NOINLINE void run_task(void)
 {
@@ -25,16 +25,9 @@ NOINLINE void run_task(void)
 
         inst = *(long *)(RSP.IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
-        if (stage != 0) /* stage == 1 */
-        {
-            PC = temp_PC & 0x00000FFC;
-            stage = 0;
-        }
-        else
-        {
-            PC = (PC + 0x004) & 0xFFC;
-         /* *RSP.SP_PC_REG = 0x04001000 + PC; // commented only for perf */
-        }
+        PC = (PC + 0x004)/*&0xFFC*/;
+     /* *RSP.SP_PC_REG = 0x04001000 + PC; // commented only for perf */
+EX:
 #endif
 #ifdef SP_EXECUTE_LOG
         step_SP_commands(inst);
@@ -98,7 +91,7 @@ NOINLINE void run_task(void)
                             SR[0] = 0x00000000;
                         case 010: /* JR */
                             set_PC(SR[rs]);
-                            CONTINUE
+                            JUMP
                         case 015: /* BREAK */
                             *RSP.SP_STATUS_REG |= 0x00000003; /* BROKE | HALT */
                             if (*RSP.SP_STATUS_REG & 0x00000040)
@@ -155,14 +148,14 @@ NOINLINE void run_task(void)
                             if (!(SR[base] < 0))
                                 CONTINUE
                             set_PC(PC + 4*inst + SLOT_OFF);
-                            CONTINUE
+                            JUMP
                         case 021: /* BGEZAL */
                             SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                         case 001: /* BGEZ */
                             if (!(SR[base] >= 0))
                                 CONTINUE
                             set_PC(PC + 4*inst + SLOT_OFF);
-                            CONTINUE
+                            JUMP
                         default:
                             res_S();
                             CONTINUE
@@ -172,27 +165,27 @@ NOINLINE void run_task(void)
                     SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                 case 002: /* J */
                     set_PC(4*inst);
-                    CONTINUE
+                    JUMP
                 case 004: /* BEQ */
                     if (!(SR[base] == SR[rt]))
                         CONTINUE
                     set_PC(PC + 4*inst + SLOT_OFF);
-                    CONTINUE
+                    JUMP
                 case 005: /* BNE */
                     if (!(SR[base] != SR[rt]))
                         CONTINUE
                     set_PC(PC + 4*inst + SLOT_OFF);
-                    CONTINUE
+                    JUMP
                 case 006: /* BLEZ */
                     if (!((signed)SR[base] <= 0x00000000))
                         CONTINUE
                     set_PC(PC + 4*inst + SLOT_OFF);
-                    CONTINUE
+                    JUMP
                 case 007: /* BGTZ */
                     if (!((signed)SR[base] >  0x00000000))
                         CONTINUE
                     set_PC(PC + 4*inst + SLOT_OFF);
-                    CONTINUE
+                    JUMP
                 case 010: /* ADDI */
                 case 011: /* ADDIU */
                     SR[rt] = SR[base] + (signed short)(inst);
@@ -445,6 +438,12 @@ NOINLINE void run_task(void)
             *RSP.SP_PC_REG = 0x04001000 + PC;
         }
         continue;
+#else
+        continue;
+BRANCH:
+        inst = *(long *)(RSP.IMEM + FIT_IMEM(PC));
+        PC = temp_PC & 0x00000FFC;
+        goto EX;
 #endif
     }
     if (*RSP.SP_STATUS_REG & 0x00000002) /* normal exit, from executing BREAK */

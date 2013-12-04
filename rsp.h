@@ -119,7 +119,9 @@ NOINLINE void update_conf(const char* source)
     return;
 }
 
+#ifndef EMULATE_STATIC_PC
 static int stage;
+#endif
 static int temp_PC;
 #ifdef WAIT_FOR_CPU_HOST
 static short MFC0_count[32];

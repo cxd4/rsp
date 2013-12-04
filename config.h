@@ -14,8 +14,10 @@
 
 #ifdef EMULATE_STATIC_PC
 #define CONTINUE    {continue;}
+#define JUMP        {goto BRANCH;}
 #else
 #define CONTINUE    {break;}
+#define JUMP        {break;}
 #endif
 
 #if (0)
