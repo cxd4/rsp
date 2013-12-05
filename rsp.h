@@ -309,7 +309,7 @@ NOINLINE void trace_RSP_registers(void)
  */
     for (i = 0; i < 8; i++)
         fprintf(
-            out, "ACC[%o]:  [%04X][%04X][%04X]\n", i,
+            out, "ACC[%o]:  [%04hX][%04hX][%04hX]\n", i,
             VACC_H[i], VACC_M[i], VACC_L[i]);
 
 /*

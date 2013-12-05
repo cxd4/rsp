@@ -138,7 +138,7 @@ unsigned char get_VCE(void)
     register unsigned char VCE;
 
     hi = _mm_setzero_si128();
-    lo = _mm_load_si128((__m128i *)comp);
+    lo = _mm_load_si128((__m128i *)vce);
 
     lo = _mm_slli_epi16(lo, 15); /* Rotate Boolean storage from LSB to MSB. */
 
