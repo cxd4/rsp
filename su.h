@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Scalar Unit Operations                     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.12.01                                                         *
+* Release:  2013.12.04                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _SU_H
@@ -1090,19 +1090,10 @@ static void LHV(int vt, int element, int offset, int base)
 }
 NOINLINE static void LFV(int vt, int element, int offset, int base)
 { /* Dummy implementation only:  Do any games execute this? */
-    char debugger[24] = "LFV\t$v00[X], 0x000($00)";
-    const char digits[16] = {
-        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-    };
+    char debugger[32];
 
-    debugger[006] |= vt / 10;
-    debugger[007] |= vt % 10;
-    debugger[011]  = digits[element];
-    debugger[017]  = digits[(offset >> 8) & 0xF];
-    debugger[020]  = digits[(offset >> 4) & 0xF];
-    debugger[021]  = digits[(offset >> 0) & 0xF];
-    debugger[024] |= base / 10;
-    debugger[025] |= base % 10;
+    sprintf(debugger, "%s     $v%i[0x%X], 0x%03X($%i)", "LFV",
+        vt, element, offset & 0xFFF, base);
     message(debugger, 3);
     return;
 }
@@ -1464,18 +1455,10 @@ INLINE static void LTV(int vt, int element, int offset, int base)
 }
 NOINLINE static void SWV(int vt, int element, int offset, int base)
 { /* Dummy implementation only:  Do any games execute this? */
-    char debugger[24] = "SWV\t$v00[X], 0x000($00)";
-    const char digits[16] = {
-        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-    };
-    debugger[006] |= vt / 10;
-    debugger[007] |= vt % 10;
-    debugger[011]  = digits[element];
-    debugger[017]  = digits[(offset >> 8) & 0xF];
-    debugger[020]  = digits[(offset >> 4) & 0xF];
-    debugger[021]  = digits[(offset >> 0) & 0xF];
-    debugger[024] |= base / 10;
-    debugger[025] |= base % 10;
+    char debugger[32];
+
+    sprintf(debugger, "%s     $v%i[0x%X], 0x%03X($%i)", "SWV",
+        vt, element, offset & 0xFFF, base);
     message(debugger, 3);
     return;
 }
