@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Scalar Unit Operations                     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.12.04                                                         *
+* Release:  2013.12.10                                                         *
 * License:  none (public domain)                                               *
 \******************************************************************************/
 #ifndef _SU_H
@@ -1305,7 +1305,6 @@ INLINE static void SQV(int vt, int element, int offset, int base)
     const int e = element;
 
     addr = (SR[base] + 16*offset) & 0x00000FFF;
-    b = addr & 0x0000000F;
     if (e != 0x0)
     { /* happens with "Mia Hamm Soccer 64" */
         register int i;
@@ -1314,6 +1313,8 @@ INLINE static void SQV(int vt, int element, int offset, int base)
             RSP.DMEM[BES((addr + i) & 0xFFF)] = VR_B(vt, (e + i) & 0xF);
         return;
     }
+    b = addr & 0x0000000F;
+    addr &= ~0x0000000F;
     switch (b)
     {
         case 00:
@@ -1367,13 +1368,13 @@ static void SRV(int vt, int element, int offset, int base)
         return;
     }
     addr = (SR[base] + 16*offset) & 0x00000FFF;
-    b = addr & 0x0000000F;
-    addr &= ~0x0000000F;
     if (addr & 0x00000001)
     {
         message("SRV\nOdd addr.", 3);
         return;
     }
+    b = addr & 0x0000000F;
+    addr &= ~0x0000000F;
     switch (b/2)
     {
         case 0xE/2:
