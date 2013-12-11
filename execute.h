@@ -18,8 +18,7 @@ NOINLINE void run_task(void)
         for (i = 0; i < 32; i++)
             MFC0_count[i] = 0;
     }
-    PC = FIT_IMEM(0x04001000);
-    *RSP.SP_PC_REG = 0x04001000 | FIT_IMEM(PC);
+    PC = FIT_IMEM(*RSP.SP_PC_REG);
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
     {
         register unsigned long inst;
@@ -99,7 +98,7 @@ EX:
                                 *RSP.MI_INTR_REG |= 0x00000001;
                                 RSP.CheckInterrupts();
                             }
-                            return;
+                            CONTINUE
                         case 040: /* ADD */
                         case 041: /* ADDU */
                             SR[rd] = SR[rs] + SR[rt];
@@ -446,6 +445,7 @@ BRANCH:
         goto EX;
 #endif
     }
+    *RSP.SP_PC_REG = 0x04001000 | FIT_IMEM(PC);
     if (*RSP.SP_STATUS_REG & 0x00000002) /* normal exit, from executing BREAK */
         return;
     else if (*RSP.MI_INTR_REG & 0x00000001) /* interrupt set by MTC0 to break */
