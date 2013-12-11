@@ -278,7 +278,7 @@ EX:
                     if (addr%0x004 != 0x000)
                         ULW(rt, addr);
                     else
-                        SR[rt] = *(long *)(RSP.DMEM + addr);
+                        SR[rt] = *(int32_t *)(RSP.DMEM + addr);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 044: /* LBU */
@@ -329,7 +329,7 @@ EX:
                     if (addr%0x004 != 0x000)
                         USW(rt, addr);
                     else
-                        *(long *)(RSP.DMEM + addr) = SR[rt];
+                        *(int32_t *)(RSP.DMEM + addr) = SR[rt];
                     CONTINUE
                 case 062: /* LWC2 */
                     offset = SE(inst, 6);
