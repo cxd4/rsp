@@ -21,9 +21,9 @@ NOINLINE void run_task(void)
     PC = FIT_IMEM(*RSP.SP_PC_REG);
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
     {
-        register unsigned long inst;
+        register uint32_t inst;
 
-        inst = *(long *)(RSP.IMEM + FIT_IMEM(PC));
+        inst = *(uint32_t *)(RSP.IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
         PC = (PC + 0x004);
 EX:
@@ -440,7 +440,7 @@ EX:
 #else
         continue;
 BRANCH:
-        inst = *(long *)(RSP.IMEM + FIT_IMEM(PC));
+        inst = *(uint32_t *)(RSP.IMEM + FIT_IMEM(PC));
         PC = temp_PC & 0x00000FFC;
         goto EX;
 #endif
