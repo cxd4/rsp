@@ -130,7 +130,7 @@ static short MFC0_count[32];
 
 #ifdef SP_EXECUTE_LOG
 static FILE *output_log;
-extern void step_SP_commands(unsigned long inst);
+extern void step_SP_commands(uint32_t inst);
 #endif
 extern void export_SP_memory(void);
 NOINLINE void trace_RSP_registers(void);
@@ -143,7 +143,7 @@ NOINLINE extern void run_task(void);
 #include "execute.h"
 
 #ifdef SP_EXECUTE_LOG
-void step_SP_commands(unsigned long inst)
+void step_SP_commands(uint32_t inst)
 {
     if (output_log)
     {
@@ -183,7 +183,7 @@ void step_SP_commands(unsigned long inst)
 NOINLINE void export_data_cache(void)
 {
     FILE* out;
-    register unsigned long addr;
+    register uint32_t addr;
 
     out = fopen("rcpcache.dhex", "wb");
 #if (0)
@@ -204,7 +204,7 @@ NOINLINE void export_data_cache(void)
 NOINLINE void export_instruction_cache(void)
 {
     FILE* out;
-    register unsigned long addr;
+    register uint32_t addr;
 
     out = fopen("rcpcache.ihex", "wb");
 #if (0)
@@ -260,7 +260,7 @@ NOINLINE void trace_RSP_registers(void)
  * them from the RCP's point of view or the CPU host's mapped point of view.
  */
     for (i = 0; i < 8; i++)
-        fprintf(out, "%s:  %08lX    %s:  %08lX\n",
+        fprintf(out, "%s:  %08"PRIX32"    %s:  %08"PRIX32"\n",
             CR_names[i+0], *(CR[i+0]), CR_names[i+8], *(CR[i+8]));
     fprintf(out, "\n");
 /*
