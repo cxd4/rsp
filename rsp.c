@@ -109,7 +109,7 @@ strcpy(
     return;
 }
 
-uint32_t* CR[16];
+RCPREG* CR[16];
 EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
 {
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
@@ -141,11 +141,6 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
     CR[0xD] = RSP.DPC_BUFBUSY_REG;
     CR[0xE] = RSP.DPC_PIPEBUSY_REG;
     CR[0xF] = RSP.DPC_TMEM_REG;
-    return;
-}
-EXPORT void CALL InitiateRSPDebugger(DEBUG_INFO DebugInfo)
-{
-    DebugInfo.UpdateMemory();
     return;
 }
 EXPORT void CALL RomClosed(void)
