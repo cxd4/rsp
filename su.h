@@ -78,8 +78,8 @@ static union {
     unsigned W:  32;
 } SR_temp;
 
-extern void ULW(int rd, unsigned long addr);
-extern void USW(int rs, unsigned long addr);
+extern void ULW(int rd, uint32_t addr);
+extern void USW(int rs, uint32_t addr);
 
 /*
  * All other behaviors defined below this point in the file are specific to
@@ -87,7 +87,7 @@ extern void USW(int rs, unsigned long addr);
  */
 
 /*** Scalar, Coprocessor Operations (system control) ***/
-extern unsigned long* CR[16];
+extern uint32_t* CR[16];
 extern void SP_DMA_READ(void);
 extern void SP_DMA_WRITE(void);
 
@@ -170,14 +170,14 @@ static void MT_SP_STATUS(int rt)
 }
 static void MT_SP_RESERVED(int rt)
 {
-    const unsigned long source = SR[rt] & 0x00000000; /* forced (zilmar, dox) */
+    const uint32_t source = SR[rt] & 0x00000000; /* forced (zilmar, dox) */
 
     *RSP.SP_SEMAPHORE_REG = source;
     return;
 }
 static void MT_CMD_START(int rt)
 {
-    const unsigned long source = SR[rt] & 0xFFFFFFF8; /* Funnelcube demo */
+    const uint32_t source = SR[rt] & 0xFFFFFFF8; /* Funnelcube demo */
 
     if (*RSP.DPC_BUFBUSY_REG) /* lock hazards not implemented */
         message("MTC0\nCMD_START", 0);
@@ -402,7 +402,7 @@ static void CTC2(int rt, int rd)
 /*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
 INLINE static void LBV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     addr = (SR[base] + 1*offset) & 0x00000FFF;
@@ -412,7 +412,7 @@ INLINE static void LBV(int vt, int element, int offset, int base)
 INLINE static void LSV(int vt, int element, int offset, int base)
 {
     int correction;
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e & 0x1)
@@ -433,7 +433,7 @@ INLINE static void LSV(int vt, int element, int offset, int base)
 INLINE static void LLV(int vt, int element, int offset, int base)
 {
     int correction;
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e & 0x1)
@@ -455,7 +455,7 @@ INLINE static void LLV(int vt, int element, int offset, int base)
 }
 INLINE static void LDV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e & 0x1)
@@ -540,7 +540,7 @@ INLINE static void LDV(int vt, int element, int offset, int base)
 }
 INLINE static void SBV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     addr = (SR[base] + 1*offset) & 0x00000FFF;
@@ -549,7 +549,7 @@ INLINE static void SBV(int vt, int element, int offset, int base)
 }
 INLINE static void SSV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     addr = (SR[base] + 2*offset) & 0x00000FFF;
@@ -561,7 +561,7 @@ INLINE static void SSV(int vt, int element, int offset, int base)
 INLINE static void SLV(int vt, int element, int offset, int base)
 {
     int correction;
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if ((e & 0x1) || e > 0xC) /* must support illegal even elements in F3DEX2 */
@@ -583,7 +583,7 @@ INLINE static void SLV(int vt, int element, int offset, int base)
 }
 INLINE static void SDV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     addr = (SR[base] + 8*offset) & 0x00000FFF;
@@ -672,7 +672,7 @@ INLINE static void SDV(int vt, int element, int offset, int base)
  */
 INLINE static void LPV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     register int b;
     const int e = element;
 
@@ -784,7 +784,7 @@ INLINE static void LPV(int vt, int element, int offset, int base)
 }
 INLINE static void LUV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     register int b;
     int e = element;
 
@@ -904,7 +904,7 @@ INLINE static void LUV(int vt, int element, int offset, int base)
 INLINE static void SPV(int vt, int element, int offset, int base)
 {
     register int b;
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e != 0x0)
@@ -1016,7 +1016,7 @@ INLINE static void SPV(int vt, int element, int offset, int base)
 INLINE static void SUV(int vt, int element, int offset, int base)
 {
     register int b;
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e != 0x0)
@@ -1063,7 +1063,7 @@ INLINE static void SUV(int vt, int element, int offset, int base)
  */
 static void LHV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e != 0x0)
@@ -1099,7 +1099,7 @@ NOINLINE static void LFV(int vt, int element, int offset, int base)
 }
 static void SHV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e != 0x0)
@@ -1126,7 +1126,7 @@ static void SHV(int vt, int element, int offset, int base)
 }
 static void SFV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     addr = (SR[base] + 16*offset) & 0x00000FFF;
@@ -1158,7 +1158,7 @@ static void SFV(int vt, int element, int offset, int base)
  */
 INLINE static void LQV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     register int b;
     const int e = element; /* Boss Game Studios illegal elements */
 
@@ -1233,7 +1233,7 @@ INLINE static void LQV(int vt, int element, int offset, int base)
 }
 static void LRV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     register int b;
     const int e = element;
 
@@ -1300,7 +1300,7 @@ static void LRV(int vt, int element, int offset, int base)
 }
 INLINE static void SQV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     register int b;
     const int e = element;
 
@@ -1358,7 +1358,7 @@ INLINE static void SQV(int vt, int element, int offset, int base)
 }
 static void SRV(int vt, int element, int offset, int base)
 {
-    register unsigned long addr;
+    register uint32_t addr;
     register int b;
     const int e = element;
 
@@ -1431,7 +1431,7 @@ static void SRV(int vt, int element, int offset, int base)
 INLINE static void LTV(int vt, int element, int offset, int base)
 {
     register int i;
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e & 1)
@@ -1466,7 +1466,7 @@ NOINLINE static void SWV(int vt, int element, int offset, int base)
 INLINE static void STV(int vt, int element, int offset, int base)
 {
     register int i;
-    register unsigned long addr;
+    register uint32_t addr;
     const int e = element;
 
     if (e & 1)
@@ -1491,7 +1491,7 @@ INLINE static void STV(int vt, int element, int offset, int base)
 }
 
 /*** Modern pseudo-operations (not real instructions, but nice shortcuts) ***/
-void ULW(int rd, unsigned long addr)
+void ULW(int rd, uint32_t addr)
 { /* "Unaligned Load Word" */
     if (addr & 0x00000001)
     {
@@ -1513,7 +1513,7 @@ void ULW(int rd, unsigned long addr)
  /* SR[0] = 0x00000000; */
     return;
 }
-void USW(int rs, unsigned long addr)
+void USW(int rs, uint32_t addr)
 { /* "Unaligned Store Word" */
     SR_temp.W = SR[rs];
     if (addr & 0x00000001)

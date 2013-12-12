@@ -21,9 +21,9 @@ NOINLINE void run_task(void)
     PC = FIT_IMEM(*RSP.SP_PC_REG);
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
     {
-        register unsigned long inst;
+        register uint32_t inst;
 
-        inst = *(long *)(RSP.IMEM + FIT_IMEM(PC));
+        inst = *(uint32_t *)(RSP.IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
         PC = (PC + 0x004);
 EX:
@@ -56,7 +56,7 @@ EX:
             switch (op)
             {
                 signed int offset;
-                register unsigned long addr;
+                register uint32_t addr;
 
                 case 000: /* SPECIAL */
                     switch (inst % 64)
@@ -278,7 +278,7 @@ EX:
                     if (addr%0x004 != 0x000)
                         ULW(rt, addr);
                     else
-                        SR[rt] = *(long *)(RSP.DMEM + addr);
+                        SR[rt] = *(int32_t *)(RSP.DMEM + addr);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 044: /* LBU */
@@ -329,7 +329,7 @@ EX:
                     if (addr%0x004 != 0x000)
                         USW(rt, addr);
                     else
-                        *(long *)(RSP.DMEM + addr) = SR[rt];
+                        *(int32_t *)(RSP.DMEM + addr) = SR[rt];
                     CONTINUE
                 case 062: /* LWC2 */
                     offset = SE(inst, 6);
@@ -440,7 +440,7 @@ EX:
 #else
         continue;
 BRANCH:
-        inst = *(long *)(RSP.IMEM + FIT_IMEM(PC));
+        inst = *(uint32_t *)(RSP.IMEM + FIT_IMEM(PC));
         PC = temp_PC & 0x00000FFC;
         goto EX;
 #endif
