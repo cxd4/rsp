@@ -34,7 +34,7 @@ EXPORT void CALL DllConfig(HWND hParent)
     hParent = NULL;
     system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
     update_conf(CFG_FILE);
-    if (RSP.DMEM == RSP.IMEM) /* emulation thread not initialized */
+    if (RSP.DMEM == RSP.IMEM || *RSP.SP_PC_REG == 0x00000000)
         return;
 
     export_SP_memory();
