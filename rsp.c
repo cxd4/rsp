@@ -35,7 +35,6 @@ EXPORT void CALL DllConfig(HWND hParent)
     system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
     update_conf(CFG_FILE);
     export_SP_memory();
-    trace_RSP_registers();
 
     stream = fopen("rsp_task.txt", "w");
     fprintf(stream, "off   inst             disassembled\n");
