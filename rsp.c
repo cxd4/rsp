@@ -116,11 +116,9 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
         *CycleCount = 0x00000000;
     update_conf(CFG_FILE);
 
-    RSP.DMEM = Rsp_Info.DMEM;
-    RSP.IMEM = Rsp_Info.IMEM;
-    if (RSP.DMEM == RSP.IMEM) /* usually dummy RSP data, not to start ROM */
+    if (Rsp_Info.DMEM == Rsp_Info.IMEM) /* usually dummy RSP data for testing */
         return; /* DMA is not executed just because plugin initiates. */
-    while (RSP.IMEM != RSP.DMEM + 4096)
+    while (Rsp_Info.IMEM != Rsp_Info.DMEM + 4096)
         message("Virtual host map noncontiguity.", 3);
 
     RSP = Rsp_Info;

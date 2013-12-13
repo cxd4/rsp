@@ -46,13 +46,7 @@ NOINLINE void message(const char* body, int priority)
     {
         if (body[i] == '\n')
         {
-            argv[j + 0] = '&';
-            argv[j + 1] = '&';
-            argv[j + 2] = 'E';
-            argv[j + 3] = 'C';
-            argv[j + 4] = 'H';
-            argv[j + 5] = 'O';
-            argv[j + 6] = ' ';
+            strcat(argv, "&&ECHO ");
             ++i;
             j += 7;
             continue;
@@ -241,6 +235,10 @@ const char SR_names[32][5] = {
     " s0:"," s1:"," s2:"," s3:"," s4:"," s5:"," s6:"," s7:",
     " t8:"," t9:"," k0:"," k1:"," gp:","$sp:","$s8:","$ra:",
 };
+const char* Boolean_names[2] = {
+    "false",
+    "true"
+};
 
 NOINLINE void trace_RSP_registers(void)
 {
@@ -249,9 +247,7 @@ NOINLINE void trace_RSP_registers(void)
 
     out = fopen("SP_STATE.TXT", "w");
     fprintf(out, "RCP Communications Register Display\n\n");
-    fclose(out);
 
-    out = fopen("SP_STATE.TXT", "a");
 /*
  * The precise names for RSP CP0 registers are somewhat difficult to define.
  * Generally, I have tried to adhere to the names shared from bpoint/zilmar,
@@ -277,20 +273,18 @@ NOINLINE void trace_RSP_registers(void)
             SR_names[i+0], SR[i+0], SR_names[i+16], SR[i+16]);
     fprintf(out, "\n");
 
-    for (i = 0; i < 10; i++)
-        fprintf(
-            out,
-           " $v%i:  [%04hX][%04hX][%04hX][%04hX][%04hX][%04hX][%04hX][%04hX]\n",
-            i,
-            VR[i][00], VR[i][01], VR[i][02], VR[i][03],
-            VR[i][04], VR[i][05], VR[i][06], VR[i][07]);
-    for (i = 10; i < 32; i++) /* decimals "10" and higher with two characters */
-        fprintf(
-            out,
-            "$v%i:  [%04hX][%04hX][%04hX][%04hX][%04hX][%04hX][%04hX][%04hX]\n",
-            i,
-            VR[i][00], VR[i][01], VR[i][02], VR[i][03],
-            VR[i][04], VR[i][05], VR[i][06], VR[i][07]);
+    for (i = 0; i < 32; i++)
+    {
+        register int j;
+
+        if (i < 10)
+            fprintf(out, "$v%i :  ", i);
+        else
+            fprintf(out, "$v%i:  ", i);
+        for (j = 0; j < N; j++)
+            fprintf(out, "[%04hX]", VR[i][j]);
+        fprintf(out, "\n");
+    }
     fprintf(out, "\n");
 
 /*
@@ -298,9 +292,10 @@ NOINLINE void trace_RSP_registers(void)
  * Just like we have the scalar 16 system control registers for the RSP CP0,
  * we have also a tiny group of special-purpose, vector control registers.
  */
-    fprintf(out, "$vco:  0x%04X\n", get_VCO());
-    fprintf(out, "$vcc:  0x%04X\n", get_VCC());
-    fprintf(out, "$vce:  0x%02X\n\n", get_VCE());
+    fprintf(out, "$%s:  0x%04X\n", tokens_CR_V[0], get_VCO());
+    fprintf(out, "$%s:  0x%04X\n", tokens_CR_V[1], get_VCC());
+    fprintf(out, "$%s:  0x%02X\n", tokens_CR_V[2], get_VCE());
+    fprintf(out, "\n");
 
 /*
  * 48-bit RSP accumulators
@@ -308,17 +303,23 @@ NOINLINE void trace_RSP_registers(void)
  * However, typically in discussion about SGI's implementation, we say "ACC".
  */
     for (i = 0; i < 8; i++)
-        fprintf(
-            out, "ACC[%o]:  [%04hX][%04hX][%04hX]\n", i,
-            VACC_H[i], VACC_M[i], VACC_L[i]);
+    {
+        register int j;
+
+        fprintf(out, "ACC[%o]:  ", i);
+        for (j = 0; j < 3; j++)
+            fprintf(out, "[%04hX]", VACC[j][i]);
+        fprintf(out, "\n");
+    }
+    fprintf(out, "\n");
 
 /*
  * special-purpose vector unit registers for vector divide operations only
  */
-    fprintf(out, "\nDivIn:  %i\n", DivIn);
-    fprintf(out, "DivOut:  %i\n", DivOut);
+    fprintf(out, "%s:  %i\n", "DivIn", DivIn);
+    fprintf(out, "%s:  %i\n", "DivOut", DivOut);
     /* MovIn:  This reg. might exist for VMOV, but it is obsolete to emulate. */
-    fprintf(out, DPH ? "DPH:  true\n" : "DPH:  false\n");
+    fprintf(out, "DPH:  %s\n", Boolean_names[DPH]);
     fclose(out);
     return;
 }
