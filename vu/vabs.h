@@ -1,6 +1,6 @@
 /******************************************************************************\
 * Authors:  Iconoclast                                                         *
-* Release:  2013.11.26                                                         *
+* Release:  2014.08.13                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -23,7 +23,7 @@ INLINE static void do_abs(short* VD, short* VS, short* VT)
 {
     short neg[N], pos[N];
     short nez[N], cch[N]; /* corner case hack -- abs(-32768) == +32767 */
-    short res[N];
+    ALIGNED short res[N];
     register int i;
 
     vector_copy(res, VT);
@@ -69,7 +69,7 @@ INLINE static void do_abs(short* VD, short* VS, short* VT)
 
 static void VABS(int vd, int vs, int vt, int e)
 {
-    short ST[N];
+    ALIGNED short ST[N];
 
     SHUFFLE_VECTOR(ST, VR[vt], e);
     do_abs(VR[vd], VR[vs], ST);
