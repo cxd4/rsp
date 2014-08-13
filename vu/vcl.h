@@ -1,6 +1,6 @@
 /******************************************************************************\
 * Authors:  Iconoclast                                                         *
-* Release:  2013.11.26                                                         *
+* Release:  2014.08.13                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -15,17 +15,15 @@
 
 INLINE static void do_cl(short* VD, short* VS, short* VT)
 {
-    short eq[N], ge[N], le[N];
-    short gen[N], len[N], lz[N], uz[N], sn[N];
+    ALIGNED unsigned short VB[N], VC[N];
+    ALIGNED short eq[N], ge[N], le[N];
+    ALIGNED short gen[N], len[N], lz[N], uz[N], sn[N];
     short diff[N];
     short cmp[N];
-    unsigned short VB[N], VC[N];
     register int i;
 
-    for (i = 0; i < N; i++)
-        VB[i] = VS[i];
-    for (i = 0; i < N; i++)
-        VC[i] = VT[i];
+    vector_copy((short *)VB, VS);
+    vector_copy((short *)VC, VT);
 
 /*
     for (i = 0; i < N; i++)
@@ -35,8 +33,8 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
 */
     for (i = 0; i < N; i++)
         eq[i] = ne[i] ^ 1;
-    for (i = 0; i < N; i++)
-        sn[i] = co[i];
+    vector_copy(sn, co);
+
 /*
  * Now that we have extracted all the flags, we will essentially be masking
  * them back in where they came from redundantly, unless the corresponding
@@ -77,10 +75,8 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     merge(VACC_L, cmp, (short *)VC, VS);
     vector_copy(VD, VACC_L);
 
-    for (i = 0; i < N; i++)
-        clip[i] = ge[i];
-    for (i = 0; i < N; i++)
-        comp[i] = le[i];
+    vector_copy(clip, ge);
+    vector_copy(comp, le);
     for (i = 0; i < N; i++)
         ne[i] = 0;
     for (i = 0; i < N; i++)
@@ -92,7 +88,7 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
 
 static void VCL(int vd, int vs, int vt, int e)
 {
-    short ST[N];
+    ALIGNED short ST[N];
 
     SHUFFLE_VECTOR(ST, VR[vt], e);
     do_cl(VR[vd], VR[vs], ST);

@@ -150,10 +150,7 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
  */
 static INLINE void vector_copy(short* VD, short* VS)
 {
-    __m128i xmm;
-
-    xmm = _mm_load_si128((__m128i *)VS);
-    _mm_store_si128((__m128i *)VD, xmm);
+    *(__m128i *)VD = *(__m128i *)VS;
     return;
 }
 

@@ -1,6 +1,6 @@
 /******************************************************************************\
 * Authors:  Iconoclast                                                         *
-* Release:  2013.11.26                                                         *
+* Release:  2014.08.13                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -15,14 +15,13 @@
 
 INLINE static void do_ch(short* VD, short* VS, short* VT)
 {
-    short eq[N], ge[N], le[N];
-    short sn[N];
-    short VC[N];
+    ALIGNED short VC[N];
+    ALIGNED short eq[N], ge[N], le[N];
+    ALIGNED short sn[N];
     short diff[N];
     register int i;
 
-    for (i = 0; i < N; i++)
-        VC[i] = VT[i];
+    vector_copy(VC, VT);
     for (i = 0; i < N; i++)
         sn[i] = (VS[i] ^ VC[i]) < 0;
     for (i = 0; i < N; i++)
@@ -52,31 +51,28 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         diff[i] = -VS[i] | -(sn[i] ^ 1);
     for (i = 0; i < N; i++)
-        le[i] = VT[i] <= diff[i];
+        le[i] = (VT[i] <= diff[i]);
     for (i = 0; i < N; i++)
         diff[i] = +VS[i] | -(sn[i] ^ 0);
     for (i = 0; i < N; i++)
-        ge[i] = diff[i] >= VT[i];
+        ge[i] = (diff[i] >= VT[i]);
 #endif
 
     merge(comp, sn, le, ge);
     merge(VACC_L, comp, VC, VS);
     vector_copy(VD, VACC_L);
 
-    for (i = 0; i < N; i++)
-        clip[i] = ge[i];
-    for (i = 0; i < N; i++)
-        comp[i] = le[i];
+    vector_copy(clip, ge);
+    vector_copy(comp, le);
     for (i = 0; i < N; i++)
         ne[i] = eq[i] ^ 1;
-    for (i = 0; i < N; i++)
-        co[i] = sn[i];
+    vector_copy(co, sn);
     return;
 }
 
 static void VCH(int vd, int vs, int vt, int e)
 {
-    short ST[N];
+    ALIGNED short ST[N];
 
     SHUFFLE_VECTOR(ST, VR[vt], e);
     do_ch(VR[vd], VR[vs], ST);
