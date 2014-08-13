@@ -1,6 +1,6 @@
 /******************************************************************************\
 * Authors:  Iconoclast                                                         *
-* Release:  2013.10.07                                                         *
+* Release:  2014.08.13                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -56,7 +56,7 @@ static INLINE void merge(short* VD, short* cmp, short* pass, short* fail)
 #endif
     return;
 }
-extern short co[N];
+extern ALIGNED short co[N];
 
 #ifndef ARCH_MIN_SSE2
 static INLINE void vector_copy(short* VD, short* VS)
@@ -226,8 +226,8 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
 
 static INLINE void UNSIGNED_CLAMP(short* VD)
 { /* sign-zero hybrid clamp of accumulator-mid (bits 31:16) */
+    ALIGNED short temp[N];
     short cond[N];
-    short temp[N];
     register int i;
 
     SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */
@@ -241,8 +241,8 @@ static INLINE void UNSIGNED_CLAMP(short* VD)
 }
 static INLINE void SIGNED_CLAMP_AL(short* VD)
 { /* sign-clamp accumulator-low (bits 15:0) */
+    ALIGNED short temp[N];
     short cond[N];
-    short temp[N];
     register int i;
 
     SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */

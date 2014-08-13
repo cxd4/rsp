@@ -1,6 +1,6 @@
 /******************************************************************************\
 * Authors:  Iconoclast                                                         *
-* Release:  2013.12.04                                                         *
+* Release:  2014.08.13                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -40,11 +40,11 @@ unsigned char VCE;
  * However, since SSE2 uses 128-bit XMM's, and Win32 `int` storage is 32-bit,
  * we have the problem of 32*8 > 128 bits, so we use `short` to reduce packs.
  */
-short ne[8]; /* $vco:  high byte "NOTEQUAL" */
-short co[8]; /* $vco:  low byte "carry/borrow in/out" */
-short clip[8]; /* $vcc:  high byte (clip tests:  VCL, VCH, VCR) */
-short comp[8]; /* $vcc:  low byte (VEQ, VNE, VLT, VGE, VCL, VCH, VCR) */
-short vce[8]; /* $vce:  vector compare extension register */
+ALIGNED short ne[8]; /* $vco:  high byte "NOTEQUAL" */
+ALIGNED short co[8]; /* $vco:  low byte "carry/borrow in/out" */
+ALIGNED short clip[8]; /* $vcc:  high byte (clip tests:  VCL, VCH, VCR) */
+ALIGNED short comp[8]; /* $vcc:  low byte (VEQ, VNE, VLT, VGE, VCL, VCH, VCR) */
+ALIGNED short vce[8]; /* $vce:  vector compare extension register */
 
 #ifndef ARCH_MIN_SSE2
 unsigned short get_VCO(void)
@@ -95,9 +95,10 @@ unsigned short get_VCC(void)
 }
 unsigned char get_VCE(void)
 {
+    int result;
     register unsigned char VCE;
 
-    VCE = 0x00
+    result = 0x00
       | (vce[07] << 0x7)
       | (vce[06] << 0x6)
       | (vce[05] << 0x5)
@@ -106,6 +107,7 @@ unsigned char get_VCE(void)
       | (vce[02] << 0x2)
       | (vce[01] << 0x1)
       | (vce[00] << 0x0);
+    VCE = (unsigned char)(result);
     return (VCE); /* Big endian becomes little. */
 }
 #else
