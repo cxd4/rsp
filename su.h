@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Table for Scalar Unit Operations                     *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.12.10                                                         *
+* Release:  2014.08.13                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1315,7 +1315,7 @@ INLINE static void SQV(int vt, int element, int offset, int base)
     addr = (SR[base] + 16*offset) & 0x00000FFF;
     if (e != 0x0)
     { /* happens with "Mia Hamm Soccer 64" */
-        register int i;
+        register unsigned int i;
 
         for (i = 0; i < 16 - addr%16; i++)
             RSP.DMEM[BES((addr + i) & 0xFFF)] = VR_B(vt, (e + i) & 0xF);
