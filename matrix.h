@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  RSP Disassembler                                                   *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.09.12                                                         *
+* Release:  2014.08.12                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -112,7 +112,7 @@ void disassemble(int IW)
     unsigned short imm = (IW & 0x0000FFFF);
     const signed int offset = -(IW & 0x00008000) | imm;
     const unsigned int target = IW%0x04000000 << 2;
-    const int func = IW % 64;
+    const int func = (unsigned)IW % 64;
     const int sa = (IW >>  6) & 31;
     const int rd = (IW & 0x0000FFFF) >> 11;
     const int rt = (IW >> 16) & 31;
