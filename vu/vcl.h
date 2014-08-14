@@ -47,7 +47,7 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         diff[i] = VB[i] - VC[i];
     for (i = 0; i < N; i++)
-        uz[i] = (VB[i] - VC[i] - 0xFFFF) >> 31;
+        uz[i] = (VB[i] + (unsigned short)VT[i] - 65536) >> 31;
     for (i = 0; i < N; i++)
         lz[i] = (diff[i] == 0x0000);
     for (i = 0; i < N; i++)
