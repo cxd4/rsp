@@ -1,6 +1,7 @@
 /******************************************************************************\
+* Project:  Scalar/Vector Unit Execution Interface                             *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.12.11                                                         *
+* Release:  2014.09.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -345,7 +346,8 @@ EX:
                         *(int32_t *)(RSP.DMEM + addr) = SR[rt];
                     CONTINUE
                 case 062: /* LWC2 */
-                    offset = SE(inst, 6);
+                    offset = (signed)(inst);
+                    offset = SE(offset, 6);
                     switch (rd)
                     {
                         case 000: /* LBV */
@@ -387,7 +389,8 @@ EX:
                     }
                     CONTINUE
                 case 072: /* SWC2 */
-                    offset = SE(inst, 6);
+                    offset = (signed)(inst);
+                    offset = SE(offset, 6);
                     switch (rd)
                     {
                         case 000: /* SBV */
