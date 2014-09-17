@@ -1,6 +1,7 @@
 /******************************************************************************\
+* Project:  Subsystem Handling Interface for RSP Application                   *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.12.12                                                         *
+* Release:  2014.09.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -121,7 +122,7 @@ NOINLINE void update_conf(const char* source)
             CFG_WAIT_FOR_CPU_HOST = bvalue;
         else if (strcmp(key, "SupportCPUSemaphoreLock") == 0)
             CFG_MEND_SEMAPHORE_LOCK = bvalue;
-    } while (test != EOF);
+    } while (test >= 0);
     fclose(stream);
     return;
 }
