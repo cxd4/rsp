@@ -1,6 +1,7 @@
 /******************************************************************************\
+* Project:  C Interpretation of Vector Select Clip Test High                   *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.08.13                                                         *
+* Release:  2014.09.24                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -23,21 +24,23 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
 
     vector_copy(VC, VT);
     for (i = 0; i < N; i++)
-        sn[i] = (VS[i] ^ VC[i]) < 0;
+        sn[i] = VS[i] ^ VT[i];
     for (i = 0; i < N; i++)
-        VC[i] ^= -sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
+        sn[i] = (sn[i] < 0) ? ~0 :  0; /* signed SRA (sn), 15 */
     for (i = 0; i < N; i++)
-        vce[i]  = (VS[i] == VC[i]); /* (VR[vs][i] + ~VC[i] == ~1); */
+        VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
+    for (i = 0; i < N; i++)
+        vce[i]  = (VS[i] == VC[i]); /* 2's complement:  VC = -VT - 1, or ~VT. */
     for (i = 0; i < N; i++)
         vce[i] &= sn[i];
     for (i = 0; i < N; i++)
-        VC[i] += sn[i]; /* converts ~(VT) into -(VT) if (sign) */
+        VC[i] -= sn[i]; /* converts ~(VT) into -(VT) if (sign) */
     for (i = 0; i < N; i++)
         eq[i]  = (VS[i] == VC[i]);
     for (i = 0; i < N; i++)
         eq[i] |= vce[i];
 
-#if (0)
+#ifdef _DEBUG
     for (i = 0; i < N; i++)
         le[i] = sn[i] ? (VS[i] <= VC[i]) : (VC[i] < 0);
     for (i = 0; i < N; i++)
@@ -49,13 +52,20 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
         ge[i] = sn[i] ? (~0x0000 >= VT[i]) : (VS[i] >= VT[i]);
 #else
     for (i = 0; i < N; i++)
-        diff[i] = -VS[i] | -(sn[i] ^ 1);
-    for (i = 0; i < N; i++)
-        le[i] = (VT[i] <= diff[i]);
-    for (i = 0; i < N; i++)
-        diff[i] = +VS[i] | -(sn[i] ^ 0);
+        diff[i] = sn[i] | VS[i];
     for (i = 0; i < N; i++)
         ge[i] = (diff[i] >= VT[i]);
+
+    for (i = 0; i < N; i++)
+        sn[i] = (unsigned short)(sn[i]) >> 15; /* ~0 to 1, 0 to 0 */
+
+    for (i = 0; i < N; i++)
+        diff[i] = VC[i] - VS[i];
+    for (i = 0; i < N; i++)
+        diff[i] = (diff[i] >= 0);
+    for (i = 0; i < N; i++)
+        le[i] = (VT[i] < 0);
+    merge(le, sn, diff, le);
 #endif
 
     merge(comp, sn, le, ge);
