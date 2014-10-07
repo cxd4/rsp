@@ -33,7 +33,7 @@
 
 #define NUMBER_OF_VU_OPCODES    38
 
-static void (*bench_tests[NUMBER_OF_VU_OPCODES])(int, int, int, int) = {
+static v16 (*bench_tests[NUMBER_OF_VU_OPCODES])(v16, v16, v16) = {
     VMULF, VMACF, /* signed single-precision fractions */
     VMULU, VMACU, /* unsigned single-precision fractions */
 
@@ -169,6 +169,13 @@ EXPORT void CALL DllTest(HWND hParent)
     clock_t t1, t2;
     register int i, j;
     register float delta, total;
+#ifdef ARCH_MIN_SSE2
+    v16 vd, vs, vt;
+
+    vd = vs = vt = _mm_setzero_si128();
+#else
+    v16 vd = VR[0], vs = VR[0], vt = VR[0];
+#endif
 
     if (RSP.RDRAM != NULL)
     {
@@ -185,7 +192,7 @@ EXPORT void CALL DllTest(HWND hParent)
     {
         t1 = clock();
         for (j = -0x1000000; j < 0; j++)
-            bench_tests[i](0, 0, 0, 8);
+            bench_tests[i](vd, vs, vt);
         t2 = clock();
         delta = (float)(t2 - t1) / CLOCKS_PER_SEC;
         fprintf(log, "%s:  %.3f s\n", test_names[i], delta);

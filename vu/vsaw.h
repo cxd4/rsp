@@ -46,23 +46,20 @@ static void VSAR(int vd, int vs, int vt, int e)
 }
 #endif
 
-static void VSAW(int vd, int vs, int vt, int e)
+VECTOR_OPERATION VSAW(v16 vd, v16 vs, v16 vt)
 {
-    register int i;
+    const unsigned int element = (inst >> 21) & 0x7;
 
-    vs = 0; /* unused--old VSAR algorithm */
-    vt = 0; /* unused but mysteriously set many times */
-    if (vs | vt)
-        return;
-    e ^= 0x8; /* &= 7 */
-
-    if (e > 0x2)
+    vs = vt = vd; /* unused */
+    if (element > 0x2)
     { /* branch very unlikely...never seen a game do VSAW illegally */
         message("VSAW\nIllegal mask.", 2);
-        for (i = 0; i < N; i++)
-            VR[vd][i] = 0x0000; /* override behavior (zilmar) */
-        return;
+        return (vd); /* according to zilmar's notes, should zero the vector */
     }
-    vector_copy(VR[vd], VACC[e]);
-    return;
+#ifdef ARCH_MIN_SSE2
+    vd = *(v16 *)VACC[element];
+#else
+    vector_copy(vd, VACC[element]);
+#endif
+    return (vd);
 }

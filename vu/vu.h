@@ -45,27 +45,38 @@ ALIGNED static short VACC[3][N];
 #define ACC_M(i)    (VACC_M[i])
 #define ACC_H(i)    (VACC_H[i])
 
+#ifdef ARCH_MIN_SSE2
+typedef __m128i v16;
+#else
+typedef short * v16;
+#endif
+
+#define VECTOR_OPERATION    INLINE static v16
+#define VECTOR_EXTERN       VECTOR_OPERATION
+
 #include "shuffle.h"
 #include "clamp.h"
 #include "cf.h"
 
-static void res_V(int vd, int vs, int vt, int e)
+VECTOR_OPERATION res_V(v16 vd, v16 vs, v16 vt)
 {
     register int i;
 
-    vs = vt = e = 0;
-    if (vs != vt || vt != e)
-        return;
+    vs = vt = vd; /* unused */
     message("C2\nRESERVED", 2); /* uncertain how to handle reserved, untested */
+#ifdef ARCH_MIN_SSE2
+    vd = _mm_setzero_si128();
+#else
     for (i = 0; i < N; i++)
-        VR[vd][i] = 0x0000; /* override behavior (bpoint) */
-    return;
+        vd[i] = 0x0000; /* override behavior (bpoint) */
+#endif
+    return (vd);
 }
-static void res_M(int vd, int vs, int vt, int e)
-{
+VECTOR_OPERATION res_M(v16 vd, v16 vs, v16 vt)
+{ /* Ultra64 OS did have these, so one could implement this ext. */
     message("VMUL IQ", 2);
-    res_V(vd, vs, vt, e);
-    return; /* Ultra64 OS did have these, so one could implement this ext. */
+    vd = res_V(vd, vs, vt);
+    return (vd);
 }
 
 #include "vabs.h"
@@ -110,7 +121,7 @@ static void res_M(int vd, int vs, int vt, int e)
 #include "vsubc.h"
 #include "vxor.h"
 
-static void (*COP2_C2[64])(int, int, int, int) = {
+static v16 (*COP2_C2[64])(v16, v16, v16) = {
     VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
     VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
     VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */

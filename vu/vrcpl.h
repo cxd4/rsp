@@ -14,13 +14,28 @@
 #include "vu.h"
 #include "divrom.h"
 
-static void VRCPL(int vd, int de, int vt, int e)
+VECTOR_OPERATION VRCPL(v16 vd, v16 vs, v16 vt)
 {
+    const int result = (inst & 0x000007FF) >>  6;
+    const int source = (inst & 0x0000FFFF) >> 11;
+    const int target = (inst >> 16) & 31;
+    const unsigned int element = (inst >> 21) & 0x7;
+
+    vs = vd; /* unused */
     DivIn &= -DPH;
-    DivIn |= (unsigned short)VR[vt][e & 07];
+    DivIn |= (unsigned short)VR[target][element];
     do_div(DivIn, SP_DIV_SQRT_NO, DPH);
-    SHUFFLE_VECTOR(VACC_L, VR[vt], e);
-    VR[vd][de &= 07] = (short)DivOut;
+#ifdef ARCH_MIN_SSE2
+    *(v16 *)VACC_L = vt;
+#else
+    vector_copy(VACC_L, vt);
+#endif
+    VR[result][source & 07] = (short)DivOut;
     DPH = SP_DIV_PRECISION_SINGLE;
-    return;
+#ifdef ARCH_MIN_SSE2
+    vd = *(v16 *)VR[result];
+#else
+    vector_copy(vd, VR[result]);
+#endif
+    return (vd);
 }

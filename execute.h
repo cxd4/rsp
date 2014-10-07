@@ -21,6 +21,7 @@
 
 #define FIT_IMEM(PC)    (PC & 0xFFF & 0xFFC)
 
+uint32_t inst;
 NOINLINE void run_task(void)
 {
     register int PC;
@@ -35,8 +36,6 @@ NOINLINE void run_task(void)
     PC = FIT_IMEM(*RSP.SP_PC_REG);
     while ((*RSP.SP_STATUS_REG & 0x00000001) == 0x00000000)
     {
-        register uint32_t inst;
-
         inst = *(uint32_t *)(RSP.IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
         PC = (PC + 0x004);
@@ -47,13 +46,33 @@ EX:
 #endif
         if (inst >> 25 == 0x25) /* is a VU instruction */
         {
+            ALIGNED short ST[N];
+            v16 vector_result, vector_source, vector_target;
+
             const int opcode = inst % 64; /* inst.R.func */
             const int vd = (inst & 0x000007FF) >> 6; /* inst.R.sa */
             const int vs = (unsigned short)(inst) >> 11; /* inst.R.rd */
             const int vt = (inst >> 16) & 31; /* inst.R.rt */
             const int e  = (inst >> 21) & 0xF; /* rs & 0xF */
 
-            COP2_C2[opcode](vd, vs, vt, e);
+            SHUFFLE_VECTOR(ST, VR[vt], e);
+#ifdef ARCH_MIN_SSE2
+            vector_result = *(__m128i *)VR[vd];
+            vector_source = *(__m128i *)VR[vs];
+            vector_target = *(__m128i *)ST;
+#else
+            vector_result = VR[vd];
+            vector_source = VR[vs];
+            vector_target = ST;
+#endif
+            vector_result = COP2_C2[opcode](
+                vector_result, vector_source, vector_target
+            );
+#ifdef ARCH_MIN_SSE2
+            *(__m128i *)(VR[vd]) = vector_result;
+#else
+            vector_copy(VR[vd], vector_result);
+#endif
         }
         else
         {

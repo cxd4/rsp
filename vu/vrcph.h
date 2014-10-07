@@ -14,11 +14,26 @@
 #include "vu.h"
 #include "divrom.h"
 
-static void VRCPH(int vd, int de, int vt, int e)
+VECTOR_OPERATION VRCPH(v16 vd, v16 vs, v16 vt)
 {
-    DivIn = VR[vt][e & 07] << 16;
-    SHUFFLE_VECTOR(VACC_L, VR[vt], e);
-    VR[vd][de &= 07] = DivOut >> 16;
+    const int result = (inst & 0x000007FF) >>  6;
+    const int source = (inst & 0x0000FFFF) >> 11;
+    const int target = (inst >> 16) & 31;
+    const unsigned int element = (inst >> 21) & 0x7;
+
+    vs = vd; /* unused */
+    DivIn = VR[target][element] << 16;
+#ifdef ARCH_MIN_SSE2
+    *(v16 *)VACC_L = vt;
+#else
+    vector_copy(VACC_L, vt);
+#endif
+    VR[result][source & 07] = DivOut >> 16;
     DPH = SP_DIV_PRECISION_DOUBLE;
-    return;
+#ifdef ARCH_MIN_SSE2
+    vd = *(v16 *)VR[result];
+#else
+    vector_copy(vd, VR[result]);
+#endif
+    return (vd);
 }

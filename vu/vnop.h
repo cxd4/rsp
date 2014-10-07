@@ -13,11 +13,8 @@
 \******************************************************************************/
 #include "vu.h"
 
-static void VNOP(int vd, int vs, int vt, int e)
+VECTOR_OPERATION VNOP(v16 vd, v16 vs, v16 vt)
 {
-    const int WB_inhibit = vd = vs = vt = e = 1;
-
-    if (WB_inhibit)
-        return; /* message("VNOP", WB_inhibit); */
-    return;
+    vs = vt = vd; /* unused */
+    return (vd);
 }

@@ -13,11 +13,10 @@
 \******************************************************************************/
 #include "vu.h"
 
-static void VMACQ(int vd, int vs, int vt, int e)
+VECTOR_OPERATION VMACQ(v16 vd, v16 vs, v16 vt)
 {
-    vd &= vs &= vt &= e &= 0; /* unused */
-    if (vd != vs || vt != e)
-        return;
+    vs = vt = vd; /* unused */
+
     message("VMACQ\nUnimplemented.", 3); /* untested, any N64 ROMs use this?? */
-    return;
+    return (vd);
 }

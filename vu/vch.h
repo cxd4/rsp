@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  C Interpretation of Vector Select Clip Test High                   *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.09.24                                                         *
+* Release:  2014.10.07                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -19,7 +19,9 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
     ALIGNED short VC[N];
     ALIGNED short eq[N], ge[N], le[N];
     ALIGNED short sn[N];
+#ifndef _DEBUG
     short diff[N];
+#endif
     register int i;
 
     vector_copy(VC, VT);
@@ -80,11 +82,24 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
     return;
 }
 
-static void VCH(int vd, int vs, int vt, int e)
+VECTOR_OPERATION VCH(v16 vd, v16 vs, v16 vt)
 {
-    ALIGNED short ST[N];
+#ifdef ARCH_MIN_SSE2
+    ALIGNED short VD[N], VS[N], VT[N];
 
-    SHUFFLE_VECTOR(ST, VR[vt], e);
-    do_ch(VR[vd], VR[vs], ST);
-    return;
+    *(__m128i *)VD = vd;
+    *(__m128i *)VS = vs;
+    *(__m128i *)VT = vt;
+#else
+    v16 VD, VS, VT;
+
+    VD = vd;
+    VS = vs;
+    VT = vt;
+#endif
+    do_ch(VD, VS, VT);
+#ifdef ARCH_MIN_SSE2
+    vd = *(__m128i *)VD;
+#endif
+    return (vd);
 }

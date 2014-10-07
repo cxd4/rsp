@@ -15,6 +15,8 @@
 #ifndef _RSP_H_
 #define _RSP_H_
 
+#include <stdint.h>
+
 #include "Rsp_#1.1.h"
 RSP_INFO RSP;
 
@@ -40,6 +42,8 @@ RSP_INFO RSP;
 #endif
 
 typedef unsigned char byte;
+
+extern uint32_t inst;
 
 NOINLINE void message(const char* body, int priority)
 { /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */

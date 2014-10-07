@@ -47,11 +47,24 @@ INLINE static void do_mulu(short* VD, short* VS, short* VT)
     return;
 }
 
-static void VMULU(int vd, int vs, int vt, int e)
+VECTOR_OPERATION VMULU(v16 vd, v16 vs, v16 vt)
 {
-    short ST[N];
+#ifdef ARCH_MIN_SSE2
+    ALIGNED short VD[N], VS[N], VT[N];
 
-    SHUFFLE_VECTOR(ST, VR[vt], e);
-    do_mulu(VR[vd], VR[vs], ST);
-    return;
+    *(__m128i *)VD = vd;
+    *(__m128i *)VS = vs;
+    *(__m128i *)VT = vt;
+#else
+    v16 VD, VS, VT;
+
+    VD = vd;
+    VS = vs;
+    VT = vt;
+#endif
+    do_mulu(VD, VS, VT);
+#ifdef ARCH_MIN_SSE2
+    vd = *(__m128i *)VD;
+#endif
+    return (vd);
 }
