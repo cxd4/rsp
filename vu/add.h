@@ -1,6 +1,7 @@
 /******************************************************************************\
+* Project:  Instruction Mnemonics for Vector Unit Computational Adds           *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.11.26                                                         *
+* Release:  2014.10.09                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -11,36 +12,23 @@
 * with this software.                                                          *
 * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.             *
 \******************************************************************************/
+
+#ifndef _ADD_H_
+#define _ADD_H_
+
 #include "vu.h"
 
-INLINE void do_and(short* VD, short* VS, short* VT)
-{
-    register int i;
+VECTOR_EXTERN
+    VADD   (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VSUB   (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VABS   (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VADDC  (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VSUBC  (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VSAW   (v16 vd, v16 vs, v16 vt);
 
-    for (i = 0; i < N; i++)
-        VACC_L[i] = VS[i] & VT[i];
-    vector_copy(VD, VACC_L);
-    return;
-}
-
-VECTOR_OPERATION VAND(v16 vd, v16 vs, v16 vt)
-{
-#ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
-
-    *(__m128i *)VD = vd;
-    *(__m128i *)VS = vs;
-    *(__m128i *)VT = vt;
-#else
-    v16 VD, VS, VT;
-
-    VD = vd;
-    VS = vs;
-    VT = vt;
 #endif
-    do_and(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vd = *(__m128i *)VD;
-#endif
-    return (vd);
-}

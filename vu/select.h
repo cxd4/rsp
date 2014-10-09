@@ -1,6 +1,7 @@
 /******************************************************************************\
+* Project:  Instruction Mnemonics for Vector Unit Computational Test Selects   *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.08.13                                                         *
+* Release:  2014.10.09                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -11,50 +12,29 @@
 * with this software.                                                          *
 * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.             *
 \******************************************************************************/
+
+#ifndef _SELECT_H_
+#define _SELECT_H_
+
 #include "vu.h"
 
-INLINE static void do_eq(short* VD, short* VS, short* VT)
-{
-    register int i;
+VECTOR_EXTERN
+    VLT    (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VEQ    (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VNE    (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VGE    (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VCL    (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VCH    (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VCR    (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VMRG   (v16 vd, v16 vs, v16 vt);
 
-    for (i = 0; i < N; i++)
-        clip[i] = 0;
-    for (i = 0; i < N; i++)
-        comp[i] = (VS[i] == VT[i]);
-    for (i = 0; i < N; i++)
-        comp[i] = comp[i] & (ne[i] ^ 1);
-#if (0)
-    merge(VACC_L, comp, VS, VT); /* correct but redundant */
-#else
-    vector_copy(VACC_L, VT);
+extern INLINE void merge(short* VD, short* cmp, short* pass, short* fail);
+
 #endif
-    vector_copy(VD, VACC_L);
-
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
-    return;
-}
-
-VECTOR_OPERATION VEQ(v16 vd, v16 vs, v16 vt)
-{
-#ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
-
-    *(__m128i *)VD = vd;
-    *(__m128i *)VS = vs;
-    *(__m128i *)VT = vt;
-#else
-    v16 VD, VS, VT;
-
-    VD = vd;
-    VS = vs;
-    VT = vt;
-#endif
-    do_eq(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vd = *(__m128i *)VD;
-#endif
-    return (vd);
-}

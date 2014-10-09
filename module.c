@@ -1,7 +1,7 @@
 /******************************************************************************\
-* Project:  Subsystem Handling Interface for RSP Application                   *
+* Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.09.17                                                         *
+* Release:  2014.10.09                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -12,48 +12,146 @@
 * with this software.                                                          *
 * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.             *
 \******************************************************************************/
-#ifndef _RSP_H_
-#define _RSP_H_
 
-#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "Rsp_#1.1.h"
+#include "module.h"
+#include "su.h"
+
 RSP_INFO RSP;
 
-#ifdef _MSC_VER
-#define INLINE      __inline
-#define NOINLINE    __declspec(noinline)
-#define ALIGNED     _declspec(align(16))
-#else
-#define INLINE      
-#define NOINLINE    __attribute__((noinline))
-#define ALIGNED     __attribute__((aligned(16)))
+static const char DLL_about[] =
+    "RSP Interpreter by Iconoclast&&ECHO."\
+    "&&ECHO "\
+    "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
+    "RSP driver examples:  bpoint, zilmar, Ville Linde";
+
+EXPORT void CALL CloseDLL(void)
+{
+    RSP.RDRAM = NULL; /* so DllTest benchmark doesn't think ROM is still open */
+    return;
+}
+EXPORT void CALL DllAbout(HWND hParent)
+{
+    hParent = NULL;
+    message(DLL_about);
+    return;
+}
+EXPORT void CALL DllConfig(HWND hParent)
+{
+    hParent = NULL;
+    system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
+    update_conf(CFG_FILE);
+    if (RSP.DMEM == RSP.IMEM || *RSP.SP_PC_REG == 0x00000000)
+        return;
+
+    export_SP_memory();
+    return;
+}
+EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
+{
+    if (*RSP.SP_STATUS_REG & 0x00000003)
+    {
+        message("SP_STATUS_HALT");
+        return 0x00000000;
+    }
+    switch (*(unsigned int *)(RSP.DMEM + 0xFC0))
+    { /* Simulation barrier to redirect processing externally. */
+#ifdef EXTERN_COMMAND_LIST_GBI
+        case 0x00000001:
+            if (CFG_HLE_GFX == 0)
+                break;
+            if (*(unsigned int *)(RSP.DMEM + 0xFF0) == 0x00000000)
+                break; /* Resident Evil 2 */
+            if (RSP.ProcessDList == NULL) {/*branch next*/} else
+                RSP.ProcessDList();
+            *RSP.SP_STATUS_REG |= 0x00000203;
+            if (*RSP.SP_STATUS_REG & 0x00000040) /* SP_STATUS_INTR_BREAK */
+            {
+                *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
+                RSP.CheckInterrupts();
+            }
+            if (*RSP.DPC_STATUS_REG & 0x00000002) /* DPC_STATUS_FREEZE */
+            {
+                message("DPC_CLR_FREEZE");
+                *RSP.DPC_STATUS_REG &= ~0x00000002;
+            }
+            return 0;
 #endif
-
-/*
- * Streaming SIMD Extensions version import management
- */
-#ifdef ARCH_MIN_SSSE3
-#define ARCH_MIN_SSE2
-#include <tmmintrin.h>
+#ifdef EXTERN_COMMAND_LIST_ABI
+        case 0x00000002: /* OSTask.type == M_AUDTASK */
+            if (CFG_HLE_AUD == 0)
+                break;
+            if (RSP.ProcessAList == 0) {} else
+                RSP.ProcessAList();
+            *RSP.SP_STATUS_REG |= 0x00000203;
+            if (*RSP.SP_STATUS_REG & 0x00000040) /* SP_STATUS_INTR_BREAK */
+            {
+                *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
+                RSP.CheckInterrupts();
+            }
+            return 0;
 #endif
-#ifdef ARCH_MIN_SSE2
-#include <emmintrin.h>
-#endif
+    }
+    run_task();
+    return (cycles);
+}
 
-typedef unsigned char byte;
+EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
+{
+    PluginInfo -> Version = 0x0101; /* zilmar #1.1 (only standard RSP spec) */
+    PluginInfo -> Type = PLUGIN_TYPE_RSP;
+strcpy(
+    PluginInfo -> Name, "Static Interpreter");
+    PluginInfo -> NormalMemory = 0;
+    PluginInfo -> MemoryBswaped = 1;
+    return;
+}
 
-extern uint32_t inst;
+EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
+{
+    if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
+        *CycleCount = 0x00000000;
+    update_conf(CFG_FILE);
 
-NOINLINE void message(const char* body, int priority)
+    if (Rsp_Info.DMEM == Rsp_Info.IMEM) /* usually dummy RSP data for testing */
+        return; /* DMA is not executed just because plugin initiates. */
+    while (Rsp_Info.IMEM != Rsp_Info.DMEM + 4096)
+        message("Virtual host map noncontiguity.");
+
+    RSP = Rsp_Info;
+    *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF; /* task init bug on Mupen64 */
+    CR[0x0] = RSP.SP_MEM_ADDR_REG;
+    CR[0x1] = RSP.SP_DRAM_ADDR_REG;
+    CR[0x2] = RSP.SP_RD_LEN_REG;
+    CR[0x3] = RSP.SP_WR_LEN_REG;
+    CR[0x4] = RSP.SP_STATUS_REG;
+    CR[0x5] = RSP.SP_DMA_FULL_REG;
+    CR[0x6] = RSP.SP_DMA_BUSY_REG;
+    CR[0x7] = RSP.SP_SEMAPHORE_REG;
+    CR[0x8] = RSP.DPC_START_REG;
+    CR[0x9] = RSP.DPC_END_REG;
+    CR[0xA] = RSP.DPC_CURRENT_REG;
+    CR[0xB] = RSP.DPC_STATUS_REG;
+    CR[0xC] = RSP.DPC_CLOCK_REG;
+    CR[0xD] = RSP.DPC_BUFBUSY_REG;
+    CR[0xE] = RSP.DPC_PIPEBUSY_REG;
+    CR[0xF] = RSP.DPC_TMEM_REG;
+    return;
+}
+EXPORT void CALL RomClosed(void)
+{
+    *RSP.SP_PC_REG = 0x00000000;
+    return;
+}
+
+NOINLINE void message(const char* body)
 { /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
     char argv[4096] = "CMD /Q /D /C \"TITLE RSP Message&&ECHO ";
     int i = 0;
     int j = strlen(argv);
-
-    priority &= 03;
-    if (priority < MINIMUM_MESSAGE_PRIORITY)
-        return;
 
 /*
  * I'm just using system() to call the Windows command shell to print text.
@@ -76,11 +174,6 @@ NOINLINE void message(const char* body, int priority)
     return;
 }
 
-/*
- * Update RSP configuration memory from local file resource.
- */
-#define CHARACTERS_PER_LINE     (80)
-/* typical standard DOS text file limit per line */
 NOINLINE void update_conf(const char* source)
 {
     FILE* stream;
@@ -91,7 +184,7 @@ NOINLINE void update_conf(const char* source)
     stream = fopen(source, "r");
     if (stream == NULL)
     { /* try GetModulePath or whatever to correct the path? */
-        message("Failed to read config.", 3);
+        message("Failed to read config.");
         return;
     }
     do
@@ -119,9 +212,9 @@ NOINLINE void update_conf(const char* source)
 
         bvalue = atoi(value);
         if (strcmp(key, "DisplayListToGraphicsPlugin") == 0)
-            CFG_HLE_GFX = (byte)(bvalue);
+            CFG_HLE_GFX = (u8)(bvalue);
         else if (strcmp(key, "AudioListToAudioPlugin") == 0)
-            CFG_HLE_AUD = (byte)(bvalue);
+            CFG_HLE_AUD = (u8)(bvalue);
         else if (strcmp(key, "WaitForCPUHost") == 0)
             CFG_WAIT_FOR_CPU_HOST = bvalue;
         else if (strcmp(key, "SupportCPUSemaphoreLock") == 0)
@@ -130,29 +223,6 @@ NOINLINE void update_conf(const char* source)
     fclose(stream);
     return;
 }
-
-#ifndef EMULATE_STATIC_PC
-static int stage;
-#endif
-static int temp_PC;
-#ifdef WAIT_FOR_CPU_HOST
-static short MFC0_count[32];
-/* Keep one C0 MF status read count for each scalar register. */
-#endif
-
-#ifdef SP_EXECUTE_LOG
-static FILE *output_log;
-extern void step_SP_commands(uint32_t inst);
-#endif
-extern void export_SP_memory(void);
-NOINLINE void trace_RSP_registers(void);
-
-#include "su.h"
-#include "vu/vu.h"
-
-/* Allocate the RSP CPU loop to its own functional space. */
-NOINLINE extern void run_task(void);
-#include "execute.h"
 
 #ifdef SP_EXECUTE_LOG
 void step_SP_commands(uint32_t inst)
@@ -185,7 +255,7 @@ void step_SP_commands(uint32_t inst)
         strcpy(text, offset);
         strcat(text, "\n");
         strcat(text, code);
-        message(text, 0); /* PC offset, MIPS hex. */
+        message(text); /* PC offset, MIPS hex. */
         if (output_log == NULL) {} else /* Global pointer not updated?? */
             fwrite(endian_swap, 4, 1, output_log);
     }
@@ -240,105 +310,3 @@ void export_SP_memory(void)
     export_instruction_cache();
     return;
 }
-
-const char CR_names[16][14] = {
-    "SP_MEM_ADDR  ","SP_DRAM_ADDR ","SP_DMA_RD_LEN","SP_DMA_WR_LEN",
-    "SP_STATUS    ","SP_DMA_FULL  ","SP_DMA_BUSY  ","SP_SEMAPHORE ",
-    "CMD_START    ","CMD_END      ","CMD_CURRENT  ","CMD_STATUS   ",
-    "CMD_CLOCK    ","CMD_BUSY     ","CMD_PIPE_BUSY","CMD_TMEM_BUSY",
-};
-const char SR_names[32][5] = {
-    "zero","$at:"," v0:"," v1:"," a0:"," a1:"," a2:"," a3:",
-    " t0:"," t1:"," t2:"," t3:"," t4:"," t5:"," t6:"," t7:",
-    " s0:"," s1:"," s2:"," s3:"," s4:"," s5:"," s6:"," s7:",
-    " t8:"," t9:"," k0:"," k1:"," gp:","$sp:","$s8:","$ra:",
-};
-const char* Boolean_names[2] = {
-    "false",
-    "true"
-};
-
-NOINLINE void trace_RSP_registers(void)
-{
-    register int i;
-    FILE* out;
-
-    out = fopen("SP_STATE.TXT", "w");
-    fprintf(out, "RCP Communications Register Display\n\n");
-
-/*
- * The precise names for RSP CP0 registers are somewhat difficult to define.
- * Generally, I have tried to adhere to the names shared from bpoint/zilmar,
- * while also merging the concrete purpose and correct assembler references.
- * Whether or not you find these names agreeable is mostly a matter of seeing
- * them from the RCP's point of view or the CPU host's mapped point of view.
- */
-    for (i = 0; i < 8; i++)
-        fprintf(out, "%s:  %08"PRIX32"    %s:  %08"PRIX32"\n",
-            CR_names[i+0], *(CR[i+0]), CR_names[i+8], *(CR[i+8]));
-    fprintf(out, "\n");
-/*
- * There is no memory map for remaining registers not shared by the CPU.
- * The scalar register (SR) file is straightforward and based on the
- * GPR file in the MIPS ISA.  However, the RSP assembly language is still
- * different enough from the MIPS assembly language, in that tokens such as
- * "$zero" and "$s0" are no longer valid.  "$k0", for example, is not a valid
- * RSP register name because on MIPS it was kernel-use, but on the RSP, free.
- * To be colorful/readable, however, I have set the modern MIPS names anyway.
- */
-    for (i = 0; i < 16; i++)
-        fprintf(out, "%s  %08X,  %s  %08X,\n",
-            SR_names[i+0], SR[i+0], SR_names[i+16], SR[i+16]);
-    fprintf(out, "\n");
-
-    for (i = 0; i < 32; i++)
-    {
-        register int j;
-
-        if (i < 10)
-            fprintf(out, "$v%i :  ", i);
-        else
-            fprintf(out, "$v%i:  ", i);
-        for (j = 0; j < N; j++)
-            fprintf(out, "[%04hX]", VR[i][j]);
-        fprintf(out, "\n");
-    }
-    fprintf(out, "\n");
-
-/*
- * The SU has its fair share of registers, but the VU has its counterparts.
- * Just like we have the scalar 16 system control registers for the RSP CP0,
- * we have also a tiny group of special-purpose, vector control registers.
- */
-    fprintf(out, "$%s:  0x%04X\n", tokens_CR_V[0], get_VCO());
-    fprintf(out, "$%s:  0x%04X\n", tokens_CR_V[1], get_VCC());
-    fprintf(out, "$%s:  0x%02X\n", tokens_CR_V[2], get_VCE());
-    fprintf(out, "\n");
-
-/*
- * 48-bit RSP accumulators
- * Most vector unit patents traditionally call this register file "VACC".
- * However, typically in discussion about SGI's implementation, we say "ACC".
- */
-    for (i = 0; i < 8; i++)
-    {
-        register int j;
-
-        fprintf(out, "ACC[%o]:  ", i);
-        for (j = 0; j < 3; j++)
-            fprintf(out, "[%04hX]", VACC[j][i]);
-        fprintf(out, "\n");
-    }
-    fprintf(out, "\n");
-
-/*
- * special-purpose vector unit registers for vector divide operations only
- */
-    fprintf(out, "%s:  %i\n", "DivIn", DivIn);
-    fprintf(out, "%s:  %i\n", "DivOut", DivOut);
-    /* MovIn:  This reg. might exist for VMOV, but it is obsolete to emulate. */
-    fprintf(out, "DPH:  %s\n", Boolean_names[DPH]);
-    fclose(out);
-    return;
-}
-#endif

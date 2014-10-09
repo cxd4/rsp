@@ -1,6 +1,7 @@
 /******************************************************************************\
+* Project:  Instruction Mnemonics for Vector Unit Computational Divides        *
 * Authors:  Iconoclast                                                         *
-* Release:  2013.11.26                                                         *
+* Release:  2014.10.09                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -11,25 +12,32 @@
 * with this software.                                                          *
 * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.             *
 \******************************************************************************/
+
+#ifndef _DIVIDE_H_
+#define _DIVIDE_H_
+
 #include "vu.h"
 
-VECTOR_OPERATION VMOV(v16 vd, v16 vs, v16 vt)
-{
-    const int result = (inst & 0x000007FF) >>  6;
-    const int source = (inst & 0x0000FFFF) >> 11;
-    const unsigned int element = (inst >> 21) & 0x7;
+VECTOR_EXTERN
+    VRCP   (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VRCPL  (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VRCPH  (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VMOV   (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VRSQ   (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VRSQL  (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VRSQH  (v16 vd, v16 vs, v16 vt);
+VECTOR_EXTERN
+    VNOP   (v16 vd, v16 vs, v16 vt);
 
-    vs = vd; /* unused */
-#ifdef ARCH_MIN_SSE2
-    *(v16 *)VACC_L = vt;
-#else
-    vector_copy(VACC_L, vt);
+extern int DivIn;
+extern int DivOut;
+
+extern int DPH;
+
 #endif
-    VR[result][source & 07] = VACC_L[element];
-#ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VR[result];
-#else
-    vector_copy(vd, VR[result]);
-#endif
-    return (vd);
-}
