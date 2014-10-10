@@ -135,7 +135,7 @@ extern void ULW(int rd, uint32_t addr);
 extern void USW(int rs, uint32_t addr);
 
 /*** Scalar, Coprocessor Operations (system control) ***/
-extern RCPREG* CR[16];
+extern u32* CR[16];
 extern void SP_DMA_READ(void);
 extern void SP_DMA_WRITE(void);
 

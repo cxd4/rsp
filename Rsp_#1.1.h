@@ -1,6 +1,8 @@
 #ifndef __RSP_1_1_H__
 #define __RSP_1_1_H__
 
+#include "my_types.h"
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -18,65 +20,63 @@ extern "C" {
  * Here, the sufficient ANSI approximations are given so that this header
  * will operate more independently.
  */
-struct HWND__ {int unused;};
-typedef struct HWND__ *HWND;
-struct HINSTANCE__ {int unused;};
-typedef struct HINSTANCE__ *HINSTANCE;
-struct HMENU__ {int unused;};
-typedef struct HMENU__ *HMENU;
-struct HDC__ {int unused;};
-typedef struct HDC__ *HDC;
-
-#ifdef _STDINT_H
-typedef uint32_t RCPREG;
-#elif (0)
-typedef unsigned long RCPREG; /* necessary for 16-bit targets */
-#else
-typedef unsigned int RCPREG; /* ANSI approximation of 32-bit size */
-#endif
+struct a_struct__ {int unused;};
+typedef struct a_struct__* struct_p;
+typedef struct {
+    i32 left;
+    i32 top;
+    i32 right;
+    i32 bottom;
+} winapi_rect;
+typedef struct {
+    struct_p hdc;
+    int fErase;
+    winapi_rect rcPaint;
+    int fRestore;
+    int fIncUpdate;
+    u8 rgbReserved[32];
+} winapi_paintstruct;
 
 typedef struct {
-    unsigned short Version;        /* Should be set to 0x0101 */
-    unsigned short Type;           /* Set to PLUGIN_TYPE_RSP */
-    char Name[100];      /* Name of the DLL */
+    u16 Version;        /* Should be set to 0x0101. */
+    u16 Type;           /* set to PLUGIN_TYPE_RSP */
+    char Name[100];     /* name of the DLL */
 
-    /* If DLL supports memory these memory options then set them to TRUE or FALSE
-       if it does not support it */
-    int NormalMemory;   /* a normal BYTE array */ 
-    int MemoryBswaped;  /* a normal BYTE array where the memory has been pre-
-                              byte-swapped on a DWORD (32 bits) boundary */
+    /* If DLL supports memory these memory options then set them to TRUE. */
+    int NormalMemory;   /* a normal byte array */
+    int MemoryBswaped;  /* a normal byte array in little-endian byte order */
 } PLUGIN_INFO;
 
 typedef struct {
-    HINSTANCE hInst;
+    struct_p* hInst;
     int MemoryBswaped;    /* If this is set to TRUE, then the memory has been
                               pre-byte-swapped on a DWORD (32 bits) boundary */
-    unsigned char *RDRAM;
-    unsigned char *DMEM;
-    unsigned char *IMEM;
+    u8* RDRAM;
+    u8* DMEM;
+    u8* IMEM;
 
-    RCPREG *MI_INTR_REG;
+    u32* MI_INTR_REG;
 
-    RCPREG *SP_MEM_ADDR_REG;
-    RCPREG *SP_DRAM_ADDR_REG;
-    RCPREG *SP_RD_LEN_REG;
-    RCPREG *SP_WR_LEN_REG;
-    RCPREG *SP_STATUS_REG;
-    RCPREG *SP_DMA_FULL_REG;
-    RCPREG *SP_DMA_BUSY_REG;
-    RCPREG *SP_PC_REG; /* This was SUPPOSED to be defined after the next. */
-    RCPREG *SP_SEMAPHORE_REG;
-
-/** RCPREG *SP_PC_REG; // CPU-mapped between SP and DP command buffer regs **/
-
-    RCPREG *DPC_START_REG;
-    RCPREG *DPC_END_REG;
-    RCPREG *DPC_CURRENT_REG;
-    RCPREG *DPC_STATUS_REG;
-    RCPREG *DPC_CLOCK_REG;
-    RCPREG *DPC_BUFBUSY_REG;
-    RCPREG *DPC_PIPEBUSY_REG;
-    RCPREG *DPC_TMEM_REG;
+    u32* SP_MEM_ADDR_REG;
+    u32* SP_DRAM_ADDR_REG;
+    u32* SP_RD_LEN_REG;
+    u32* SP_WR_LEN_REG;
+    u32* SP_STATUS_REG;
+    u32* SP_DMA_FULL_REG;
+    u32* SP_DMA_BUSY_REG;
+    u32* SP_PC_REG; /* This was supposed to be defined AFTER semaphore. */
+    u32* SP_SEMAPHORE_REG;
+#if 0
+    u32* SP_PC_REG; /* CPU-mapped between SP and DP command buffer regs */
+#endif
+    u32* DPC_START_REG;
+    u32* DPC_END_REG;
+    u32* DPC_CURRENT_REG;
+    u32* DPC_STATUS_REG;
+    u32* DPC_CLOCK_REG;
+    u32* DPC_BUFBUSY_REG;
+    u32* DPC_PIPEBUSY_REG;
+    u32* DPC_TMEM_REG;
 
     void (*CheckInterrupts)(void);
     void (*ProcessDList)(void);
@@ -84,6 +84,28 @@ typedef struct {
     void (*ProcessRdpList)(void);
     void (*ShowCFB)(void);
 } RSP_INFO;
+
+typedef struct {
+	/* menu */
+	/* Items should have an ID between 5001 and 5100 .*/
+	struct_p hRSPMenu;
+	void (*ProcessMenuItem)(int ID);
+
+	/* Break Points */
+	int UseBPoints;
+	char BPPanelName[20];
+	void (*Add_BPoint)(void);
+	void (*CreateBPPanel)(struct_p hDlg, winapi_rect rcBox);
+	void (*HideBPPanel)(void);
+	void (*PaintBPPanel)(winapi_paintstruct ps);
+	void (*ShowBPPanel)(void);
+	void (*RefreshBpoints)(struct_p hList);
+	void (*RemoveBpoint)(struct_p hList, int index );
+	void (*RemoveAllBpoint)(void);
+
+	/* RSP command window */
+	void (*Enter_RSP_Commands_Window)(void);
+} RSPDEBUG_INFO;
 
 typedef struct {
     void (*UpdateBreakPoints)(void);
@@ -120,7 +142,7 @@ EXPORT void CALL CloseDLL(void);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/ 
-EXPORT void CALL DllAbout(HWND hParent);
+EXPORT void CALL DllAbout(struct_p hParent);
 
 /******************************************************************
   Function: DllConfig
@@ -129,7 +151,7 @@ EXPORT void CALL DllAbout(HWND hParent);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/
-EXPORT void CALL DllConfig(HWND hParent);
+EXPORT void CALL DllConfig(struct_p hParent);
 
 /******************************************************************
   Function: DllTest
@@ -138,7 +160,7 @@ EXPORT void CALL DllConfig(HWND hParent);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/ 
-EXPORT void CALL DllTest(HWND hParent);
+EXPORT void CALL DllTest(struct_p hParent);
 
 /******************************************************************
   Function: DoRspCycles
@@ -151,7 +173,7 @@ EXPORT void CALL DllTest(HWND hParent);
             should have performed.
             (this value is ignored if the RSP is stopped)
 *******************************************************************/ 
-EXPORT unsigned int CALL DoRspCycles(unsigned int Cycles);
+EXPORT u32 CALL DoRspCycles(u32 Cycles);
 
 /******************************************************************
   Function: GetDllInfo
@@ -161,17 +183,7 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int Cycles);
             filled by the function. (see def above)
   output:   none
 *******************************************************************/ 
-EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo);
-
-/*
- * `GetRspDebugInfo` -- customarily deprecated by cxd4
- *
- * It was extraordinarily easy to re-invent debug facilities without
- * depending on the Microsoft-Windows-themed debug functions from this spec.
- *
- * What's more?  No emulators supporting RSP plugins require this function.
- * It can be safely ignored as a non-portable custom extension to the spec.
- */
+EXPORT void CALL GetDllInfo(PLUGIN_INFO* PluginInfo);
 
 /******************************************************************
   Function: InitiateRSP
@@ -184,18 +196,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo);
             control between the RSP and r4300i core.
   output:   none
 *******************************************************************/ 
-EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount);
-
-/*
- * `InitiateRSPDebugger` -- customarily deprecated by cxd4
- *
- * Here, again, nothing about the full features of debugging this RSP
- * emulator needed to depend on any WIN32 fixations in this plugin spec.
- *
- * Also, again, as with the case of `GetRspDebugInfo`, the test of time has
- * passed the conclusion that no emulators require the RSP plugin to export
- * this procedure's symbol to be considered a valid RSP plugin.
- */
+EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, u32* CycleCount);
 
 /******************************************************************
   Function: RomClosed
@@ -204,6 +205,59 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount);
   output:   none
 *******************************************************************/ 
 EXPORT void CALL RomClosed(void);
+
+/*
+ * optional in version #1.1 of the plugin spec
+ * These symbols do not need exporting for emulators to accept the module.
+ */
+
+/******************************************************************
+  Function: GetRspDebugInfo
+  Purpose:  This function allows the emulator to gather information
+            about the debug capabilities of the dll by filling in
+			the DebugInfo structure.
+  input:    a pointer to a RSPDEBUG_INFO stucture that needs to be
+            filled by the function. (see def above)
+  output:   none
+*******************************************************************/
+EXPORT void CALL GetRspDebugInfo(RSPDEBUG_INFO* RSPDebugInfo);
+
+/******************************************************************
+  Function: InitiateRSPDebugger
+  Purpose:  This function is called when the DLL is started to give
+            information from the emulator that the n64 RSP
+			interface needs to intergrate the debugger with the
+			rest of the emulator.
+  input:    DebugInfo is passed to this function which is defined
+            above.
+  output:   none
+*******************************************************************/
+EXPORT void CALL InitiateRSPDebugger(DEBUG_INFO DebugInfo);
+
+/*
+ * required in version #1.2 of the RSP plugin spec
+ *
+ * Most of these functions were made to inhibit private plugin distribution
+ * from Project64 in its commercial state, and there is no documentation of
+ * these in the source to Project64 2.x as of yet.
+ */
+EXPORT void CALL RomOpen(void);
+EXPORT void CALL EnableDebugging(int Enabled);
+EXPORT void CALL PluginLoaded(void);
+
+/************ Profiling **************/
+#ifndef FALSE
+#define FALSE       0
+#define TRUE        1
+#endif
+
+#define Default_ProfilingOn         FALSE
+#define Default_IndvidualBlock      FALSE
+#define Default_ShowErrors          FALSE
+#define Default_AudioHle            FALSE
+
+#define InterpreterCPU      0
+#define RecompilerCPU       1
 
 #if defined(__cplusplus)
 }

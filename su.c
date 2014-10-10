@@ -49,7 +49,7 @@ static word_32 SR_temp;
  * the SGI N64 extension to the MIPS R4000 and are not entirely implemented.
  */
 
-RCPREG* CR[16];
+u32* CR[16];
 unsigned char conf[32];
 
 void MFC0(int rt, int rd)
