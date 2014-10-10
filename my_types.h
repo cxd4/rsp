@@ -67,7 +67,7 @@ typedef i64                     s64;
 
 /*
  * Type `i8' should be neutral to signedness and representative of the
- * indifference of which one implementations or optimizations may prefer.
+ * indifference as to whether implementations or optimizations sign or not.
  */
 typedef char                    i8;
 typedef int8_t                  s8;
