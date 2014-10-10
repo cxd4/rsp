@@ -33,13 +33,13 @@ EXPORT void CALL CloseDLL(void)
     RSP.RDRAM = NULL; /* so DllTest benchmark doesn't think ROM is still open */
     return;
 }
-EXPORT void CALL DllAbout(HWND hParent)
+EXPORT void CALL DllAbout(struct_p hParent)
 {
     hParent = NULL;
     message(DLL_about);
     return;
 }
-EXPORT void CALL DllConfig(HWND hParent)
+EXPORT void CALL DllConfig(struct_p hParent)
 {
     hParent = NULL;
     system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
@@ -310,3 +310,28 @@ void export_SP_memory(void)
     export_instruction_cache();
     return;
 }
+
+/*
+ * Microsoft linker defaults to an entry point of `_DllMainCRTStartup',
+ * which attaches several CRT dependencies.  To eliminate CRT dependencies,
+ * we direct the linker to cursor the entry point to the lower-level
+ * `DllMain' symbol or, alternatively, link with /NOENTRY for no entry point.
+ */
+#ifdef WIN32
+int __stdcall DllMain(void* hModule, u32 ul_reason_for_call, void* lpReserved)
+{
+    hModule = lpReserved = NULL; /* unused */
+    switch (ul_reason_for_call)
+    {
+case 1: /* DLL_PROCESS_ATTACH */
+        break;
+case 2: /* DLL_THREAD_ATTACH */
+        break;
+case 3: /* DLL_THREAD_DETACH */
+        break;
+case 0: /* DLL_PROCESS_DETACH */
+        break;
+    }
+    return 1; /* TRUE */
+}
+#endif
