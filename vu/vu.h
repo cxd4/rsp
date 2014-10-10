@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.07                                                         *
+* Release:  2014.10.10                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -23,16 +23,6 @@
 
 #define N       8
 /* N:  number of processor elements in SIMD processor */
-
-#ifdef _MSC_VER
-#define INLINE      __inline
-#define NOINLINE    __declspec(noinline)
-#define ALIGNED     _declspec(align(16))
-#else
-#define INLINE      
-#define NOINLINE    __attribute__((noinline))
-#define ALIGNED     __attribute__((aligned(16)))
-#endif
 
 /*
  * We are going to need this for vector operations doing scalar things.
