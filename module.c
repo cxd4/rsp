@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.10                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -20,7 +20,7 @@
 #include "module.h"
 #include "su.h"
 
-RSP_INFO RSP;
+RSP_INFO RSP_INFO_NAME;
 
 static const char DLL_about[] =
     "RSP Interpreter by Iconoclast&&ECHO."\
@@ -30,53 +30,60 @@ static const char DLL_about[] =
 
 EXPORT void CALL CloseDLL(void)
 {
-    RSP.RDRAM = NULL; /* so DllTest benchmark doesn't think ROM is still open */
+    DRAM = NULL; /* so DllTest benchmark doesn't think ROM is still open */
     return;
 }
+
 EXPORT void CALL DllAbout(struct_p hParent)
 {
     hParent = NULL;
     message(DLL_about);
     return;
 }
+
 EXPORT void CALL DllConfig(struct_p hParent)
 {
     hParent = NULL;
     system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
     update_conf(CFG_FILE);
-    if (RSP.DMEM == RSP.IMEM || *RSP.SP_PC_REG == 0x00000000)
+    if (DMEM == IMEM || GET_RCP_REG(SP_PC_REG) == 0x00000000)
         return;
 
     export_SP_memory();
     return;
 }
-EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
+
+EXPORT u32 CALL DoRspCycles(u32 cycles)
 {
-    if (*RSP.SP_STATUS_REG & 0x00000003)
+    if (GET_RCP_REG(SP_STATUS_REG) & 0x00000003)
     {
         message("SP_STATUS_HALT");
         return 0x00000000;
     }
-    switch (*(unsigned int *)(RSP.DMEM + 0xFC0))
+
+    switch (*(i32 *)(DMEM + 0xFC0))
     { /* Simulation barrier to redirect processing externally. */
 #ifdef EXTERN_COMMAND_LIST_GBI
         case 0x00000001:
             if (CFG_HLE_GFX == 0)
                 break;
-            if (*(unsigned int *)(RSP.DMEM + 0xFF0) == 0x00000000)
-                break; /* Resident Evil 2 */
-            if (RSP.ProcessDList == NULL) {/*branch next*/} else
-                RSP.ProcessDList();
-            *RSP.SP_STATUS_REG |= 0x00000203;
-            if (*RSP.SP_STATUS_REG & 0x00000040) /* SP_STATUS_INTR_BREAK */
-            {
-                *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
-                RSP.CheckInterrupts();
+
+            if (*(i32 *)(DMEM + 0xFF0) == 0x00000000)
+                break; /* Resident Evil 2, null task pointers */
+            if (GET_RSP_INFO(ProcessDList) == NULL)
+                { /* branch */ }
+            else
+                GET_RSP_INFO(ProcessDList)();
+            GET_RCP_REG(SP_STATUS_REG) |= 0x00000203;
+            if (GET_RCP_REG(SP_STATUS_REG) & 0x00000040)
+            { /* SP_STATUS_INTR_BREAK */
+                GET_RCP_REG(MI_INTR_REG) |= 0x00000001; /* R4300 SP interrupt */
+                GET_RSP_INFO(CheckInterrupts)();
             }
-            if (*RSP.DPC_STATUS_REG & 0x00000002) /* DPC_STATUS_FREEZE */
-            {
+            if (GET_RCP_REG(DPC_STATUS_REG) & 0x00000002)
+            { /* DPC_STATUS_FREEZE */
                 message("DPC_CLR_FREEZE");
-                *RSP.DPC_STATUS_REG &= ~0x00000002;
+                GET_RCP_REG(DPC_STATUS_REG) &= ~0x00000002;
             }
             return 0;
 #endif
@@ -84,13 +91,16 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
         case 0x00000002: /* OSTask.type == M_AUDTASK */
             if (CFG_HLE_AUD == 0)
                 break;
-            if (RSP.ProcessAList == 0) {} else
-                RSP.ProcessAList();
-            *RSP.SP_STATUS_REG |= 0x00000203;
-            if (*RSP.SP_STATUS_REG & 0x00000040) /* SP_STATUS_INTR_BREAK */
-            {
-                *RSP.MI_INTR_REG |= 0x00000001; /* VR4300 SP interrupt */
-                RSP.CheckInterrupts();
+
+            if (GET_RSP_INFO(ProcessAList) == NULL)
+                { /* branch */ }
+            else
+                GET_RSP_INFO(ProcessAList)();
+            GET_RCP_REG(SP_STATUS_REG) |= 0x00000203;
+            if (GET_RCP_REG(SP_STATUS_REG) & 0x00000040)
+            { /* SP_STATUS_INTR_BREAK */
+                GET_RCP_REG(MI_INTR_REG) |= 0x00000001; /* R4300 SP interrupt */
+                GET_RSP_INFO(CheckInterrupts)();
             }
             return 0;
 #endif
@@ -121,29 +131,34 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
     while (Rsp_Info.IMEM != Rsp_Info.DMEM + 4096)
         message("Virtual host map noncontiguity.");
 
-    RSP = Rsp_Info;
-    *RSP.SP_PC_REG = 0x04001000 & 0x00000FFF; /* task init bug on Mupen64 */
-    CR[0x0] = RSP.SP_MEM_ADDR_REG;
-    CR[0x1] = RSP.SP_DRAM_ADDR_REG;
-    CR[0x2] = RSP.SP_RD_LEN_REG;
-    CR[0x3] = RSP.SP_WR_LEN_REG;
-    CR[0x4] = RSP.SP_STATUS_REG;
-    CR[0x5] = RSP.SP_DMA_FULL_REG;
-    CR[0x6] = RSP.SP_DMA_BUSY_REG;
-    CR[0x7] = RSP.SP_SEMAPHORE_REG;
-    CR[0x8] = RSP.DPC_START_REG;
-    CR[0x9] = RSP.DPC_END_REG;
-    CR[0xA] = RSP.DPC_CURRENT_REG;
-    CR[0xB] = RSP.DPC_STATUS_REG;
-    CR[0xC] = RSP.DPC_CLOCK_REG;
-    CR[0xD] = RSP.DPC_BUFBUSY_REG;
-    CR[0xE] = RSP.DPC_PIPEBUSY_REG;
-    CR[0xF] = RSP.DPC_TMEM_REG;
+    RSP_INFO_NAME = Rsp_Info;
+    DRAM = GET_RSP_INFO(RDRAM);
+    DMEM = GET_RSP_INFO(DMEM);
+    IMEM = GET_RSP_INFO(IMEM);
+
+    CR[0x0] = &GET_RCP_REG(SP_MEM_ADDR_REG);
+    CR[0x1] = &GET_RCP_REG(SP_DRAM_ADDR_REG);
+    CR[0x2] = &GET_RCP_REG(SP_RD_LEN_REG);
+    CR[0x3] = &GET_RCP_REG(SP_WR_LEN_REG);
+    CR[0x4] = &GET_RCP_REG(SP_STATUS_REG);
+    CR[0x5] = &GET_RCP_REG(SP_DMA_FULL_REG);
+    CR[0x6] = &GET_RCP_REG(SP_DMA_BUSY_REG);
+    CR[0x7] = &GET_RCP_REG(SP_SEMAPHORE_REG);
+    GET_RCP_REG(SP_PC_REG) = 0x04001000 & 0xFFF; /* task init bug on Mupen64 */
+    CR[0x8] = &GET_RCP_REG(DPC_START_REG);
+    CR[0x9] = &GET_RCP_REG(DPC_END_REG);
+    CR[0xA] = &GET_RCP_REG(DPC_CURRENT_REG);
+    CR[0xB] = &GET_RCP_REG(DPC_STATUS_REG);
+    CR[0xC] = &GET_RCP_REG(DPC_CLOCK_REG);
+    CR[0xD] = &GET_RCP_REG(DPC_BUFBUSY_REG);
+    CR[0xE] = &GET_RCP_REG(DPC_PIPEBUSY_REG);
+    CR[0xF] = &GET_RCP_REG(DPC_TMEM_REG);
     return;
 }
+
 EXPORT void CALL RomClosed(void)
 {
-    *RSP.SP_PC_REG = 0x00000000;
+    GET_RCP_REG(SP_PC_REG) = 0x04001000;
     return;
 }
 
@@ -265,19 +280,19 @@ void step_SP_commands(uint32_t inst)
 NOINLINE void export_data_cache(void)
 {
     FILE* out;
-    register uint32_t addr;
+    register u32 addr;
 
     out = fopen("rcpcache.dhex", "wb");
 #if (0)
     for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000001)
-        fputc(RSP.DMEM[BES(addr & 0x00000FFF)], out);
+        fputc(DMEM[BES(addr & 0x00000FFF)], out);
 #else
     for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000004)
     {
-        fputc(RSP.DMEM[addr + 0x000 + BES(0x000)], out);
-        fputc(RSP.DMEM[addr + 0x001 + MES(0x000)], out);
-        fputc(RSP.DMEM[addr + 0x002 - MES(0x000)], out);
-        fputc(RSP.DMEM[addr + 0x003 - BES(0x000)], out);
+        fputc(DMEM[addr + 0x000 + BES(0x000)], out);
+        fputc(DMEM[addr + 0x001 + MES(0x000)], out);
+        fputc(DMEM[addr + 0x002 - MES(0x000)], out);
+        fputc(DMEM[addr + 0x003 - BES(0x000)], out);
     }
 #endif
     fclose(out);
@@ -286,7 +301,7 @@ NOINLINE void export_data_cache(void)
 NOINLINE void export_instruction_cache(void)
 {
     FILE* out;
-    register uint32_t addr;
+    register u32 addr;
 
     out = fopen("rcpcache.ihex", "wb");
 #if (0)
@@ -295,10 +310,10 @@ NOINLINE void export_instruction_cache(void)
 #else
     for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000004)
     {
-        fputc(RSP.IMEM[addr + 0x000 + BES(0x000)], out);
-        fputc(RSP.IMEM[addr + 0x001 + MES(0x000)], out);
-        fputc(RSP.IMEM[addr + 0x002 - MES(0x000)], out);
-        fputc(RSP.IMEM[addr + 0x003 - BES(0x000)], out);
+        fputc(IMEM[addr + 0x000 + BES(0x000)], out);
+        fputc(IMEM[addr + 0x001 + MES(0x000)], out);
+        fputc(IMEM[addr + 0x002 - MES(0x000)], out);
+        fputc(IMEM[addr + 0x003 - BES(0x000)], out);
     }
 #endif
     fclose(out);

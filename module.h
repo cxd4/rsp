@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.10                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -54,8 +54,6 @@
 #define CFG_WAIT_FOR_CPU_HOST       (*(int *)(conf + 0x10))
 #define CFG_MEND_SEMAPHORE_LOCK     (*(int *)(conf + 0x14))
 #define CFG_TRACE_RSP_REGISTERS     (*(int *)(conf + 0x18))
-
-extern RSP_INFO RSP;
 
 /*
  * Update RSP configuration memory from local file resource.

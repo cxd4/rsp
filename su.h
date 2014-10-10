@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.10                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -17,7 +17,6 @@
 #define _SU_H_
 
 #include <stdio.h>
-#include <stdint.h>
 
 #include "my_types.h"
 
@@ -33,9 +32,16 @@
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ
 #endif
 
-extern RSP_INFO RSP;
+#define RSP_INFO_NAME           RSP_info
+#define GET_RSP_INFO(member)    (RSP_INFO_NAME.member)
+#define GET_RCP_REG(member)     (*RSP_INFO_NAME.member)
 
-extern unsigned char conf[32];
+extern RSP_INFO RSP_INFO_NAME;
+extern u8* DRAM;
+extern u8* DMEM;
+extern u8* IMEM;
+
+extern u8 conf[32];
 
 /*
  * RSP virtual registers (of scalar unit)
@@ -49,7 +55,7 @@ extern unsigned char conf[32];
  * abandon their designated purposes on the master CPU host (the VR4300),
  * hence most of the MIPS names "k0, k1, t0, t1, v0, v1 ..." no longer apply.
  */
-extern int SR[32];
+extern i32 SR[32];
 
 #define FIT_IMEM(PC)    (PC & 0xFFF & 0xFFC)
 
@@ -131,11 +137,25 @@ extern void set_PC(int address);
  */
 #define VR_S(vt,element)    (*(i16 *)((i8 *)(VR[vt]) + element))
 
-extern void ULW(int rd, uint32_t addr);
-extern void USW(int rs, uint32_t addr);
-
 /*** Scalar, Coprocessor Operations (system control) ***/
+#define SP_STATUS_HALT          (0x00000001 <<  0)
+#define SP_STATUS_BROKE         (0x00000001 <<  1)
+#define SP_STATUS_DMA_BUSY      (0x00000001 <<  2)
+#define SP_STATUS_DMA_FULL      (0x00000001 <<  3)
+#define SP_STATUS_IO_FULL       (0x00000001 <<  4)
+#define SP_STATUS_SSTEP         (0x00000001 <<  5)
+#define SP_STATUS_INTR_BREAK    (0x00000001 <<  6)
+#define SP_STATUS_SIG0          (0x00000001 <<  7)
+#define SP_STATUS_SIG1          (0x00000001 <<  8)
+#define SP_STATUS_SIG2          (0x00000001 <<  9)
+#define SP_STATUS_SIG3          (0x00000001 << 10)
+#define SP_STATUS_SIG4          (0x00000001 << 11)
+#define SP_STATUS_SIG5          (0x00000001 << 12)
+#define SP_STATUS_SIG6          (0x00000001 << 13)
+#define SP_STATUS_SIG7          (0x00000001 << 14)
+
 extern u32* CR[16];
+
 extern void SP_DMA_READ(void);
 extern void SP_DMA_WRITE(void);
 
@@ -157,8 +177,8 @@ extern void CFC2(int rt, int rd);
 extern void CTC2(int rt, int rd);
 
 /*** Modern pseudo-operations (not real instructions, but nice shortcuts) ***/
-extern void ULW(int rd, uint32_t addr);
-extern void USW(int rs, uint32_t addr);
+extern void ULW(int rd, u32 addr);
+extern void USW(int rs, u32 addr);
 
 /*
  * The scalar unit controls the primary R4000 operations implementation,
