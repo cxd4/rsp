@@ -233,7 +233,7 @@ void SP_DMA_READ(void)
         {
             offC = (count*length + *CR[0x0] + i) & 0x00001FF8;
             offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8;
-            memcpy(DMEM + offC, DRAM + offD, 8);
+            *(i64 *)(DMEM + offC) = *(i64 *)(DRAM + offD);
             i += 0x008;
         } while (i < length);
     } while (count);
@@ -264,7 +264,7 @@ void SP_DMA_WRITE(void)
         {
             offC = (count*length + *CR[0x0] + i) & 0x00001FF8;
             offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8;
-            memcpy(DRAM + offD, DMEM + offC, 8);
+            *(i64 *)(DRAM + offD) = *(i64 *)(DMEM + offC);
             i += 0x000008;
         } while (i < length);
     } while (count);
