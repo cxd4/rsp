@@ -49,8 +49,8 @@ typedef struct {
 
 typedef struct {
     struct_p* hInst;
-    int MemoryBswaped;    /* If this is set to TRUE, then the memory has been
-                              pre-byte-swapped on a DWORD (32 bits) boundary */
+    int MemoryBswaped;
+
     u8* RDRAM;
     u8* DMEM;
     u8* IMEM;
