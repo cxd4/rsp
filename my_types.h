@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Standard Integer Type Definitions                                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.10                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -48,7 +48,7 @@ typedef __int64                 i64;
 typedef signed __int64          s64;
 typedef unsigned __int64        u64;
 
-#elif (__STDC_VERSION__ >= 199901L)
+#elif (__STDC_VERSION__ >= 199901L) | !defined(__STDC_VERSION__)
 
 #include <stdint.h>
 
