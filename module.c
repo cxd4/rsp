@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.10                                                         *
+* Release:  2014.10.11                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -16,6 +16,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 #include "module.h"
 #include "su.h"
@@ -44,7 +48,7 @@ EXPORT void CALL DllAbout(struct_p hParent)
 EXPORT void CALL DllConfig(struct_p hParent)
 {
     hParent = NULL;
-    system("sp_cfgui"); /* This launches an EXE by default (if not, BAT/CMD). */
+    my_system("sp_cfgui");
     update_conf(CFG_FILE);
     if (DMEM == IMEM || GET_RCP_REG(SP_PC_REG) == 0x00000000)
         return;
@@ -164,15 +168,11 @@ EXPORT void CALL RomClosed(void)
 
 NOINLINE void message(const char* body)
 { /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
+#ifdef WIN32
     char argv[4096] = "CMD /Q /D /C \"TITLE RSP Message&&ECHO ";
     int i = 0;
     int j = strlen(argv);
 
-/*
- * I'm just using system() to call the Windows command shell to print text.
- * When the subsystem permits, use printf to trace messages, not this crap.
- * I don't use WIN32 MessageBox because that's just extra OS dependencies. :P
- */
     while (body[i] != '\0')
     {
         if (body[i] == '\n')
@@ -185,7 +185,10 @@ NOINLINE void message(const char* body)
         argv[j++] = body[i++];
     }
     strcat(argv, "&&PAUSE&&EXIT\"");
-    system(argv);
+    my_system(argv);
+#else
+    fputs(body, stdout);
+#endif
     return;
 }
 
@@ -350,3 +353,60 @@ case 0: /* DLL_PROCESS_DETACH */
     return 1; /* TRUE */
 }
 #endif
+
+/*
+ * low-level recreations of the C standard library functions for operating
+ * systems that define a C run-time or dependency on top of fixed OS calls
+ *
+ * Currently, this only addresses Microsoft Windows.
+ */
+
+NOINLINE extern void* my_memset(void* ptr, int value, size_t num)
+{
+    unsigned char* addr;
+
+    addr = (unsigned char *)ptr;
+    while (num-- > 0)
+        *(addr++) = value & 0xFF;
+    return (ptr);
+}
+
+NOINLINE int my_system(char* command)
+{
+    int ret_slot;
+#ifdef WIN32
+    STARTUPINFOA info;
+    PROCESS_INFORMATION info_process;
+
+    my_memset(&info, 0x00, sizeof(info));
+    info.cb = sizeof(info);
+
+    info.dwFillAttribute =
+        FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+    info.dwFlags = STARTF_USEFILLATTRIBUTE | STARTF_USECOUNTCHARS;
+
+    info.dwXCountChars = 80;
+    info.dwYCountChars = 20;
+
+    my_memset(&info_process, 0x00, sizeof(info_process));
+    ret_slot = CreateProcessA(
+        NULL,
+        command,
+        NULL,
+        NULL,
+        FALSE,
+        0x00000000,
+        NULL,
+        NULL,
+        &info,
+        &info_process
+    );
+
+    WaitForSingleObject(info_process.hProcess, INFINITE);
+    CloseHandle(info_process.hProcess);
+    CloseHandle(info_process.hThread);
+#else
+    ret_slot = system(command);
+#endif
+    return (ret_slot);
+}

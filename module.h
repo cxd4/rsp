@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.10                                                         *
+* Release:  2014.10.11                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -73,5 +73,8 @@ static FILE *output_log;
 extern void step_SP_commands(u32 inst);
 #endif
 extern void export_SP_memory(void);
+
+NOINLINE extern void* my_memset(void* ptr, int value, size_t num);
+NOINLINE extern int my_system(char* command);
 
 #endif
