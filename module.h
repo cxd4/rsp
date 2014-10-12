@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.11                                                         *
+* Release:  2014.10.12                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -74,7 +74,15 @@ extern void step_SP_commands(u32 inst);
 #endif
 extern void export_SP_memory(void);
 
+/*
+ * low-level recreations of the C standard library functions for operating
+ * systems that define a C run-time or dependency on top of fixed OS calls
+ */
 NOINLINE extern void* my_memset(void* ptr, int value, size_t num);
 NOINLINE extern int my_system(char* command);
+NOINLINE extern FILE* my_fopen(const char * filename, const char* mode);
+NOINLINE int my_fclose(FILE* stream);
+NOINLINE size_t my_fread(void* ptr, size_t size, size_t count, FILE* stream);
+NOINLINE size_t my_fwrite(void* ptr, size_t size, size_t count, FILE* stream);
 
 #endif

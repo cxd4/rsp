@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.11                                                         *
+* Release:  2014.10.12                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -275,51 +275,37 @@ void step_SP_commands(uint32_t inst)
         strcat(text, code);
         message(text); /* PC offset, MIPS hex. */
         if (output_log == NULL) {} else /* Global pointer not updated?? */
-            fwrite(endian_swap, 4, 1, output_log);
+            my_fwrite(endian_swap, 4, 1, output_log);
     }
 }
 #endif
 
 NOINLINE void export_data_cache(void)
 {
+    u8 DMEM_swapped[0x00000FFF + 1];
     FILE* out;
-    register u32 addr;
+    register int i;
+ /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
-    out = fopen("rcpcache.dhex", "wb");
-#if (0)
-    for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000001)
-        fputc(DMEM[BES(addr & 0x00000FFF)], out);
-#else
-    for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000004)
-    {
-        fputc(DMEM[addr + 0x000 + BES(0x000)], out);
-        fputc(DMEM[addr + 0x001 + MES(0x000)], out);
-        fputc(DMEM[addr + 0x002 - MES(0x000)], out);
-        fputc(DMEM[addr + 0x003 - BES(0x000)], out);
-    }
-#endif
-    fclose(out);
+    for (i = 0; i < 4096; i++)
+        DMEM_swapped[i] = DMEM[BES(i)];
+    out = my_fopen("rcpcache.dhex", "wb");
+    my_fwrite(DMEM_swapped, 16, 4096 / 16, out);
+    my_fclose(out);
     return;
 }
 NOINLINE void export_instruction_cache(void)
 {
+    u8 IMEM_swapped[0x00000FFF + 1];
     FILE* out;
-    register u32 addr;
+    register int i;
+ /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
-    out = fopen("rcpcache.ihex", "wb");
-#if (0)
-    for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000001)
-        fputc(RSP.IMEM[BES(addr & 0x00000FFF)], out);
-#else
-    for (addr = 0x00000000; addr < 0x00001000; addr += 0x00000004)
-    {
-        fputc(IMEM[addr + 0x000 + BES(0x000)], out);
-        fputc(IMEM[addr + 0x001 + MES(0x000)], out);
-        fputc(IMEM[addr + 0x002 - MES(0x000)], out);
-        fputc(IMEM[addr + 0x003 - BES(0x000)], out);
-    }
-#endif
-    fclose(out);
+    for (i = 0; i < 4096; i++)
+        IMEM_swapped[i] = IMEM[BES(i)];
+    out = my_fopen("rcpcache.ihex", "wb");
+    my_fwrite(IMEM_swapped, 16, 4096 / 16, out);
+    my_fclose(out);
     return;
 }
 void export_SP_memory(void)
@@ -409,4 +395,68 @@ NOINLINE int my_system(char* command)
     ret_slot = system(command);
 #endif
     return (ret_slot);
+}
+
+NOINLINE FILE* my_fopen(const char * filename, const char* mode)
+{
+#ifdef WIN32
+#if 0
+    if (mode[1] != 'b')
+        return NULL; /* non-binary yet to be supported? */
+#endif
+    return (FILE *)(HANDLE)CreateFileA(
+        filename,
+        (mode[0] == 'r') ? GENERIC_READ : GENERIC_WRITE,
+        (mode[0] == 'r') ? FILE_SHARE_READ : FILE_SHARE_WRITE,
+        NULL,
+        CREATE_ALWAYS,
+#if 0
+        FILE_FLAG_WRITE_THROUGH | FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING,
+#else
+        FILE_FLAG_WRITE_THROUGH,
+#endif
+        NULL
+    );
+#else
+    return fopen(filename, mode);
+#endif
+}
+
+NOINLINE int my_fclose(FILE* stream)
+{
+    int ret_slot;
+#ifdef WIN32
+    ret_slot = !CloseHandle((HANDLE)stream);
+#else
+    ret_slot = fclose(stream);
+#endif
+    return (ret_slot);
+}
+
+NOINLINE size_t my_fread(void* ptr, size_t size, size_t count, FILE* stream)
+{
+#ifdef WIN32
+    DWORD ret_slot;
+
+    ReadFile((HANDLE)stream, ptr, size * count, &ret_slot, NULL);
+#else
+    size_t ret_slot;
+
+    ret_slot = fread(ptr, size, count, stream);
+#endif
+    return (size_t)(ret_slot);
+}
+
+NOINLINE size_t my_fwrite(void* ptr, size_t size, size_t count, FILE* stream)
+{
+#ifdef WIN32
+    DWORD ret_slot;
+
+    WriteFile((HANDLE)stream, ptr, size * count, &ret_slot, NULL);
+#else
+    size_t ret_slot;
+
+    ret_slot = fwrite(ptr, size, count, stream);
+#endif
+    return (size_t)(ret_slot);
 }
