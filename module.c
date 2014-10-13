@@ -176,11 +176,12 @@ EXPORT void CALL RomClosed(void)
 }
 
 NOINLINE void message(const char* body)
-{ /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
+{
 #ifdef WIN32
     char argv[4096];
     int i, j;
 
+    my_memset(argv, '\0', 4096);
     my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
     i = 0;
     j = my_strlen(argv);
