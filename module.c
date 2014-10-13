@@ -362,7 +362,7 @@ NOINLINE char* my_strcat(char* destination, const char* source)
     return (destination);
 }
 
-NOINLINE extern void* my_memset(void* ptr, int value, size_t num)
+NOINLINE void* my_memset(void* ptr, int value, size_t num)
 {
     unsigned char* addr;
 
