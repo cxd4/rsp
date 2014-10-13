@@ -79,6 +79,7 @@ extern void export_SP_memory(void);
  * systems that define a C run-time or dependency on top of fixed OS calls
  */
 NOINLINE size_t my_strlen(const char* str);
+NOINLINE char* my_strcpy(char* destination, const char* source);
 NOINLINE extern void* my_memset(void* ptr, int value, size_t num);
 NOINLINE extern int my_system(char* command);
 NOINLINE extern FILE* my_fopen(const char * filename, const char* mode);

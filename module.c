@@ -117,8 +117,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
     PluginInfo -> Version = 0x0101; /* zilmar #1.1 (only standard RSP spec) */
     PluginInfo -> Type = PLUGIN_TYPE_RSP;
-strcpy(
-    PluginInfo -> Name, "Static Interpreter");
+    my_strcpy(PluginInfo -> Name, "Static Interpreter");
     PluginInfo -> NormalMemory = 0;
     PluginInfo -> MemoryBswaped = 1;
     return;
@@ -179,10 +178,11 @@ EXPORT void CALL RomClosed(void)
 NOINLINE void message(const char* body)
 { /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
 #ifdef WIN32
-    char argv[4096] = "CMD /Q /D /C \"TITLE RSP Message&&ECHO ";
+    char argv[4096];
     int i = 0;
     int j = my_strlen(argv);
 
+    my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
     while (body[i] != '\0')
     {
         if (body[i] == '\n')
@@ -336,6 +336,16 @@ NOINLINE size_t my_strlen(const char* str)
 
     for (ret_slot = 0; *str != '\0'; ret_slot++, str++);
     return (ret_slot);
+}
+
+NOINLINE char* my_strcpy(char* destination, const char* source)
+{
+    register size_t i;
+    const size_t length = my_strlen(source) + 1; /* including null terminator */
+
+    for (i = 0; i < length; i++)
+        destination[i] = source[i];
+    return (destination);
 }
 
 NOINLINE extern void* my_memset(void* ptr, int value, size_t num)
