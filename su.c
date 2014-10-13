@@ -197,10 +197,11 @@ static void MT_CMD_CLOCK(int rt)
 }
 static void MT_READ_ONLY(int rt)
 {
-    char text[64];
+    static char write_to_read_only[] = "Invalid MTC0 from SR[00].";
 
-    sprintf(text, "MTC0\nInvalid write attempt.\nSR[%i] = 0x%08X", rt, SR[rt]);
-    message(text);
+    write_to_read_only[21] = '0' + (unsigned char)rt/10;
+    write_to_read_only[22] = '0' + (unsigned char)rt%10;
+    message(write_to_read_only);
     return;
 }
 
@@ -615,6 +616,10 @@ INLINE void SDV(int vt, int element, int offset, int base)
     }
 }
 
+static char transfer_debug[32] = "??V     $v00[0x?], 0x???($??)";
+static const char digits[16] = {
+    '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+};
 /*
  * Group II vector loads and stores:
  * PV and UV (As of RCP implementation, XV and ZV are reserved opcodes.)
@@ -1039,11 +1044,22 @@ NOINLINE void LHV(int vt, int element, int offset, int base)
 }
 NOINLINE void LFV(int vt, int element, int offset, int base)
 { /* Dummy implementation only:  Do any games execute this? */
-    char debugger[32];
+    transfer_debug[0] = 'L';
+    transfer_debug[1] = 'F';
 
-    sprintf(debugger, "%s     $v%i[0x%X], 0x%03X($%i)", "LFV",
-        vt, element, offset & 0xFFF, base);
-    message(debugger);
+    transfer_debug[10] = '0' + (unsigned char)vt/10;
+    transfer_debug[11] = '0' + (unsigned char)vt%10;
+
+    transfer_debug[15] = digits[element & 0xF];
+
+    transfer_debug[21] = digits[(offset & 0xFFF) >>  8];
+    transfer_debug[22] = digits[(offset & 0x0FF) >>  4];
+    transfer_debug[23] = digits[(offset & 0x00F) >>  0];
+
+    transfer_debug[26] = '0' + (unsigned char)base/10;
+    transfer_debug[27] = '0' + (unsigned char)base%10;
+
+    message(transfer_debug);
     return;
 }
 NOINLINE void SHV(int vt, int element, int offset, int base)
@@ -1405,11 +1421,22 @@ INLINE void LTV(int vt, int element, int offset, int base)
 }
 NOINLINE void SWV(int vt, int element, int offset, int base)
 { /* Dummy implementation only:  Do any games execute this? */
-    char debugger[32];
+    transfer_debug[0] = 'S';
+    transfer_debug[1] = 'W';
 
-    sprintf(debugger, "%s     $v%i[0x%X], 0x%03X($%i)", "SWV",
-        vt, element, offset & 0xFFF, base);
-    message(debugger);
+    transfer_debug[10] = '0' + (unsigned char)vt/10;
+    transfer_debug[11] = '0' + (unsigned char)vt%10;
+
+    transfer_debug[15] = digits[element & 0xF];
+
+    transfer_debug[21] = digits[(offset & 0xFFF) >>  8];
+    transfer_debug[22] = digits[(offset & 0x0FF) >>  4];
+    transfer_debug[23] = digits[(offset & 0x00F) >>  0];
+
+    transfer_debug[26] = '0' + (unsigned char)base/10;
+    transfer_debug[27] = '0' + (unsigned char)base%10;
+
+    message(transfer_debug);
     return;
 }
 INLINE void STV(int vt, int element, int offset, int base)
