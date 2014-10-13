@@ -47,12 +47,12 @@ EXPORT void CALL DllAbout(struct_p hParent)
 
 EXPORT void CALL DllConfig(struct_p hParent)
 {
-    hParent = NULL;
+    hParent = NULL; /* unused */
     my_system("sp_cfgui");
     update_conf(CFG_FILE);
-    if (DMEM == IMEM || GET_RCP_REG(SP_PC_REG) == 0x00000000)
-        return;
 
+    if (DMEM == IMEM || GET_RCP_REG(SP_PC_REG) % 4096 == 0x00000000)
+        return;
     export_SP_memory();
     return;
 }
@@ -162,7 +162,17 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
 
 EXPORT void CALL RomClosed(void)
 {
+    FILE* stream;
+
     GET_RCP_REG(SP_PC_REG) = 0x04001000;
+
+/*
+ * Sometimes the end user won't correctly install to the right directory. :(
+ * If the config file wasn't installed correctly, politely shut errors up.
+ */
+    stream = my_fopen(CFG_FILE, "wb");
+    my_fwrite(conf, 8, 32 / 8, stream);
+    my_fclose(stream);
     return;
 }
 
@@ -195,50 +205,23 @@ NOINLINE void message(const char* body)
 NOINLINE void update_conf(const char* source)
 {
     FILE* stream;
-    char line[CHARACTERS_PER_LINE] = "";
-    char key[CHARACTERS_PER_LINE], value[CHARACTERS_PER_LINE];
-    register int i, test;
+    register int i;
 
-    stream = fopen(source, "r");
+/*
+ * hazard adjustment
+ * If file not found, wipe the registry to 0's (all default settings).
+ */
+    for (i = 0; i < 32; i++)
+        conf[i] = 0x00;
+
+    stream = my_fopen(source, "rb");
     if (stream == NULL)
     { /* try GetModulePath or whatever to correct the path? */
         message("Failed to read config.");
         return;
     }
-    do
-    {
-        int bvalue;
-
-        line[0] = '\0';
-        key[0] = '\0';
-        value[0] = '\0';
-        for (i = 0; i < CHARACTERS_PER_LINE; i++)
-        {
-            test = fgetc(stream);
-            if (test < 0) /* either EOF or invalid ASCII characters */
-                break;
-            line[i] = (char)(test);
-            if (line[i] == '\n')
-                break;
-        }
-        line[i] = '\0';
-
-        for (i = 0; i < CHARACTERS_PER_LINE && line[i] != '='; i++);
-        line[i] = '\0';
-        strcpy(key, line);
-        strcpy(value, line + i + 1);
-
-        bvalue = atoi(value);
-        if (strcmp(key, "DisplayListToGraphicsPlugin") == 0)
-            CFG_HLE_GFX = (u8)(bvalue);
-        else if (strcmp(key, "AudioListToAudioPlugin") == 0)
-            CFG_HLE_AUD = (u8)(bvalue);
-        else if (strcmp(key, "WaitForCPUHost") == 0)
-            CFG_WAIT_FOR_CPU_HOST = bvalue;
-        else if (strcmp(key, "SupportCPUSemaphoreLock") == 0)
-            CFG_MEND_SEMAPHORE_LOCK = bvalue;
-    } while (test >= 0);
-    fclose(stream);
+    my_fread(conf, 8, 32 / 8, stream);
+    my_fclose(stream);
     return;
 }
 

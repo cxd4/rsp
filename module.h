@@ -20,7 +20,7 @@
 
 #include "Rsp_#1.1.h"
 
-#define CFG_FILE    "rsp_conf.cfg"
+#define CFG_FILE    "rsp_conf.bin"
 
 /*
  * Most of the point behind this config system is to let users use HLE video
