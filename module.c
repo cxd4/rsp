@@ -179,22 +179,23 @@ NOINLINE void message(const char* body)
 { /* Avoid SHELL32/ADVAPI32/USER32 dependencies by using standard C to print. */
 #ifdef WIN32
     char argv[4096];
-    int i = 0;
-    int j = my_strlen(argv);
+    int i, j;
 
     my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
+    i = 0;
+    j = my_strlen(argv);
     while (body[i] != '\0')
     {
         if (body[i] == '\n')
         {
-            strcat(argv, "&&ECHO ");
+            my_strcat(argv, "&&ECHO ");
             ++i;
             j += 7;
             continue;
         }
         argv[j++] = body[i++];
     }
-    strcat(argv, "&&PAUSE&&EXIT\"");
+    my_strcat(argv, "&&PAUSE&&EXIT\"");
     my_system(argv);
 #else
     fputs(body, stdout);
@@ -254,8 +255,8 @@ void step_SP_commands(uint32_t inst)
         code[06] = digits[(inst & 0x000000F0) >>  4];
         code[07] = digits[(inst & 0x0000000F) >>  0];
         strcpy(text, offset);
-        strcat(text, "\n");
-        strcat(text, code);
+        my_strcat(text, "\n");
+        my_strcat(text, code);
         message(text); /* PC offset, MIPS hex. */
         if (output_log == NULL) {} else /* Global pointer not updated?? */
             my_fwrite(endian_swap, 4, 1, output_log);
@@ -328,6 +329,11 @@ case 0: /* DLL_PROCESS_DETACH */
  * systems that define a C run-time or dependency on top of fixed OS calls
  *
  * Currently, this only addresses Microsoft Windows.
+ *
+ * None of these are meant to out-perform the original functions, by the way
+ * (especially with better intrinsic compiler support for stuff like memcpy),
+ * just to cut down on I-cache use for performance-irrelevant code sections
+ * and to avoid std. lib run-time dependencies on certain operating systems.
  */
 
 NOINLINE size_t my_strlen(const char* str)
@@ -345,6 +351,14 @@ NOINLINE char* my_strcpy(char* destination, const char* source)
 
     for (i = 0; i < length; i++)
         destination[i] = source[i];
+    return (destination);
+}
+
+NOINLINE char* my_strcat(char* destination, const char* source)
+{
+    const size_t length = my_strlen(destination);
+
+    my_strcpy(destination + length, source);
     return (destination);
 }
 
