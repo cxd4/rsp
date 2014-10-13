@@ -178,9 +178,10 @@ EXPORT void CALL RomClosed(void)
 NOINLINE void message(const char* body)
 {
 #ifdef WIN32
-    char argv[4096];
+    char* argv;
     int i, j;
 
+    argv = my_malloc(4096);
     my_memset(argv, '\0', 4096);
     my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
     i = 0;
@@ -198,6 +199,7 @@ NOINLINE void message(const char* body)
     }
     my_strcat(argv, "&&PAUSE&&EXIT\"");
     my_system(argv);
+    my_free(argv);
 #else
     fputs(body, stdout);
 #endif
@@ -267,30 +269,34 @@ void step_SP_commands(uint32_t inst)
 
 NOINLINE void export_data_cache(void)
 {
-    u8 DMEM_swapped[0x00000FFF + 1];
+    u8* DMEM_swapped;
     FILE* out;
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
+    DMEM_swapped = my_malloc(4096);
     for (i = 0; i < 4096; i++)
         DMEM_swapped[i] = DMEM[BES(i)];
     out = my_fopen("rcpcache.dhex", "wb");
     my_fwrite(DMEM_swapped, 16, 4096 / 16, out);
     my_fclose(out);
+    my_free(DMEM_swapped);
     return;
 }
 NOINLINE void export_instruction_cache(void)
 {
-    u8 IMEM_swapped[0x00000FFF + 1];
+    u8* IMEM_swapped;
     FILE* out;
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
+    IMEM_swapped = my_malloc(4096);
     for (i = 0; i < 4096; i++)
         IMEM_swapped[i] = IMEM[BES(i)];
     out = my_fopen("rcpcache.ihex", "wb");
     my_fwrite(IMEM_swapped, 16, 4096 / 16, out);
     my_fclose(out);
+    my_free(IMEM_swapped);
     return;
 }
 void export_SP_memory(void)
@@ -336,6 +342,29 @@ case 0: /* DLL_PROCESS_DETACH */
  * just to cut down on I-cache use for performance-irrelevant code sections
  * and to avoid std. lib run-time dependencies on certain operating systems.
  */
+
+NOINLINE void* my_malloc(size_t size)
+{
+#ifdef WIN32
+    return GlobalAlloc(GMEM_FIXED, size);
+#else
+    return malloc(size);
+#endif
+}
+
+NOINLINE void my_free(void* ptr)
+{
+#ifdef WIN32
+    HANDLE this_should_be_null;
+
+    do {
+        this_should_be_null = GlobalFree(ptr);
+    } while (this_should_be_null != NULL);
+#else
+    free(ptr);
+#endif
+    return;
+}
 
 NOINLINE size_t my_strlen(const char* str)
 {
