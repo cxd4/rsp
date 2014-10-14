@@ -181,8 +181,7 @@ NOINLINE void message(const char* body)
     char* argv;
     int i, j;
 
-    argv = my_malloc(4096);
-    my_memset(argv, '\0', 4096);
+    argv = my_calloc(4096);
     my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
     i = 0;
     j = my_strlen(argv);
@@ -274,7 +273,7 @@ NOINLINE void export_data_cache(void)
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
-    DMEM_swapped = my_malloc(4096);
+    DMEM_swapped = my_calloc(4096);
     for (i = 0; i < 4096; i++)
         DMEM_swapped[i] = DMEM[BES(i)];
     out = my_fopen("rcpcache.dhex", "wb");
@@ -290,7 +289,7 @@ NOINLINE void export_instruction_cache(void)
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
-    IMEM_swapped = my_malloc(4096);
+    IMEM_swapped = my_calloc(4096);
     for (i = 0; i < 4096; i++)
         IMEM_swapped[i] = IMEM[BES(i)];
     out = my_fopen("rcpcache.ihex", "wb");
@@ -343,10 +342,10 @@ case 0: /* DLL_PROCESS_DETACH */
  * and to avoid std. lib run-time dependencies on certain operating systems.
  */
 
-NOINLINE void* my_malloc(size_t size)
+NOINLINE void* my_calloc(size_t size)
 {
 #ifdef WIN32
-    return GlobalAlloc(GMEM_FIXED, size);
+    return GlobalAlloc(GPTR, size);
 #else
     return malloc(size);
 #endif
@@ -392,26 +391,14 @@ NOINLINE char* my_strcat(char* destination, const char* source)
     return (destination);
 }
 
-NOINLINE void* my_memset(void* ptr, int value, size_t num)
-{
-    unsigned char* addr;
-
-    addr = (unsigned char *)ptr;
-    while (num-- > 0)
-        *(addr++) = value & 0xFF;
-    return (ptr);
-}
-
 NOINLINE int my_system(char* command)
 {
     int ret_slot;
 #ifdef WIN32
-    STARTUPINFOA info;
-    PROCESS_INFORMATION info_process;
+    static STARTUPINFOA info;
+    static PROCESS_INFORMATION info_process;
 
-    my_memset(&info, 0x00, sizeof(info));
     info.cb = sizeof(info);
-
     info.dwFillAttribute =
         FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
     info.dwFlags = STARTF_USEFILLATTRIBUTE | STARTF_USECOUNTCHARS;
@@ -419,7 +406,6 @@ NOINLINE int my_system(char* command)
     info.dwXCountChars = 80;
     info.dwYCountChars = 20;
 
-    my_memset(&info_process, 0x00, sizeof(info_process));
     ret_slot = CreateProcessA(
         NULL,
         command,

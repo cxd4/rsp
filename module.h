@@ -78,12 +78,11 @@ extern void export_SP_memory(void);
  * low-level recreations of the C standard library functions for operating
  * systems that define a C run-time or dependency on top of fixed OS calls
  */
-NOINLINE extern void* my_malloc(size_t size);
+NOINLINE extern void* my_calloc(size_t size);
 NOINLINE extern void my_free(void* ptr);
 NOINLINE extern size_t my_strlen(const char* str);
 NOINLINE extern char* my_strcpy(char* destination, const char* source);
 NOINLINE extern char* my_strcat(char* destination, const char* source);
-NOINLINE extern void* my_memset(void* ptr, int value, size_t num);
 NOINLINE extern int my_system(char* command);
 NOINLINE extern FILE* my_fopen(const char * filename, const char* mode);
 NOINLINE extern int my_fclose(FILE* stream);
