@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.13                                                         *
+* Release:  2014.10.14                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -347,7 +347,7 @@ NOINLINE void* my_calloc(size_t size)
 #ifdef WIN32
     return GlobalAlloc(GPTR, size);
 #else
-    return malloc(size);
+    return calloc(size);
 #endif
 }
 
