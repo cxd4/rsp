@@ -1554,7 +1554,7 @@ EX:
 #ifdef ARCH_MIN_SSE2
             result = *(v16 *)VR[vd];
             source = *(v16 *)VR[vs];
-            target = XMM_ZERO; /* trivial uninitialized variable warning */
+            vector_wipe(target); /* trivial uninitialized variable warning */
 #else
             result = VR[vd];
             source = VR[vs];

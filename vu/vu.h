@@ -46,7 +46,7 @@ ALIGNED extern short VR[32][N];
  *
  * Access dimensions would be VACC[8][3] but are inverted for SIMD benefits.
  */
-ALIGNED extern short VACC[3][N];
+ALIGNED extern i16 VACC[3][N];
 
 /*
  * accumulator-indexing macros
@@ -63,9 +63,6 @@ ALIGNED extern short VACC[3][N];
 #define ACC_M(i)    (VACC_M)[i]
 #define ACC_H(i)    (VACC_H)[i]
 
-#define XMM_ZERO    _mm_setzero_si128()
-#define XMM_ONES    _mm_cmpeq_epi16(XMM_ZERO, XMM_ZERO)
-
 #ifdef ARCH_MIN_SSE2
 typedef __m128i v16;
 #else
@@ -77,16 +74,36 @@ typedef short * v16;
 
 NOINLINE void message(const char* body);
 
-extern v16 (*COP2_C2[64])(v16, v16, v16);
+VECTOR_EXTERN (*COP2_C2[64])(v16, v16, v16);
 
 #ifdef ARCH_MIN_SSE2
 
 #define vector_copy(vd, vs) { \
     *(v16 *)(vd) = *(v16 *)(vs); }
 #define vector_wipe(vd) { \
-    *(v16 *)(vd) = XMM_ZERO; }
+    (vd) = _mm_xor_si128(vd, vd); }
 #define vector_fill(vd) { \
-    *(v16 *)(vd) = XMM_ONES; }
+    (vd) = _mm_cmpeq_epi16(vd, vd); }
+
+#define vector_and(vd, vs) { \
+    (vd) = _mm_and_si128    (vd, vs); }
+#define vector_or(vd, vs) { \
+    (vd) = _mm_or_si128     (vd, vs); }
+#define vector_xor(vd, vs) { \
+    (vd) = _mm_xor_si128    (vd, vs); }
+
+/*
+ * Every competent vector unit should have at least two vector comparison
+ * operations:  EQ and LT/GT.  (MMX makes us say GT; SSE's LT is just a GT.)
+ *
+ * Default examples when compiling for the x86 SSE2 architecture below.
+ */
+#define vector_cmplt(vd, vs) { \
+    (vd) = _mm_cmplt_epi16  (vd, vs); }
+#define vector_cmpeq(vd, vs) { \
+    (vd) = _mm_cmpeq_epi16  (vd, vs); }
+#define vector_cmpgt(vd, vs) { \
+    (vd) = _mm_cmpgt_epi16  (vd, vs); }
 
 #else
 
@@ -99,6 +116,87 @@ extern v16 (*COP2_C2[64])(v16, v16, v16);
     (vd)[5] = (vs)[5]; \
     (vd)[6] = (vs)[6]; \
     (vd)[7] = (vs)[7]; \
+}
+#define vector_wipe(vd) { \
+    (vd)[0] =  0x0000; \
+    (vd)[1] =  0x0000; \
+    (vd)[2] =  0x0000; \
+    (vd)[3] =  0x0000; \
+    (vd)[4] =  0x0000; \
+    (vd)[5] =  0x0000; \
+    (vd)[6] =  0x0000; \
+    (vd)[7] =  0x0000; \
+}
+#define vector_fill(vd) { \
+    (vd)[0] = ~0x0000; \
+    (vd)[1] = ~0x0000; \
+    (vd)[2] = ~0x0000; \
+    (vd)[3] = ~0x0000; \
+    (vd)[4] = ~0x0000; \
+    (vd)[5] = ~0x0000; \
+    (vd)[6] = ~0x0000; \
+    (vd)[7] = ~0x0000; \
+}
+#define vector_and(vd, vs) { \
+    (vd)[0] &= (vs)[0]; \
+    (vd)[1] &= (vs)[1]; \
+    (vd)[2] &= (vs)[2]; \
+    (vd)[3] &= (vs)[3]; \
+    (vd)[4] &= (vs)[4]; \
+    (vd)[5] &= (vs)[5]; \
+    (vd)[6] &= (vs)[6]; \
+    (vd)[7] &= (vs)[7]; \
+}
+#define vector_or(vd, vs) { \
+    (vd)[0] |= (vs)[0]; \
+    (vd)[1] |= (vs)[1]; \
+    (vd)[2] |= (vs)[2]; \
+    (vd)[3] |= (vs)[3]; \
+    (vd)[4] |= (vs)[4]; \
+    (vd)[5] |= (vs)[5]; \
+    (vd)[6] |= (vs)[6]; \
+    (vd)[7] |= (vs)[7]; \
+}
+#define vector_xor(vd, vs) { \
+    (vd)[0] ^= (vs)[0]; \
+    (vd)[1] ^= (vs)[1]; \
+    (vd)[2] ^= (vs)[2]; \
+    (vd)[3] ^= (vs)[3]; \
+    (vd)[4] ^= (vs)[4]; \
+    (vd)[5] ^= (vs)[5]; \
+    (vd)[6] ^= (vs)[6]; \
+    (vd)[7] ^= (vs)[7]; \
+}
+
+#define vector_cmplt(vd, vs) { \
+    (vd)[0] = ((vd)[0] < (vs)[0]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[1] < (vs)[1]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[2] < (vs)[2]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[3] < (vs)[3]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[4] < (vs)[4]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[5] < (vs)[5]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[6] < (vs)[6]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[7] < (vs)[7]) ? ~0x0000 :  0x0000; \
+}
+#define vector_cmpeq(vd, vs) { \
+    (vd)[0] = ((vd)[0] == (vs)[0]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[1] == (vs)[1]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[2] == (vs)[2]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[3] == (vs)[3]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[4] == (vs)[4]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[5] == (vs)[5]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[6] == (vs)[6]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[7] == (vs)[7]) ? ~0x0000 :  0x0000; \
+}
+#define vector_cmpgt(vd, vs) { \
+    (vd)[0] = ((vd)[0] > (vs)[0]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[1] > (vs)[1]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[2] > (vs)[2]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[3] > (vs)[3]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[4] > (vs)[4]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[5] > (vs)[5]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[6] > (vs)[6]) ? ~0x0000 :  0x0000; \
+    (vd)[0] = ((vd)[7] > (vs)[7]) ? ~0x0000 :  0x0000; \
 }
 
 #endif
