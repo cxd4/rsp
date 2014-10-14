@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.07                                                         *
+* Release:  2014.10.14                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -252,10 +252,11 @@ int sub_mask[16] = {
     0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
 };
 
-INLINE void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
+INLINE v16 SHUFFLE_VECTOR(v16 VD, i16* VT, const int e)
 {
     short SV[8];
     register int i, j;
+
 #if (0 == 0)
     j = sub_mask[e];
     for (i = 0; i < N; i++)
@@ -276,7 +277,7 @@ INLINE void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
 #endif
     for (i = 0; i < N; i++)
         *(VD + i) = *(SV + i);
-    return;
+    return (VD);
 }
 #else
 #ifdef ARCH_MIN_SSSE3
@@ -299,7 +300,7 @@ static const unsigned char smask[16][16] = {
     { 0xE,0xF,0xE,0xF,0xE,0xF,0xE,0xF,0xE,0xF,0xE,0xF,0xE,0xF,0xE,0xF },
 };
 
-INLINE void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
+INLINE v16 SHUFFLE_VECTOR(v16 VD, i16* VT, const int e)
 { /* SSSE3 shuffling method was written entirely by CEN64 author MarathonMan. */
     v16 xmm;
     v16 key;
@@ -307,8 +308,8 @@ INLINE void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
     xmm = _mm_load_si128((v16 *)VT);
     key = _mm_load_si128((v16 *)(smask[e]));
     xmm = _mm_shuffle_epi8(xmm, key);
-    _mm_store_si128((v16 *)VD, xmm);
-    return;
+    VD = xmm;
+    return (VD);
 }
 #else
 #define B(x)    ((x) & 3)
@@ -411,14 +412,14 @@ static v16 (*SSE2_SHUFFLE_16[16])(v16) = {
     shuffle_4w, shuffle_5w, shuffle_6w, shuffle_7w
 };
 
-INLINE void SHUFFLE_VECTOR(short* VD, short* VT, const int e)
+INLINE v16 SHUFFLE_VECTOR(v16 VD, i16* VT, const int e)
 {
     v16 xmm;
 
-    xmm = _mm_load_si128((v16 *)VT);
+    xmm = *(v16 *)VT;
     xmm = SSE2_SHUFFLE_16[e](xmm);
-    _mm_store_si128((v16 *)VD, xmm);
-    return;
+    VD = xmm;
+    return (VD);
 }
 #endif
 #endif

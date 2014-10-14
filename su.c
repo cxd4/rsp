@@ -1540,7 +1540,9 @@ EX:
 #endif
         if (inst >> 25 == 0x25) /* is a VU instruction */
         {
+#ifndef ARCH_MIN_SSE2
             ALIGNED i16 ST[N];
+#endif
             v16 result, source, target;
 
             const int opcode = inst % 64; /* inst.R.func */
@@ -1549,16 +1551,16 @@ EX:
             const int vt = (inst >> 16) & 31; /* inst.R.rt */
             const int e  = (inst >> 21) & 0xF; /* rs & 0xF */
 
-            SHUFFLE_VECTOR(ST, VR[vt], e);
 #ifdef ARCH_MIN_SSE2
             result = *(v16 *)VR[vd];
             source = *(v16 *)VR[vs];
-            target = *(v16 *)ST;
+            target = XMM_ZERO; /* trivial uninitialized variable warning */
 #else
             result = VR[vd];
             source = VR[vs];
             target = ST;
 #endif
+            target = SHUFFLE_VECTOR(target, VR[vt], e);
             result = COP2_C2[opcode](result, source, target);
 #ifdef ARCH_MIN_SSE2
             *(v16 *)(VR[vd]) = result;
