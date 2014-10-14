@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.10                                                         *
+* Release:  2014.10.14                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -616,7 +616,7 @@ INLINE void SDV(int vt, int element, int offset, int base)
     }
 }
 
-static char transfer_debug[32] = "??V     $v00[0x?], 0x???($??)";
+static char transfer_debug[32] = "XXV     $v00[0x0], 0x000($00)";
 static const char digits[16] = {
     '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
 };
