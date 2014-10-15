@@ -82,7 +82,7 @@ VECTOR_OPERATION VXOR(v16 vd, v16 vs, v16 vt)
 
 VECTOR_OPERATION VNXOR(v16 vd, v16 vs, v16 vt)
 {
-    vector_and(vt, vs);
+    vector_xor(vt, vs);
     vector_fill(vd);
     vector_xor(vd, vt);
 #ifdef ARCH_MIN_SSE2
