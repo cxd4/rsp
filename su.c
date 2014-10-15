@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.14                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1552,7 +1552,7 @@ EX:
             const int e  = (inst >> 21) & 0xF; /* rs & 0xF */
 
 #ifdef ARCH_MIN_SSE2
-            result = *(v16 *)VR[vd];
+            result = _mm_setzero_si128();
             source = *(v16 *)VR[vs];
             vector_wipe(target); /* trivial uninitialized variable warning */
 #else

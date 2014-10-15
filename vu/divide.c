@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Divides         *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1290,6 +1290,12 @@ VECTOR_OPERATION VRSQH(v16 vd, v16 vs, v16 vt)
 
 VECTOR_OPERATION VNOP(v16 vd, v16 vs, v16 vt)
 {
-    vs = vt = vd; /* unused */
-    return (vd);
+    const int result = (inst & 0x000007FF) >>  6;
+
+#ifdef ARCH_MIN_SSE2
+    vd = *(v16 *)VR[result];
+#else
+    vector_copy(vd, VR[result]);
+#endif
+    return (vt = vs = vd); /* unused */
 }
