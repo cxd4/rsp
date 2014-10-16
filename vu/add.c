@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Adds            *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -230,130 +230,151 @@ INLINE static void set_bo(short* VD, short* VS, short* VT)
     return;
 }
 
-VECTOR_OPERATION VADD(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VADD(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     clr_ci(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VSUB(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VSUB(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     clr_bi(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VABS(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VABS(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_abs(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VADDC(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VADDC(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     set_co(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VSUBC(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VSUBC(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     set_bo(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VSAW(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VSAW(v16 vs, v16 vt)
 {
     const unsigned int element = (inst >> 21) & 0x7;
 
-    vs = vt = vd; /* unused */
+    vt = vs; /* unused */
     if (element > 0x2)
     { /* branch very unlikely...never seen a game do VSAW illegally */
         message("VSAW\nIllegal mask.");
-        return (vd); /* according to zilmar's notes, should zero the vector */
+#ifdef ARCH_MIN_SSE2
+        vector_wipe(vs);
+#else
+        vector_wipe(V_result);
+#endif
+    }
+    else
+    {
+#ifdef ARCH_MIN_SSE2
+        vs = *(v16 *)VACC[element];
+#else
+        vector_copy(V_result, VACC[element]);
+#endif
     }
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VACC[element];
+    return (vs);
 #else
-    vector_copy(vd, VACC[element]);
+    return;
 #endif
-    return (vd);
 }

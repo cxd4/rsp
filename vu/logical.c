@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Bit-Wise Logic  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.14                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -15,80 +15,98 @@
 
 #include "logical.h"
 
-VECTOR_OPERATION VAND(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VAND(v16 vs, v16 vt)
 {
+#ifdef ARCH_MIN_SSE2
+    vector_and(vs, vt);
+    *(v16 *)VACC_L = vs;
+    return (vs);
+#else
+    vector_copy(VACC_L, vt);
+    vector_and(VACC_L, vs);
+    vector_copy(V_result, VACC_L);
+    return;
+#endif
+}
+
+VECTOR_OPERATION VNAND(v16 vs, v16 vt)
+{
+#ifdef ARCH_MIN_SSE2
     vector_and(vt, vs);
-    vector_wipe(vd);
-    vector_xor(vd, vt);
-#ifdef ARCH_MIN_SSE2
-    *(v16 *)VACC_L = vd;
+    vector_fill(vs);
+    vector_xor(vs, vt);
+    *(v16 *)VACC_L = vs;
+    return (vs);
 #else
-    vector_copy(VACC_L, vd);
+    vector_copy(VACC_L, vt);
+    vector_and(VACC_L, vs);
+    vector_fill(V_result);
+    vector_xor(VACC_L, V_result);
+    vector_copy(V_result, VACC_L);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VNAND(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VOR(v16 vs, v16 vt)
 {
-    vector_and(vt, vs);
-    vector_fill(vd);
-    vector_xor(vd, vt);
 #ifdef ARCH_MIN_SSE2
-    *(v16 *)VACC_L = vd;
+    vector_or(vs, vt);
+    *(v16 *)VACC_L = vs;
+    return (vs);
 #else
-    vector_copy(VACC_L, vd);
+    vector_copy(VACC_L, vt);
+    vector_or(VACC_L, vs);
+    vector_copy(V_result, VACC_L);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VOR(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VNOR(v16 vs, v16 vt)
 {
+#ifdef ARCH_MIN_SSE2
     vector_or(vt, vs);
-    vector_wipe(vd);
-    vector_xor(vd, vt);
-#ifdef ARCH_MIN_SSE2
-    *(v16 *)VACC_L = vd;
+    vector_fill(vs);
+    vector_xor(vs, vt);
+    *(v16 *)VACC_L = vs;
+    return (vs);
 #else
-    vector_copy(VACC_L, vd);
+    vector_copy(VACC_L, vt);
+    vector_or(VACC_L, vs);
+    vector_fill(V_result);
+    vector_xor(VACC_L, V_result);
+    vector_copy(V_result, VACC_L);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VNOR(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VXOR(v16 vs, v16 vt)
 {
-    vector_or(vt, vs);
-    vector_fill(vd);
-    vector_xor(vd, vt);
 #ifdef ARCH_MIN_SSE2
-    *(v16 *)VACC_L = vd;
+    vector_xor(vs, vt);
+    *(v16 *)VACC_L = vs;
+    return (vs);
 #else
-    vector_copy(VACC_L, vd);
+    vector_copy(VACC_L, vt);
+    vector_xor(VACC_L, vs);
+    vector_copy(V_result, VACC_L);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VXOR(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VNXOR(v16 vs, v16 vt)
 {
+#ifdef ARCH_MIN_SSE2
     vector_xor(vt, vs);
-    vector_wipe(vd);
-    vector_xor(vd, vt);
-#ifdef ARCH_MIN_SSE2
-    *(v16 *)VACC_L = vd;
+    vector_fill(vs);
+    vector_xor(vs, vt);
+    *(v16 *)VACC_L = vs;
+    return (vs);
 #else
-    vector_copy(VACC_L, vd);
+    vector_copy(VACC_L, vt);
+    vector_xor(VACC_L, vs);
+    vector_fill(V_result);
+    vector_xor(VACC_L, V_result);
+    vector_copy(V_result, VACC_L);
+    return;
 #endif
-    return (vd);
-}
-
-VECTOR_OPERATION VNXOR(v16 vd, v16 vs, v16 vt)
-{
-    vector_xor(vt, vs);
-    vector_fill(vd);
-    vector_xor(vd, vt);
-#ifdef ARCH_MIN_SSE2
-    *(v16 *)VACC_L = vd;
-#else
-    vector_copy(VACC_L, vd);
-#endif
-    return (vd);
 }

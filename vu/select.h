@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Instruction Mnemonics for Vector Unit Computational Test Selects   *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -19,21 +19,21 @@
 #include "vu.h"
 
 VECTOR_EXTERN
-    VLT    (v16 vd, v16 vs, v16 vt);
+    VLT    (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VEQ    (v16 vd, v16 vs, v16 vt);
+    VEQ    (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VNE    (v16 vd, v16 vs, v16 vt);
+    VNE    (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VGE    (v16 vd, v16 vs, v16 vt);
+    VGE    (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VCL    (v16 vd, v16 vs, v16 vt);
+    VCL    (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VCH    (v16 vd, v16 vs, v16 vt);
+    VCH    (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VCR    (v16 vd, v16 vs, v16 vt);
+    VCR    (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMRG   (v16 vd, v16 vs, v16 vt);
+    VMRG   (v16 vs, v16 vt);
 
 extern INLINE void merge(short* VD, short* cmp, short* pass, short* fail);
 

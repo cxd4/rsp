@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Instruction Mnemonics for Vector Unit Computational Packs          *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -19,16 +19,16 @@
 #include "vu.h"
 
 VECTOR_EXTERN
-    VEXTT  (v16 vd, v16 vs, v16 vt);
+    VEXTT  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VEXTQ  (v16 vd, v16 vs, v16 vt);
+    VEXTQ  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VEXTN  (v16 vd, v16 vs, v16 vt);
+    VEXTN  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VINST  (v16 vd, v16 vs, v16 vt);
+    VINST  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VINSQ  (v16 vd, v16 vs, v16 vt);
+    VINSQ  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VINSN  (v16 vd, v16 vs, v16 vt);
+    VINSN  (v16 vs, v16 vt);
 
 #endif

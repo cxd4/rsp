@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Test Selects    *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -338,178 +338,194 @@ INLINE static void do_mrg(short* VD, short* VS, short* VT)
     return;
 }
 
-VECTOR_OPERATION VLT(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VLT(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_lt(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VEQ(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VEQ(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_eq(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VNE(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VNE(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_ne(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VGE(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VGE(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_ge(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VCL(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VCL(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_cl(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VCH(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VCH(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_ch(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VCR(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VCR(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_cr(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }
 
-VECTOR_OPERATION VMRG(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION VMRG(v16 vs, v16 vt)
 {
+    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED short VD[N], VS[N], VT[N];
+    ALIGNED i16 VS[N], VT[N];
 
-    *(v16 *)VD = vd;
     *(v16 *)VS = vs;
     *(v16 *)VT = vt;
 #else
-    v16 VD, VS, VT;
+    v16 VS, VT;
 
-    VD = vd;
     VS = vs;
     VT = vt;
 #endif
     do_mrg(VD, VS, VT);
 #ifdef ARCH_MIN_SSE2
-    vd = *(v16 *)VD;
+    vs = *(v16 *)VD;
+    return (vs);
+#else
+    vector_copy(V_result, VD);
+    return;
 #endif
-    return (vd);
 }

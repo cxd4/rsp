@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.14                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -38,7 +38,7 @@ extern u32 inst;
  * For ?WC2 we may need to do byte-precision access just as directly.
  * This is amended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
-ALIGNED extern short VR[32][N];
+ALIGNED extern i16 VR[32][N];
 
 /*
  * The RSP accumulator is a vector of 3 48-bit integers.  Nearly all of the
@@ -47,6 +47,16 @@ ALIGNED extern short VR[32][N];
  * Access dimensions would be VACC[8][3] but are inverted for SIMD benefits.
  */
 ALIGNED extern i16 VACC[3][N];
+
+/*
+ * When compiling without SSE2, we need to use a pointer to a destination
+ * vector instead of an XMM register in the return slot of the function.
+ * The vector "result" register will be emulated to serve this pointer
+ * as a shared global rather than the return slot of a function call.
+ */
+#ifndef ARCH_MIN_SSE2
+ALIGNED extern i16 V_result[N];
+#endif
 
 /*
  * accumulator-indexing macros
@@ -69,12 +79,16 @@ typedef __m128i v16;
 typedef short * v16;
 #endif
 
+#ifdef ARCH_MIN_SSE2
 #define VECTOR_OPERATION    v16
-#define VECTOR_EXTERN       extern v16
+#else
+#define VECTOR_OPERATION    void
+#endif
+#define VECTOR_EXTERN       extern VECTOR_OPERATION
 
-NOINLINE void message(const char* body);
+NOINLINE extern void message(const char* body);
 
-VECTOR_EXTERN (*COP2_C2[64])(v16, v16, v16);
+VECTOR_EXTERN (*COP2_C2[8*7 + 8])(v16, v16);
 
 #ifdef ARCH_MIN_SSE2
 
@@ -219,22 +233,22 @@ INLINE extern v16 SHUFFLE_VECTOR(v16 VD, i16* VT, const int e);
  * VCF-2 is the compare extension flags register:  $vce.
  * There is no fourth RSP flags register.
  */
-unsigned short VCO;
-unsigned short VCC;
-unsigned char VCE;
+extern u16 VCO;
+extern u16 VCC;
+extern u8 VCE;
 
-ALIGNED extern short ne[8];
-ALIGNED extern short co[8];
-ALIGNED extern short clip[8];
-ALIGNED extern short comp[8];
-ALIGNED extern short vce[8];
+ALIGNED extern i16 ne[8];
+ALIGNED extern i16 co[8];
+ALIGNED extern i16 clip[8];
+ALIGNED extern i16 comp[8];
+ALIGNED extern i16 vce[8];
 
-extern unsigned short get_VCO(void);
-extern unsigned short get_VCC(void);
-extern unsigned char get_VCE(void);
+extern u16 get_VCO(void);
+extern u16 get_VCC(void);
+extern u8 get_VCE(void);
 
-extern void set_VCO(unsigned short VCO);
-extern void set_VCC(unsigned short VCC);
-extern void set_VCE(unsigned char VCE);
+extern void set_VCO(u16 VCO);
+extern void set_VCC(u16 VCC);
+extern void set_VCE(u8 VCE);
 
 #endif

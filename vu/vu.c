@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.14                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -24,42 +24,48 @@
 #include "pack.h"
 #endif
 
-ALIGNED short VR[32][N];
-ALIGNED short VACC[3][N];
+ALIGNED i16 VR[32][N];
+ALIGNED i16 VACC[3][N];
+#ifndef ARCH_MIN_SSE2
+ALIGNED i16 V_result[N];
+#endif
 
 /*
  * These normally should have type `int` because they are Boolean T/F arrays.
  * However, since SSE2 uses 128-bit XMM's, and Win32 `int` storage is 32-bit,
  * we have the problem of 32*8 > 128 bits, so we use `short` to reduce packs.
  */
-ALIGNED short ne[8]; /* $vco:  high byte "NOTEQUAL" */
-ALIGNED short co[8]; /* $vco:  low byte "carry/borrow in/out" */
-ALIGNED short clip[8]; /* $vcc:  high byte (clip tests:  VCL, VCH, VCR) */
-ALIGNED short comp[8]; /* $vcc:  low byte (VEQ, VNE, VLT, VGE, VCL, VCH, VCR) */
-ALIGNED short vce[8]; /* $vce:  vector compare extension register */
+ALIGNED i16 ne[8]; /* $vco:  high byte "NOTEQUAL" */
+ALIGNED i16 co[8]; /* $vco:  low byte "carry/borrow in/out" */
+ALIGNED i16 clip[8]; /* $vcc:  high byte (clip tests:  VCL, VCH, VCR) */
+ALIGNED i16 comp[8]; /* $vcc:  low byte (VEQ, VNE, VLT, VGE, VCL, VCH, VCR) */
+ALIGNED i16 vce[8]; /* $vce:  vector compare extension register */
 
-VECTOR_OPERATION res_V(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION res_V(v16 vs, v16 vt)
 {
-#ifdef ARCH_MIN_SSE2
-    vd = _mm_setzero_si128();
-#else
-    register int i;
-
-    for (i = 0; i < N; i++)
-        vd[i] = 0x0000; /* override behavior (bpoint) */
-#endif
-    vs = vt = vd; /* unused */
+    vt = vs; /* unused */
     message("C2\nRESERVED"); /* uncertain how to handle reserved, untested */
-    return (vd);
+#ifdef ARCH_MIN_SSE2
+    vs = _mm_setzero_si128();
+    return (vs);
+#else
+    vector_wipe(V_result);
+    return;
+#endif
 }
-VECTOR_OPERATION res_M(v16 vd, v16 vs, v16 vt)
+VECTOR_OPERATION res_M(v16 vs, v16 vt)
 { /* Ultra64 OS did have these, so one could implement this ext. */
     message("VMUL IQ");
-    vd = res_V(vd, vs, vt);
-    return (vd);
+#ifdef ARCH_MIN_SSE2
+    vs = res_V(vs, vt);
+    return (vs);
+#else
+    res_V(vs, vt);
+    return;
+#endif
 }
 
-v16 (*COP2_C2[64])(v16, v16, v16) = {
+VECTOR_OPERATION (*COP2_C2[8 * 8])(v16, v16) = {
     VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
     VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
     VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */
@@ -71,9 +77,9 @@ v16 (*COP2_C2[64])(v16, v16, v16) = {
 }; /* 000     001     010     011     100     101     110     111 */
 
 #ifndef ARCH_MIN_SSE2
-unsigned short get_VCO(void)
+u16 get_VCO(void)
 {
-    register unsigned short VCO;
+    register u16 VCO;
 
     VCO = 0x0000
       | (ne[0xF % 8] << 0xF)
@@ -94,9 +100,9 @@ unsigned short get_VCO(void)
       | (co[0x0 % 8] << 0x0);
     return (VCO); /* Big endian becomes little. */
 }
-unsigned short get_VCC(void)
+u16 get_VCC(void)
 {
-    register unsigned short VCC;
+    register u16 VCC;
 
     VCC = 0x0000
       | (clip[0xF % 8] << 0xF)
@@ -117,10 +123,10 @@ unsigned short get_VCC(void)
       | (comp[0x0 % 8] << 0x0);
     return (VCC); /* Big endian becomes little. */
 }
-unsigned char get_VCE(void)
+u8 get_VCE(void)
 {
     int result;
-    register unsigned char VCE;
+    register u8 VCE;
 
     result = 0x00
       | (vce[07] << 0x7)
@@ -131,14 +137,14 @@ unsigned char get_VCE(void)
       | (vce[02] << 0x2)
       | (vce[01] << 0x1)
       | (vce[00] << 0x0);
-    VCE = (unsigned char)(result);
+    VCE = result & 0xFF;
     return (VCE); /* Big endian becomes little. */
 }
 #else
-unsigned short get_VCO(void)
+u16 get_VCO(void)
 {
     v16 xmm, hi, lo;
-    register unsigned short VCO;
+    register u16 VCO;
 
     hi = _mm_load_si128((v16 *)ne);
     lo = _mm_load_si128((v16 *)co);
@@ -153,10 +159,10 @@ unsigned short get_VCO(void)
     VCO = _mm_movemask_epi8(xmm) & 0x0000FFFF; /* PMOVMSKB combines each MSB. */
     return (VCO);
 }
-unsigned short get_VCC(void)
+u16 get_VCC(void)
 {
     v16 xmm, hi, lo;
-    register unsigned short VCC;
+    register u16 VCC;
 
     hi = _mm_load_si128((v16 *)clip);
     lo = _mm_load_si128((v16 *)comp);
@@ -171,10 +177,10 @@ unsigned short get_VCC(void)
     VCC = _mm_movemask_epi8(xmm) & 0x0000FFFF; /* PMOVMSKB combines each MSB. */
     return (VCC);
 }
-unsigned char get_VCE(void)
+u8 get_VCE(void)
 {
     v16 xmm, hi, lo;
-    register unsigned char VCE;
+    register u8 VCE;
 
     hi = _mm_setzero_si128();
     lo = _mm_load_si128((v16 *)vce);
@@ -191,7 +197,7 @@ unsigned char get_VCE(void)
  * CTC2 resources
  * not sure how to vectorize going the other direction into SSE2
  */
-void set_VCO(unsigned short VCO)
+void set_VCO(u16 VCO)
 {
     register int i;
 
@@ -201,7 +207,7 @@ void set_VCO(unsigned short VCO)
         ne[i] = (VCO >> (i + 0x8)) & 1;
     return; /* Little endian becomes big. */
 }
-void set_VCC(unsigned short VCC)
+void set_VCC(u16 VCC)
 {
     register int i;
 
@@ -211,7 +217,7 @@ void set_VCC(unsigned short VCC)
         clip[i] = (VCC >> (i + 0x8)) & 1;
     return; /* Little endian becomes big. */
 }
-void set_VCE(unsigned char VCE)
+void set_VCE(u8 VCE)
 {
     register int i;
 

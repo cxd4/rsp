@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Instruction Mnemonics for Vector Unit Computational Bit-Wise Logic *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -19,16 +19,16 @@
 #include "vu.h"
 
 VECTOR_EXTERN
-    VAND   (v16 vd, v16 vs, v16 vt);
+    VAND   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VNAND  (v16 vd, v16 vs, v16 vt);
+    VNAND  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VOR    (v16 vd, v16 vs, v16 vt);
+    VOR    (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VNOR   (v16 vd, v16 vs, v16 vt);
+    VNOR   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VXOR   (v16 vd, v16 vs, v16 vt);
+    VXOR   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VNXOR  (v16 vd, v16 vs, v16 vt);
+    VNXOR  (v16 vs, v16 vt);
 
 #endif

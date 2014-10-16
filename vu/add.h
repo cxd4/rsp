@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Instruction Mnemonics for Vector Unit Computational Adds           *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -19,16 +19,16 @@
 #include "vu.h"
 
 VECTOR_EXTERN
-    VADD   (v16 vd, v16 vs, v16 vt);
+    VADD   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VSUB   (v16 vd, v16 vs, v16 vt);
+    VSUB   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VABS   (v16 vd, v16 vs, v16 vt);
+    VABS   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VADDC  (v16 vd, v16 vs, v16 vt);
+    VADDC  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VSUBC  (v16 vd, v16 vs, v16 vt);
+    VSUBC  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VSAW   (v16 vd, v16 vs, v16 vt);
+    VSAW   (v16 vs, v16 vt);
 
 #endif

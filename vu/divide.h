@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Instruction Mnemonics for Vector Unit Computational Divides        *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -19,25 +19,35 @@
 #include "vu.h"
 
 VECTOR_EXTERN
-    VRCP   (v16 vd, v16 vs, v16 vt);
+    VRCP   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VRCPL  (v16 vd, v16 vs, v16 vt);
+    VRCPL  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VRCPH  (v16 vd, v16 vs, v16 vt);
+    VRCPH  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMOV   (v16 vd, v16 vs, v16 vt);
+    VMOV   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VRSQ   (v16 vd, v16 vs, v16 vt);
+    VRSQ   (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VRSQL  (v16 vd, v16 vs, v16 vt);
+    VRSQL  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VRSQH  (v16 vd, v16 vs, v16 vt);
+    VRSQH  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VNOP   (v16 vd, v16 vs, v16 vt);
+    VNOP   (v16 vs, v16 vt);
 
-extern int DivIn;
-extern int DivOut;
+extern s32 DivIn;
+extern s32 DivOut;
 
+/*
+ * Boolean flag:  Double-precision high was the last vector divide op?
+ *
+ * if (lastDivideOp == VRCP, VRCPL, VRSQ, VRSQL)
+ *     DPH = false; // single-precision or double-precision low, not high
+ * else if (lastDivideOp == VRCPH, VRSQH)
+ *     DPH = true; // double-precision high
+ * else if (lastDivideOp == VMOV, VNOP)
+ *     DPH = DPH; // no change, divide-group ops but not real divides
+ */
 extern int DPH;
 
 #endif

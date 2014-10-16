@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Instruction Mnemonics for Vector Unit Computational Multiplies     *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.09                                                         *
+* Release:  2014.10.15                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -22,50 +22,50 @@
  * signed or unsigned muplication of fractions
  */
 VECTOR_EXTERN
-    VMULF  (v16 vd, v16 vs, v16 vt);
+    VMULF  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMULU  (v16 vd, v16 vs, v16 vt);
+    VMULU  (v16 vs, v16 vt);
 /*
- *  VRNDP  (v16 vd, v16 vs, v16 vt); # was on Ultra64 RCP but removed
- *  VMULQ  (v16 vd, v16 vs, v16 vt); # was on Ultra64 RCP but removed
+ *  VRNDP  (v16 vs, v16 vt); # was on Ultra64 RCP but removed
+ *  VMULQ  (v16 vs, v16 vt); # was on Ultra64 RCP but removed
  */
 
 /*
  * double-precision multiplication of fractions
  */
 VECTOR_EXTERN
-    VMUDL  (v16 vd, v16 vs, v16 vt);
+    VMUDL  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMUDM  (v16 vd, v16 vs, v16 vt);
+    VMUDM  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMUDN  (v16 vd, v16 vs, v16 vt);
+    VMUDN  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMUDH  (v16 vd, v16 vs, v16 vt);
+    VMUDH  (v16 vs, v16 vt);
 
 /*
  * signed or unsigned accumulative multiplication and VMACQ
  */
 VECTOR_EXTERN
-    VMACF  (v16 vd, v16 vs, v16 vt);
+    VMACF  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMACU  (v16 vd, v16 vs, v16 vt);
+    VMACU  (v16 vs, v16 vt);
 /*
- *  VRNDN  (v16 vd, v16 vs, v16 vt); # was on Ultra64 RCP but removed
+ *  VRNDN  (v16 vs, v16 vt); # was on Ultra64 RCP but removed
  */
 VECTOR_EXTERN
-    VMACQ  (v16 vd, v16 vs, v16 vt);
+    VMACQ  (v16 vs, v16 vt);
 
 /*
  * double-precision accumulative multiplication
  */
 VECTOR_EXTERN
-    VMADL  (v16 vd, v16 vs, v16 vt);
+    VMADL  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMADM  (v16 vd, v16 vs, v16 vt);
+    VMADM  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMADN  (v16 vd, v16 vs, v16 vt);
+    VMADN  (v16 vs, v16 vt);
 VECTOR_EXTERN
-    VMADH  (v16 vd, v16 vs, v16 vt);
+    VMADH  (v16 vs, v16 vt);
 
 /*
  * an useful idea I thought of for the single-precision multiplies
