@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.10                                                         *
+* Release:  2014.10.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -95,15 +95,6 @@ extern void set_PC(int address);
 /* Let hardware architecture do the mask for us. */
 #endif
 
-#if (0)
-#define ENDIAN   0
-#else
-#define ENDIAN  ~0
-#endif
-#define BES(address)    ((address) ^ ((ENDIAN) & 03))
-#define HES(address)    ((address) ^ ((ENDIAN) & 02))
-#define MES(address)    ((address) ^ ((ENDIAN) & 01))
-#define WES(address)    ((address) ^ ((ENDIAN) & 00))
 #define SR_B(s, i)      (*(i8 *)(((i8 *)(SR + s)) + BES(i)))
 #define SR_S(s, i)      (*(i16 *)(((i8 *)(SR + s)) + HES(i)))
 #define SE(x, b)        (-(x & (1 << b)) | (x & ~(~0 << b)))

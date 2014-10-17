@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Standard Integer Type Definitions                                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.10                                                         *
+* Release:  2014.10.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -150,6 +150,28 @@ typedef union {
     u64 UW;
     s64 SW;
 } word_64;
+
+/*
+ * helper macros for indexing memory in the above unions
+ * EEP!  Currently concentrates mostly on 32-bit endianness.
+ */
+#ifndef ENDIAN_M
+#if defined(__BIG_ENDIAN__) | (__BYTE_ORDER == __BIG_ENDIAN)
+#define ENDIAN_M    ( 0)
+#else
+#define ENDIAN_M    (~0)
+#endif
+#endif
+
+#define ENDIAN_SWAP_BYTE    (ENDIAN_M & 0x7 & 3)
+#define ENDIAN_SWAP_HALF    (ENDIAN_M & 0x6 & 2)
+#define ENDIAN_SWAP_BIMI    (ENDIAN_M & 0x5 & 1)
+#define ENDIAN_SWAP_WORD    (ENDIAN_M & 0x4 & 0)
+
+#define BES(address)    ((address) ^ ENDIAN_SWAP_BYTE)
+#define HES(address)    ((address) ^ ENDIAN_SWAP_HALF)
+#define MES(address)    ((address) ^ ENDIAN_SWAP_BIMI)
+#define WES(address)    ((address) ^ ENDIAN_SWAP_WORD)
 
 /*
  * extra types of encoding for the well-known MIPS RISC architecture
