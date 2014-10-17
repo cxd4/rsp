@@ -318,9 +318,6 @@ INLINE v16 SHUFFLE_VECTOR(v16 VD, i16* VT, const int e)
     return (VD);
 }
 #else
-#define B(x)    ((x) & 3)
-#define SHUFFLE(a,b,c,d)    ((B(d)<<6) | (B(c)<<4) | (B(b)<<2) | (B(a)<<0))
-
 INLINE v16 SHUFFLE_VECTOR(v16 VD, i16* VT, const int e)
 {
     v16 xmm;

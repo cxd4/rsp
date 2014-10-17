@@ -251,4 +251,11 @@ extern void set_VCO(u16 VCO);
 extern void set_VCC(u16 VCC);
 extern void set_VCE(u8 VCE);
 
+/*
+ * shuffling convenience macros for Intel SIMD
+ * An 8-bit shuffle imm. of SHUFFLE(0, 1, 2, 3) should be a null operation.
+ */
+#define B(x)    ((x) & 3)
+#define SHUFFLE(a,b,c,d)    ((B(d)<<6) | (B(c)<<4) | (B(b)<<2) | (B(a)<<0))
+
 #endif
