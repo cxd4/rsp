@@ -156,7 +156,7 @@ typedef union {
  * EEP!  Currently concentrates mostly on 32-bit endianness.
  */
 #ifndef ENDIAN_M
-#if defined(__BIG_ENDIAN__) | (__BYTE_ORDER == __BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__) | (__BYTE_ORDER != __LITTLE_ENDIAN)
 #define ENDIAN_M    ( 0)
 #else
 #define ENDIAN_M    (~0)
