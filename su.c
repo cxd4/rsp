@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.16                                                         *
+* Release:  2014.10.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1540,10 +1540,11 @@ EX:
 #endif
         if (inst >> 25 == 0x25) /* is a VU instruction */
         {
-#ifndef ARCH_MIN_SSE2
-            ALIGNED i16 ST[N];
-#endif
+#ifdef ARCH_MIN_SSE2
             v16 source, target;
+#else
+            ALIGNED i16 source[N], target[N];
+#endif
 
             const int opcode = inst % 64; /* inst.R.func */
             const int vd = (inst & 0x000007FF) >> 6; /* inst.R.sa */
@@ -1553,12 +1554,13 @@ EX:
 
 #ifdef ARCH_MIN_SSE2
             source = *(v16 *)VR[vs];
-            vector_wipe(target); /* trivial uninitialized variable warning */
+            target = *(v16 *)VR[vt];
+            target = SHUFFLE_VECTOR(target, e);
 #else
-            source = VR[vs];
-            target = ST;
+            vector_copy(source, VR[vs]);
+            vector_copy(target, VR[vt]);
+            SHUFFLE_VECTOR(target, e);
 #endif
-            target = SHUFFLE_VECTOR(target, VR[vt], e);
 #ifdef ARCH_MIN_SSE2
             *(v16 *)(VR[vd]) = COP2_C2[opcode](source, target);
 #else
