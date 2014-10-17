@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Divides         *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.16                                                         *
+* Release:  2014.10.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1128,6 +1128,7 @@ VECTOR_OPERATION VRCP(v16 vs, v16 vt)
     return (vs);
 #else
     vector_copy(V_result, VR[result]);
+    vs = vt; /* unused */
     return;
 #endif
 }
@@ -1154,6 +1155,7 @@ VECTOR_OPERATION VRCPL(v16 vs, v16 vt)
     return (vs);
 #else
     vector_copy(V_result, VR[result]);
+    vs = vt; /* unused */
     return;
 #endif
 }
@@ -1178,6 +1180,7 @@ VECTOR_OPERATION VRCPH(v16 vs, v16 vt)
     return (vs);
 #else
     vector_copy(V_result, VR[result]);
+    vs = vt; /* unused */
     return;
 #endif
 }
@@ -1199,6 +1202,7 @@ VECTOR_OPERATION VMOV(v16 vs, v16 vt)
     return (vs);
 #else
     vector_copy(V_result, VR[result]);
+    vs = vt; /* unused */
     return;
 #endif
 }
@@ -1224,6 +1228,7 @@ VECTOR_OPERATION VRSQ(v16 vs, v16 vt)
     return (vs);
 #else
     vector_copy(V_result, VR[result]);
+    vs = vt; /* unused */
     return;
 #endif
 }
@@ -1250,6 +1255,7 @@ VECTOR_OPERATION VRSQL(v16 vs, v16 vt)
     return (vs);
 #else
     vector_copy(V_result, VR[result]);
+    vs = vt; /* unused */
     return;
 #endif
 }
@@ -1274,6 +1280,7 @@ VECTOR_OPERATION VRSQH(v16 vs, v16 vt)
     return (vs);
 #else
     vector_copy(V_result, VR[result]);
+    vs = vt; /* unused */
     return;
 #endif
 }
