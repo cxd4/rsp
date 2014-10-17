@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.16                                                         *
+* Release:  2014.10.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -126,20 +126,6 @@ INLINE static void do_mulu(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         VD[i] &= ~(VACC_H[i] >>  0); /* VD &= -(result >= 0x000000000000) */
 #endif
-    return;
-}
-
-INLINE static void do_mudl(short* VD, short* VS, short* VT)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        VACC_L[i] = (unsigned short)(VS[i])*(unsigned short)(VT[i]) >> 16;
-    for (i = 0; i < N; i++)
-        VACC_M[i] = 0x0000;
-    for (i = 0; i < N; i++)
-        VACC_H[i] = 0x0000;
-    vector_copy(VD, VACC_L); /* no possibilities to clamp */
     return;
 }
 
@@ -377,24 +363,24 @@ VECTOR_OPERATION VMULU(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMUDL(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
-
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
+    vs = _mm_mulhi_epu16(vs, vt);
+    vector_wipe(vt); /* (UINT16_MAX * UINT16_MAX) >> 16 too small for MD/HI */
+    *(v16 *)VACC_L = vs;
+    *(v16 *)VACC_M = vt;
+    *(v16 *)VACC_H = vt;
+    return (vs); /* no possibilities to clamp */
 #else
-    v16 VS, VT;
+    word_32 product[N];
+    register unsigned int i;
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_mudl(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
-    return (vs);
-#else
-    vector_copy(V_result, VD);
+    for (i = 0; i < N; i++)
+        product[i].UW = (u16)vs[i] * (u16)vt[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = product[i].UW >> 16; /* product[i].H[BES(0)] */
+    vector_copy(V_result, VACC_L);
+    vector_wipe(VACC_M);
+    vector_wipe(VACC_H);
     return;
 #endif
 }
