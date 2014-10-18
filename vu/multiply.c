@@ -157,20 +157,6 @@ INLINE static void do_mudn(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_mudh(short* VD, short* VS, short* VT)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        VACC_L[i] = 0x0000;
-    for (i = 0; i < N; i++)
-        VACC_M[i] = (short)(VS[i]*VT[i] >>  0);
-    for (i = 0; i < N; i++)
-        VACC_H[i] = (short)(VS[i]*VT[i] >> 16);
-    SIGNED_CLAMP_AM(VD);
-    return;
-}
-
 INLINE static void do_macf(short* VD, short* VS, short* VT)
 {
     i32 product[N];
@@ -377,7 +363,7 @@ VECTOR_OPERATION VMUDL(v16 vs, v16 vt)
     for (i = 0; i < N; i++)
         product[i].UW = (u16)vs[i] * (u16)vt[i];
     for (i = 0; i < N; i++)
-        VACC_L[i] = product[i].UW >> 16; /* product[i].H[BES(0)] */
+        VACC_L[i] = product[i].UW >> 16; /* product[i].H[HES(0) >> 1] */
     vector_copy(V_result, VACC_L);
     vector_wipe(VACC_M);
     vector_wipe(VACC_H);
@@ -435,24 +421,41 @@ VECTOR_OPERATION VMUDN(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMUDH(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
+    v16 prod_high;
 
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
-#else
-    v16 VS, VT;
+    prod_high = _mm_mulhi_epi16(vs, vt);
+    vs        = _mm_mullo_epi16(vs, vt);
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_mudh(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
+    *(v16 *)VACC_L = _mm_setzero_si128();
+    *(v16 *)VACC_M = vs; /* acc 31..16 storing (VS*VT)15..0 */
+    *(v16 *)VACC_H = prod_high; /* acc 47..32 storing (VS*VT)31..16 */
+
+/*
+ * "Unpack" the low 16 bits and the high 16 bits of each 32-bit product to a
+ * couple xmm registers, re-storing them as 2 32-bit products each.
+ */
+    vt = _mm_unpackhi_epi16(vs, prod_high);
+    vs = _mm_unpacklo_epi16(vs, prod_high);
+
+/*
+ * Re-interleave or pack both 32-bit products in both xmm registers with
+ * signed saturation:  prod < -32768 to -32768 and prod > +32767 to +32767.
+ */
+    vs = _mm_packs_epi32(vs, vt);
     return (vs);
 #else
-    vector_copy(V_result, VD);
+    word_32 product[N];
+    register unsigned int i;
+
+    for (i = 0; i < N; i++)
+        product[i].SW = (s16)vs[i] * (s16)vt[i];
+    vector_wipe(VACC_L);
+    for (i = 0; i < N; i++)
+        VACC_M[i] = (s16)(product[i].W >>  0); /* product[i].HW[HES(0) >> 1] */
+    for (i = 0; i < N; i++)
+        VACC_H[i] = (s16)(product[i].W >> 16); /* product[i].HW[HES(2) >> 1] */
+    SIGNED_CLAMP_AM(V_result);
     return;
 #endif
 }
