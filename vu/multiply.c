@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.17                                                         *
+* Release:  2014.10.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -17,6 +17,13 @@
 #include "select.h"
 
 #ifdef ARCH_MIN_SSE2
+#define _mm_cmple_epu16(dst, src) \
+    _mm_cmpeq_epi16(_mm_subs_epu16(dst, src), _mm_setzero_si128())
+#define _mm_cmpgt_epu16(dst, src) \
+    _mm_andnot_si128(_mm_cmpeq_epi16(dst, src), _mm_cmple_epu16(src, dst))
+#define _mm_cmplt_epu16(dst, src) \
+    _mm_cmpgt_epu16(src, dst)
+
 static INLINE void SIGNED_CLAMP_AM(short* VD)
 { /* typical sign-clamp of accumulator-mid (bits 31:16) */
     v16 dst, src;
@@ -278,24 +285,6 @@ INLINE static void do_madn(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         VACC_H[i] += addend[i] >> 16;
     SIGNED_CLAMP_AL(VD);
-    return;
-}
-
-INLINE static void do_madh(short* VD, short* VS, short* VT)
-{
-    i32 product[N];
-    u32 addend[N];
-    register int i;
-
-    for (i = 0; i < N; i++)
-        product[i] = (signed short)(VS[i]) * (signed short)(VT[i]);
-    for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_M[i]) + (unsigned short)(product[i]);
-    for (i = 0; i < N; i++)
-        VACC_M[i] += (short)(VS[i] * VT[i]);
-    for (i = 0; i < N; i++)
-        VACC_H[i] += (addend[i] >> 16) + (product[i] >> 16);
-    SIGNED_CLAMP_AM(VD);
     return;
 }
 
@@ -594,24 +583,53 @@ VECTOR_OPERATION VMADN(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMADH(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
+    v16 acc_mid;
+    v16 prod_high;
 
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
-#else
-    v16 VS, VT;
+    prod_high = _mm_mulhi_epi16(vs, vt);
+    vs        = _mm_mullo_epi16(vs, vt);
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_madh(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
+/*
+ * We're required to load the source product from the accumulator to add to.
+ * While we're at it, conveniently sneak in a acc[31..16] += (vs*vt)[15..0].
+ */
+    acc_mid = *(v16 *)VACC_M;
+    vs = _mm_add_epi16(vs, acc_mid);
+    *(v16 *)VACC_M = vs;
+    vt = *(v16 *)VACC_H;
+
+/*
+ * While accumulating base_lo + product_lo is easy, getting the correct data
+ * for base_hi + product_hi is tricky and needs unsigned overflow detection.
+ *
+ * The one-liner solution to detecting unsigned overflow (thus adding a carry
+ * value of 1 to the higher word) is _mm_cmplt_epu16, but none of the Intel
+ * MMX-based instruction sets define unsigned comparison ops FOR us, so...
+ */
+    vt = _mm_add_epi16(vt, prod_high);
+    vs = _mm_cmplt_epu16(vs, acc_mid); /* acc.mid + prod.low < acc.mid */
+    vt = _mm_sub_epi16(vt, vs); /* += 1 if overflow, by doing -= ~0 */
+    *(v16 *)VACC_H = vt;
+
+    vs = *(v16 *)VACC_M;
+    prod_high = _mm_unpackhi_epi16(vs, vt);
+    vs        = _mm_unpacklo_epi16(vs, vt);
+    vs = _mm_packs_epi32(vs, prod_high);
     return (vs);
 #else
-    vector_copy(V_result, VD);
+    word_32 product[N], addend[N];
+    register unsigned int i;
+
+    for (i = 0; i < N; i++)
+        product[i].SW = (s16)vs[i] * (s16)vt[i];
+    for (i = 0; i < N; i++)
+        addend[i].UW = (u16)VACC_M[i] + (u16)(product[i].W);
+    for (i = 0; i < N; i++)
+        VACC_M[i] += (i16)product[i].SW;
+    for (i = 0; i < N; i++)
+        VACC_H[i] += (addend[i].UW >> 16) + (product[i].SW >> 16);
+    SIGNED_CLAMP_AM(V_result);
     return;
 #endif
 }
