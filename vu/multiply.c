@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.18                                                         *
+* Release:  2014.10.19                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -91,26 +91,6 @@ static INLINE void SIGNED_CLAMP_AL(short* VD)
     for (i = 0; i < N; i++)
         temp[i] ^= 0x8000; /* half-assed unsigned saturation mix in the clamp */
     merge(VD, cond, temp, VACC_L);
-    return;
-}
-
-INLINE static void do_mulf(short* VD, short* VS, short* VT)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        VACC_L[i] = (SEMIFRAC << 1) >>  0;
-    for (i = 0; i < N; i++)
-        VACC_M[i] = (SEMIFRAC << 1) >> 16;
-    for (i = 0; i < N; i++)
-        VACC_H[i] = -((VACC_M[i] < 0) & (VS[i] != VT[i])); /* -32768 * -32768 */
-#ifndef ARCH_MIN_SSE2
-    vector_copy(VD, VACC_M);
-    for (i = 0; i < N; i++)
-        VD[i] -= (VACC_M[i] < 0) & (VS[i] == VT[i]); /* ACC b 31 set, min*min */
-#else
-    SIGNED_CLAMP_AM(VD);
-#endif
     return;
 }
 
@@ -290,24 +270,81 @@ INLINE static void do_madn(short* VD, short* VS, short* VT)
 
 VECTOR_OPERATION VMULF(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
+    v16 negative;
+    v16 round;
+    v16 prod_hi, prod_lo;
 
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
-#else
-    v16 VS, VT;
+/*
+ * We cannot save register allocations by doing xmm0 *= xmm1 or xmm1 *= xmm0
+ * because we need to do a computation on (xmm0 ^ xmm1) before interference.
+ */
+    prod_lo = _mm_mullo_epi16(vs, vt);
+    prod_hi = _mm_mulhi_epi16(vs, vt);
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_mulf(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
+/*
+ * Since -32768 * -32768 > 0, we cannot detect if VACC_H should be all ones
+ * based solely on whether bit 31 of the 32-bit-stored product is set.
+ * So we'll detect if (vs * vt < 0) an old-fashioned way:  ((vs ^ vt) < 0).
+ */
+    negative = _mm_xor_si128(vs, vt);
+    negative = _mm_srai_epi16(negative, 15);
+    *(v16 *)VACC_H = negative; /* i16*i16 only fills L/M; VACC_H = 0 or ~0. */
+
+    prod_hi = _mm_slli_epi16(prod_hi, 1); /* Product requires special <<= 1. */
+    negative = _mm_srli_epi16(prod_lo, 15); /* shifting overflows ? 1 : 0 */
+    prod_hi = _mm_add_epi16(prod_hi, negative);
+    prod_lo = _mm_slli_epi16(prod_lo, 1);
+
+/*
+ * special fractional round value:  (32-bit product) += 32768 (0x8000)
+ * two's compliment computation:  (0xFFFF << 15) & 0xFFFF
+ */
+    round = _mm_cmpeq_epi16(vs, vs); /* PCMPEQ  xmmA, xmmA # all 1's forced */
+    round = _mm_slli_epi16(round, 15);
+
+    prod_lo = _mm_add_epi16(prod_lo, round); /* Or ^= 0x8000 works also. */
+    *(v16 *)VACC_L = prod_lo;
+
+/*
+ * Did we overflow the 16-bit low word by adding 0x8000 to VACC_L?
+ * Very easily checked.  If adding 32768 (equivalent, again, to XOR'ing by
+ * 32768) changed the MSB from 1 to 0, we know that it DID overflow.
+ * Although, doing += (0 >> 15) ? 1 : 0, isn't as easy as inverting 0 first.
+ */
+    prod_lo = _mm_xor_si128(prod_lo, round);
+    prod_lo = _mm_srli_epi16(prod_lo, 15); /* += 1:0 or _srai_ for -= ~0:0 */
+    prod_hi = _mm_add_epi16(prod_hi, prod_lo);
+    *(v16 *)VACC_M = prod_hi;
+
+/*
+ * VMULF does signed clamping.  However, in VMULF's case, the only possible
+ * combination of inputs to even cause a 32-bit signed clamp to a saturated
+ * 16-bit result is (-32768 * -32768), so, rather than fully emulating a
+ * signed clamp with SSE, we do an accurate-enough hack for this corner case.
+ */
+    vs = _mm_cmpeq_epi16(vs, vt); /* vs == vt */
+    vt = _mm_cmpeq_epi16(vt, round); /* vt == -32768 (conveniently, "round") */
+    vs = _mm_and_si128(vs, vt); /* vs == vt == -32768:  corner case confirmed */
+    vs = _mm_add_epi16(vs, prod_hi); /* prod_hi must be -32768; + -1 = +32767 */
     return (vs);
 #else
-    vector_copy(V_result, VD);
+    word_32 product[N];
+    register unsigned int i;
+
+    for (i = 0; i < N; i++)
+        product[i].W = vs[i] * vt[i];
+    for (i = 0; i < N; i++)
+        product[i].W <<= 1; /* special fractional shift value */
+    for (i = 0; i < N; i++)
+        product[i].W += 32768; /* special fractional round value */
+    for (i = 0; i < N; i++)
+        VACC_L[i] = (product[i].UW & 0x00000000FFFF) >>  0;
+    for (i = 0; i < N; i++)
+        VACC_M[i] = (product[i].UW & 0x0000FFFF0000) >> 16;
+    for (i = 0; i < N; i++)
+        VACC_H[i] = ((vs[i] ^ vt[i]) < 0) ? -1 :  0;
+    SIGNED_CLAMP_AM(V_result);
     return;
 #endif
 }
