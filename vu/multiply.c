@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.20                                                         *
+* Release:  2014.10.21                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -359,8 +359,7 @@ VECTOR_OPERATION VMULU(v16 vs, v16 vt)
 
     prod_lo = _mm_srai_epi16(prod_hi, 15); /* unsigned overflow mask */
     vs = _mm_or_si128(prod_hi, prod_lo);
-    prod_hi = _mm_srai_epi16(prod_hi, 15); /* unsigned underflow mask */
-    vs = _mm_andnot_si128(prod_hi, vs);
+    vs = _mm_andnot_si128(negative, vs); /* unsigned underflow mask */
     return (vs);
 #else
     word_64 product[N]; /* (-32768 * -32768)<<1 + 32768 confuses 32-bit type. */
