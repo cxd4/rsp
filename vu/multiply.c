@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.19                                                         *
+* Release:  2014.10.20                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -91,28 +91,6 @@ static INLINE void SIGNED_CLAMP_AL(short* VD)
     for (i = 0; i < N; i++)
         temp[i] ^= 0x8000; /* half-assed unsigned saturation mix in the clamp */
     merge(VD, cond, temp, VACC_L);
-    return;
-}
-
-INLINE static void do_mulu(short* VD, short* VS, short* VT)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        VACC_L[i] = (SEMIFRAC << 1) >>  0;
-    for (i = 0; i < N; i++)
-        VACC_M[i] = (SEMIFRAC << 1) >> 16;
-    for (i = 0; i < N; i++)
-        VACC_H[i] = -((VACC_M[i] < 0) & (VS[i] != VT[i])); /* -32768 * -32768 */
-#if (0)
-    UNSIGNED_CLAMP(VD);
-#else
-    vector_copy(VD, VACC_M);
-    for (i = 0; i < N; i++)
-        VD[i] |=  (VACC_M[i] >> 15); /* VD |= -(result == 0x000080008000) */
-    for (i = 0; i < N; i++)
-        VD[i] &= ~(VACC_H[i] >>  0); /* VD &= -(result >= 0x000000000000) */
-#endif
     return;
 }
 
@@ -342,24 +320,65 @@ VECTOR_OPERATION VMULF(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMULU(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
+    v16 negative;
+    v16 round;
+    v16 prod_hi, prod_lo;
 
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
-#else
-    v16 VS, VT;
+/*
+ * Besides the unsigned clamping method (as opposed to VMULF's signed clamp),
+ * this operation's multiplication matches VMULF.  See VMULF for annotations.
+ */
+    prod_lo = _mm_mullo_epi16(vs, vt);
+    prod_hi = _mm_mulhi_epi16(vs, vt);
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_mulu(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
+    prod_hi = _mm_add_epi16(prod_hi, prod_hi);
+    negative = _mm_srli_epi16(prod_lo, 15);
+    prod_hi = _mm_add_epi16(prod_hi, negative);
+    prod_lo = _mm_add_epi16(prod_lo, prod_lo);
+    negative = _mm_srli_epi16(prod_lo, 15);
+
+    round = _mm_cmpeq_epi16(vs, vs);
+    round = _mm_slli_epi16(round, 15);
+
+    prod_lo = _mm_xor_si128(prod_lo, round);
+    *(v16 *)VACC_L = prod_lo;
+    prod_hi = _mm_add_epi16(prod_hi, negative);
+    *(v16 *)VACC_M = prod_hi;
+
+/*
+ * VMULU does unsigned clamping.  However, in VMULU's case, the only possible
+ * combinations that overflow, are either negative values or -32768 * -32768.
+ */
+    negative = _mm_srai_epi16(prod_hi, 15);
+    vs = _mm_cmpeq_epi16(vs, round); /* vs == -32768 ? ~0 : 0 */
+    vt = _mm_cmpeq_epi16(vt, round); /* vt == -32768 ? ~0 : 0 */
+    vs = _mm_and_si128(vs, vt); /* vs == vt == -32768:  corner case confirmed */
+    negative = _mm_xor_si128(negative, vs);
+    *(v16 *)VACC_H = negative; /* 2*i16*i16 only fills L/M; VACC_H = 0 or ~0. */
+
+    prod_lo = _mm_srai_epi16(prod_hi, 15); /* unsigned overflow mask */
+    vs = _mm_or_si128(prod_hi, prod_lo);
+    prod_hi = _mm_srai_epi16(prod_hi, 15); /* unsigned underflow mask */
+    vs = _mm_andnot_si128(prod_hi, vs);
     return (vs);
 #else
-    vector_copy(V_result, VD);
+    word_64 product[N]; /* (-32768 * -32768)<<1 + 32768 confuses 32-bit type. */
+    register unsigned int i;
+
+    for (i = 0; i < N; i++)
+        product[i].W = vs[i] * vt[i];
+    for (i = 0; i < N; i++)
+        product[i].W <<= 1; /* special fractional shift value */
+    for (i = 0; i < N; i++)
+        product[i].W += 32768; /* special fractional round value */
+    for (i = 0; i < N; i++)
+        VACC_L[i] = (product[i].UW & 0x00000000FFFF) >>  0;
+    for (i = 0; i < N; i++)
+        VACC_M[i] = (product[i].UW & 0x0000FFFF0000) >> 16;
+    for (i = 0; i < N; i++)
+        VACC_H[i] = -(product[i].SW < 0); /* product>>32 & 0xFFFF */
+    UNSIGNED_CLAMP(V_result);
     return;
 #endif
 }
