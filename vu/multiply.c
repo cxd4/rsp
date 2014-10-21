@@ -277,44 +277,31 @@ VECTOR_OPERATION VMULF(v16 vs, v16 vt)
 
 /*
  * We cannot save register allocations by doing xmm0 *= xmm1 or xmm1 *= xmm0
- * because we need to do a computation on (xmm0 ^ xmm1) before interference.
+ * because we need to do future computations on the original source factors.
  */
     prod_lo = _mm_mullo_epi16(vs, vt);
     prod_hi = _mm_mulhi_epi16(vs, vt);
 
 /*
- * Since -32768 * -32768 > 0, we cannot detect if VACC_H should be all ones
- * based solely on whether bit 31 of the 32-bit-stored product is set.
- * So we'll detect if (vs * vt < 0) an old-fashioned way:  ((vs ^ vt) < 0).
+ * The final product is really 2*s*t + 32768.  Fortunately for us, however,
+ * no two 16-bit values can cause overflow when <<= 1 the HIGH word, anyway.
  */
-    negative = _mm_xor_si128(vs, vt);
-    negative = _mm_srai_epi16(negative, 15);
-    *(v16 *)VACC_H = negative; /* i16*i16 only fills L/M; VACC_H = 0 or ~0. */
-
-    prod_hi = _mm_slli_epi16(prod_hi, 1); /* Product requires special <<= 1. */
-    negative = _mm_srli_epi16(prod_lo, 15); /* shifting overflows ? 1 : 0 */
-    prod_hi = _mm_add_epi16(prod_hi, negative);
-    prod_lo = _mm_slli_epi16(prod_lo, 1);
+    prod_hi = _mm_add_epi16(prod_hi, prod_hi); /* fast way of doing <<= 1 */
+    negative = _mm_srli_epi16(prod_lo, 15); /* shifting LOW overflows ? 1 : 0 */
+    prod_hi = _mm_add_epi16(prod_hi, negative); /* hi<<1 += MSB of lo */
+    prod_lo = _mm_add_epi16(prod_lo, prod_lo); /* fast way of doing <<= 1 */
+    negative = _mm_srli_epi16(prod_lo, 15); /* Adding 0x8000 sets MSB to 0? */
 
 /*
  * special fractional round value:  (32-bit product) += 32768 (0x8000)
  * two's compliment computation:  (0xFFFF << 15) & 0xFFFF
  */
-    round = _mm_cmpeq_epi16(vs, vs); /* PCMPEQ  xmmA, xmmA # all 1's forced */
+    round = _mm_cmpeq_epi16(vs, vs); /* PCMPEQW xmmA, xmmA # all 1's forced */
     round = _mm_slli_epi16(round, 15);
 
-    prod_lo = _mm_add_epi16(prod_lo, round); /* Or ^= 0x8000 works also. */
+    prod_lo = _mm_xor_si128(prod_lo, round); /* Or += 32768 works also. */
     *(v16 *)VACC_L = prod_lo;
-
-/*
- * Did we overflow the 16-bit low word by adding 0x8000 to VACC_L?
- * Very easily checked.  If adding 32768 (equivalent, again, to XOR'ing by
- * 32768) changed the MSB from 1 to 0, we know that it DID overflow.
- * Although, doing += (0 >> 15) ? 1 : 0, isn't as easy as inverting 0 first.
- */
-    prod_lo = _mm_xor_si128(prod_lo, round);
-    prod_lo = _mm_srli_epi16(prod_lo, 15); /* += 1:0 or _srai_ for -= ~0:0 */
-    prod_hi = _mm_add_epi16(prod_hi, prod_lo);
+    prod_hi = _mm_add_epi16(prod_hi, negative);
     *(v16 *)VACC_M = prod_hi;
 
 /*
@@ -323,13 +310,17 @@ VECTOR_OPERATION VMULF(v16 vs, v16 vt)
  * 16-bit result is (-32768 * -32768), so, rather than fully emulating a
  * signed clamp with SSE, we do an accurate-enough hack for this corner case.
  */
-    vs = _mm_cmpeq_epi16(vs, vt); /* vs == vt */
-    vt = _mm_cmpeq_epi16(vt, round); /* vt == -32768 (conveniently, "round") */
+    negative = _mm_srai_epi16(prod_hi, 15);
+    vs = _mm_cmpeq_epi16(vs, round); /* vs == -32768 ? ~0 : 0 */
+    vt = _mm_cmpeq_epi16(vt, round); /* vt == -32768 ? ~0 : 0 */
     vs = _mm_and_si128(vs, vt); /* vs == vt == -32768:  corner case confirmed */
+
+    negative = _mm_xor_si128(negative, vs);
+    *(v16 *)VACC_H = negative; /* 2*i16*i16 only fills L/M; VACC_H = 0 or ~0. */
     vs = _mm_add_epi16(vs, prod_hi); /* prod_hi must be -32768; + -1 = +32767 */
     return (vs);
 #else
-    word_32 product[N];
+    word_64 product[N]; /* (-32768 * -32768)<<1 + 32768 confuses 32-bit type. */
     register unsigned int i;
 
     for (i = 0; i < N; i++)
@@ -343,7 +334,7 @@ VECTOR_OPERATION VMULF(v16 vs, v16 vt)
     for (i = 0; i < N; i++)
         VACC_M[i] = (product[i].UW & 0x0000FFFF0000) >> 16;
     for (i = 0; i < N; i++)
-        VACC_H[i] = ((vs[i] ^ vt[i]) < 0) ? -1 :  0;
+        VACC_H[i] = -(product[i].SW < 0); /* product>>32 & 0xFFFF */
     SIGNED_CLAMP_AM(V_result);
     return;
 #endif
