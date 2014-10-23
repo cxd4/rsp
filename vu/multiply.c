@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.21                                                         *
+* Release:  2014.10.22                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -105,20 +105,6 @@ INLINE static void do_mudm(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         VACC_H[i] = -(VACC_M[i] < 0);
     vector_copy(VD, VACC_M); /* no possibilities to clamp */
-    return;
-}
-
-INLINE static void do_mudn(short* VD, short* VS, short* VT)
-{
-    register int i;
-
-    for (i = 0; i < N; i++)
-        VACC_L[i] = ((unsigned short)(VS[i])*VT[i] & 0x00000000FFFF) >>  0;
-    for (i = 0; i < N; i++)
-        VACC_M[i] = ((unsigned short)(VS[i])*VT[i] & 0x0000FFFF0000) >> 16;
-    for (i = 0; i < N; i++)
-        VACC_H[i] = -(VACC_M[i] < 0);
-    vector_copy(VD, VACC_L); /* no possibilities to clamp */
     return;
 }
 
@@ -432,24 +418,57 @@ VECTOR_OPERATION VMUDM(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMUDN(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
+    v16 prod_hi, prod_lo;
+    v16 overflow, underflow, precision_loss;
 
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
-#else
-    v16 VS, VT;
+/*
+ * There is no SSE operation for multiplying signed by unsigned, so we'll try
+ * enforcing both VS and VT to be signed.  Since VMUDN requires that VS is
+ * the unsigned multiplier, correct multiplication requires that we prevent
+ * doing it as a signed one, while the unsigned VS has the highest bit set.
+ * We prevent unsigned VS from having the MSB set by shifting it right and
+ * recording the lost LSB (either 0 or 1) as a sign-extended temporary mask.
+ */
+    precision_loss = _mm_slli_epi16(vs, 15);
+    precision_loss = _mm_srai_epi16(precision_loss, 15);
+    vs = _mm_srli_epi16(vs, 1);
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_mudn(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
-    return (vs);
+    prod_hi = _mm_mulhi_epi16(vs, vt);
+    prod_lo = _mm_mullo_epi16(vs, vt);
+    overflow = _mm_srli_epi16(prod_lo, 15);
+    prod_lo = _mm_add_epi16(prod_lo, prod_lo); /* undoing the >>= 1 */
+    prod_hi = _mm_add_epi16(prod_hi, prod_hi);
+    prod_hi = _mm_or_si128(prod_hi, overflow); /* shifts low MSB to high LSB */
+
+    vt = _mm_and_si128(vt, precision_loss);
+    prod_lo = _mm_add_epi16(prod_lo, vt); /* 3*x == 2*x + x, right? */
+    overflow = _mm_cmplt_epu16(prod_lo, vt); /* Did adding overflow? */
+    underflow = _mm_cmpgt_epu16(prod_lo, vt);
+    vt = _mm_srai_epi16(vt, 15);
+    underflow = _mm_and_si128(underflow, vt);
+    overflow = _mm_andnot_si128(vt, overflow);
+
+    prod_hi = _mm_add_epi16(prod_hi, underflow);
+    prod_hi = _mm_sub_epi16(prod_hi, overflow); /* - (-1) over, - (+1) under */
+    *(v16 *)VACC_L = prod_lo;
+    *(v16 *)VACC_M = prod_hi;
+    prod_hi = _mm_srai_epi16(prod_hi, 15);
+    *(v16 *)VACC_H = prod_hi;
+    return (vs = prod_lo);
 #else
-    vector_copy(V_result, VD);
+    word_32 product[N];
+    register unsigned int i;
+
+    for (i = 0; i < N; i++)
+        product[i].SW = (u16)vs[i] * (s16)vt[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = (product[i].W & 0x00000000FFFF) >>  0;
+    for (i = 0; i < N; i++)
+        VACC_M[i] = (product[i].W & 0x0000FFFF0000) >> 16;
+    for (i = 0; i < N; i++)
+        VACC_H[i] = -(VACC_M[i] < 0);
+    vector_copy(V_result, VACC_L);
     return;
 #endif
 }
