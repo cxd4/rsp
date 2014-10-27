@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.23                                                         *
+* Release:  2014.10.26                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -173,27 +173,6 @@ INLINE static void do_madl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         VACC_H[i] += addend[i] >> 16;
     SIGNED_CLAMP_AL(VD);
-    return;
-}
-
-INLINE static void do_madm(short* VD, short* VS, short* VT)
-{
-    u32 addend[N];
-    register int i;
-
-    for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_L[i]) + (unsigned short)(VS[i]*VT[i]);
-    for (i = 0; i < N; i++)
-        VACC_L[i] += (short)(VS[i] * VT[i]);
-    for (i = 0; i < N; i++)
-        addend[i] = (addend[i] >> 16) + (VS[i]*(unsigned short)(VT[i]) >> 16);
-    for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
-    for (i = 0; i < N; i++)
-        VACC_M[i] = (short)addend[i];
-    for (i = 0; i < N; i++)
-        VACC_H[i] += addend[i] >> 16;
-    SIGNED_CLAMP_AM(VD);
     return;
 }
 
@@ -582,24 +561,63 @@ VECTOR_OPERATION VMADL(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMADM(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
+    v16 acc_hi, acc_md, acc_lo;
+    v16 prod_hi, prod_lo;
+    v16 overflow;
 
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
-#else
-    v16 VS, VT;
+    prod_lo = _mm_mullo_epi16(vs, vt);
+    prod_hi = _mm_mulhi_epu16(vs, vt);
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_madm(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
+    vs = _mm_srai_epi16(vs, 15);
+    vt = _mm_and_si128(vt, vs);
+    prod_hi = _mm_sub_epi16(prod_hi, vt);
+
+/*
+ * Writeback phase to the accumulator.
+ * VMADM stores accumulator += the product achieved by VMUDM.
+ */
+    acc_lo = *(v16 *)VACC_L;
+    acc_md = *(v16 *)VACC_M;
+    acc_hi = *(v16 *)VACC_H;
+
+    acc_lo = _mm_add_epi16(acc_lo, prod_lo);
+    *(v16 *)VACC_L = acc_lo;
+
+    overflow = _mm_cmplt_epu16(acc_lo, prod_lo); /* overflow:  (x + y < y) */
+    prod_hi = _mm_sub_epi16(prod_hi, overflow);
+    acc_md = _mm_add_epi16(acc_md, prod_hi);
+    *(v16 *)VACC_M = acc_md;
+
+    overflow = _mm_cmplt_epu16(acc_md, prod_hi);
+    prod_hi = _mm_srai_epi16(prod_hi, 15);
+    acc_hi = _mm_add_epi16(acc_hi, prod_hi);
+    acc_hi = _mm_sub_epi16(acc_hi, overflow);
+    *(v16 *)VACC_H = acc_hi;
+
+    vt = _mm_unpackhi_epi16(acc_md, acc_hi);
+    vs = _mm_unpacklo_epi16(acc_md, acc_hi);
+    vs = _mm_packs_epi32(vs, vt);
     return (vs);
 #else
-    vector_copy(V_result, VD);
+    word_32 product[N], addend[N];
+    register unsigned int i;
+
+    for (i = 0; i < N; i++)
+        product[i].SW = (s16)vs[i] * (u16)vt[i];
+    for (i = 0; i < N; i++)
+        addend[i].UW = (product[i].W & 0x0000FFFF) + (u16)VACC_L[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = addend[i].UW & 0x0000FFFF;
+    for (i = 0; i < N; i++)
+        addend[i].UW = (addend[i].UW >> 16) + (product[i].SW >> 16);
+    for (i = 0; i < N; i++)
+        addend[i].UW += (u16)VACC_M[i];
+    for (i = 0; i < N; i++)
+        VACC_M[i] = addend[i].UW & 0x0000FFFF;
+    for (i = 0; i < N; i++)
+        VACC_H[i] += addend[i].UW >> 16;
+    SIGNED_CLAMP_AM(V_result);
     return;
 #endif
 }
