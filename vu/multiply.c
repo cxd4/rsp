@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.26                                                         *
+* Release:  2014.10.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -170,27 +170,6 @@ INLINE static void do_madl(short* VD, short* VS, short* VT)
         addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
     for (i = 0; i < N; i++)
         VACC_M[i] = (short)(addend[i]);
-    for (i = 0; i < N; i++)
-        VACC_H[i] += addend[i] >> 16;
-    SIGNED_CLAMP_AL(VD);
-    return;
-}
-
-INLINE static void do_madn(short* VD, short* VS, short* VT)
-{
-    u32 addend[N];
-    register int i;
-
-    for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_L[i]) + (unsigned short)(VS[i]*VT[i]);
-    for (i = 0; i < N; i++)
-        VACC_L[i] += (short)(VS[i] * VT[i]);
-    for (i = 0; i < N; i++)
-        addend[i] = (addend[i] >> 16) + ((unsigned short)(VS[i])*VT[i] >> 16);
-    for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
-    for (i = 0; i < N; i++)
-        VACC_M[i] = (short)addend[i];
     for (i = 0; i < N; i++)
         VACC_H[i] += addend[i] >> 16;
     SIGNED_CLAMP_AL(VD);
@@ -624,24 +603,81 @@ VECTOR_OPERATION VMADM(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMADN(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
+    v16 acc_hi, acc_md, acc_lo;
+    v16 prod_hi, prod_lo;
+    v16 overflow;
 
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
-#else
-    v16 VS, VT;
+    prod_lo = _mm_mullo_epi16(vs, vt);
+    prod_hi = _mm_mulhi_epu16(vs, vt);
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_madn(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
+    vt = _mm_srai_epi16(vt, 15);
+    vs = _mm_and_si128(vs, vt);
+    prod_hi = _mm_sub_epi16(prod_hi, vs);
+
+/*
+ * Writeback phase to the accumulator.
+ * VMADM stores accumulator += the product achieved by VMUDM.
+ */
+    acc_lo = *(v16 *)VACC_L;
+    acc_md = *(v16 *)VACC_M;
+    acc_hi = *(v16 *)VACC_H;
+
+    acc_lo = _mm_add_epi16(acc_lo, prod_lo);
+    *(v16 *)VACC_L = acc_lo;
+
+    overflow = _mm_cmplt_epu16(acc_lo, prod_lo); /* overflow:  (x + y < y) */
+    prod_hi = _mm_sub_epi16(prod_hi, overflow);
+    acc_md = _mm_add_epi16(acc_md, prod_hi);
+    *(v16 *)VACC_M = acc_md;
+
+    overflow = _mm_cmplt_epu16(acc_md, prod_hi);
+    prod_hi = _mm_srai_epi16(prod_hi, 15);
+    acc_hi = _mm_add_epi16(acc_hi, prod_hi);
+    acc_hi = _mm_sub_epi16(acc_hi, overflow);
+    *(v16 *)VACC_H = acc_hi;
+
+/*
+ * Do a signed clamp...sort of (VM?DM, VM?DH:  middle; VM?DL, VM?DN:  low).
+ *     if (acc_47..16 < -32768) result = -32768 ^ 0x8000;      # 0000
+ *     else if (acc_47..16 > +32767) result = +32767 ^ 0x8000; # FFFF
+ *     else { result = acc_15..0 & 0xFFFF; }
+ * So it is based on the standard signed clamping logic for VM?DM, VM?DH,
+ * except that extra steps must be concatenated to that definition.
+ */
+    vt = _mm_unpackhi_epi16(acc_md, acc_hi);
+    vs = _mm_unpacklo_epi16(acc_md, acc_hi);
+    vs = _mm_packs_epi32(vs, vt);
+
+    acc_md = _mm_cmpeq_epi16(acc_md, vs); /* (unclamped == clamped) ... */
+    acc_lo = _mm_and_si128(acc_lo, acc_md); /* ... ? low : mid */
+    vt = _mm_cmpeq_epi16(vt, vt);
+    acc_md = _mm_xor_si128(acc_md, vt); /* (unclamped != clamped) ... */
+
+    vs = _mm_and_si128(vs, acc_md); /* ... ? VS_clamped : 0x0000 */
+    vs = _mm_or_si128(vs, acc_lo); /*                   : acc_lo */
+    acc_md = _mm_slli_epi16(acc_md, 15); /* ... ? ^ 0x8000 : ^ 0x0000 */
+    vs = _mm_xor_si128(vs, acc_md); /* Stupid unsigned-clamp-ish adjustment. */
     return (vs);
 #else
-    vector_copy(V_result, VD);
+    word_32 product[N], addend[N];
+    register unsigned int i;
+
+    for (i = 0; i < N; i++)
+        product[i].SW = (u16)vs[i] * (s16)vt[i];
+    for (i = 0; i < N; i++)
+        addend[i].UW = (product[i].W & 0x0000FFFF) + (u16)VACC_L[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = addend[i].UW & 0x0000FFFF;
+    for (i = 0; i < N; i++)
+        addend[i].UW = (addend[i].UW >> 16) + (product[i].SW >> 16);
+    for (i = 0; i < N; i++)
+        addend[i].UW += (u16)VACC_M[i];
+    for (i = 0; i < N; i++)
+        VACC_M[i] = addend[i].UW & 0x0000FFFF;
+    for (i = 0; i < N; i++)
+        VACC_H[i] += addend[i].UW >> 16;
+    SIGNED_CLAMP_AL(V_result);
     return;
 #endif
 }
