@@ -24,6 +24,9 @@
 #define _mm_cmplt_epu16(dst, src) \
     _mm_cmpgt_epu16(src, dst)
 
+#define _mm_mullo_epu16(dst, src) \
+    _mm_mullo_epi16(dst, src)
+
 static INLINE void SIGNED_CLAMP_AM(short* VD)
 { /* typical sign-clamp of accumulator-mid (bits 31:16) */
     v16 dst, src;
@@ -147,32 +150,6 @@ INLINE static void do_macu(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         VACC_H[i] += addend[i] >> 16;
     UNSIGNED_CLAMP(VD);
-    return;
-}
-
-INLINE static void do_madl(short* VD, short* VS, short* VT)
-{
-    i32 product[N];
-    u32 addend[N];
-    register int i;
-
-    for (i = 0; i < N; i++)
-        product[i] = (unsigned short)(VS[i]) * (unsigned short)(VT[i]);
-    for (i = 0; i < N; i++)
-        addend[i] = (product[i] & 0x0000FFFF0000) >> 16;
-    for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_L[i]) + addend[i];
-    for (i = 0; i < N; i++)
-        VACC_L[i] = (short)(addend[i]);
-    for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(addend[i] >> 16);
-    for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
-    for (i = 0; i < N; i++)
-        VACC_M[i] = (short)(addend[i]);
-    for (i = 0; i < N; i++)
-        VACC_H[i] += addend[i] >> 16;
-    SIGNED_CLAMP_AL(VD);
     return;
 }
 
@@ -516,24 +493,75 @@ VECTOR_OPERATION VMACQ(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMADL(v16 vs, v16 vt)
 {
-    ALIGNED i16 VD[N];
 #ifdef ARCH_MIN_SSE2
-    ALIGNED i16 VS[N], VT[N];
+    v16 acc_hi, acc_md, acc_lo;
+    v16 prod_hi;
+    v16 overflow, overflow_new;
 
-    *(v16 *)VS = vs;
-    *(v16 *)VT = vt;
-#else
-    v16 VS, VT;
+ /* prod_lo = _mm_mullo_epu16(vs, vt); */
+    prod_hi = _mm_mulhi_epu16(vs, vt);
 
-    VS = vs;
-    VT = vt;
-#endif
-    do_madl(VD, VS, VT);
-#ifdef ARCH_MIN_SSE2
-    vs = *(v16 *)VD;
+    acc_lo = *(v16 *)VACC_L;
+    acc_md = *(v16 *)VACC_M;
+    acc_hi = *(v16 *)VACC_H;
+
+    acc_lo = _mm_add_epi16(acc_lo, prod_hi);
+    *(v16 *)VACC_L = acc_lo;
+
+    overflow = _mm_cmplt_epu16(acc_lo, prod_hi); /* overflow:  (x + y < y) */
+    acc_md = _mm_sub_epi16(acc_md, overflow);
+    *(v16 *)VACC_M = acc_md;
+
+/*
+ * Luckily for us, taking unsigned * unsigned always evaluates to something
+ * nonnegative, so we only have to worry about overflow from accumulating.
+ */
+    overflow_new = _mm_cmpeq_epi16(acc_md, _mm_setzero_si128());
+    overflow = _mm_and_si128(overflow, overflow_new);
+    acc_hi = _mm_sub_epi16(acc_hi, overflow);
+    *(v16 *)VACC_H = acc_hi;
+
+/*
+ * Do a signed clamp...sort of (VM?DM, VM?DH:  middle; VM?DL, VM?DN:  low).
+ *     if (acc_47..16 < -32768) result = -32768 ^ 0x8000;      # 0000
+ *     else if (acc_47..16 > +32767) result = +32767 ^ 0x8000; # FFFF
+ *     else { result = acc_15..0 & 0xFFFF; }
+ * So it is based on the standard signed clamping logic for VM?DM, VM?DH,
+ * except that extra steps must be concatenated to that definition.
+ */
+    vt = _mm_unpackhi_epi16(acc_md, acc_hi);
+    vs = _mm_unpacklo_epi16(acc_md, acc_hi);
+    vs = _mm_packs_epi32(vs, vt);
+
+    acc_md = _mm_cmpeq_epi16(acc_md, vs); /* (unclamped == clamped) ... */
+    acc_lo = _mm_and_si128(acc_lo, acc_md); /* ... ? low : mid */
+    vt = _mm_cmpeq_epi16(vt, vt);
+    acc_md = _mm_xor_si128(acc_md, vt); /* (unclamped != clamped) ... */
+
+    vs = _mm_and_si128(vs, acc_md); /* ... ? VS_clamped : 0x0000 */
+    vs = _mm_or_si128(vs, acc_lo); /*                   : acc_lo */
+    acc_md = _mm_slli_epi16(acc_md, 15); /* ... ? ^ 0x8000 : ^ 0x0000 */
+    vs = _mm_xor_si128(vs, acc_md); /* Stupid unsigned-clamp-ish adjustment. */
     return (vs);
 #else
-    vector_copy(V_result, VD);
+    word_32 product[N], addend[N];
+    register unsigned int i;
+
+    for (i = 0; i < N; i++)
+        product[i].UW = (u16)vs[i] * (u16)vt[i];
+    for (i = 0; i < N; i++)
+        addend[i].UW = (u16)(product[i].UW >> 16) + (u16)VACC_L[i];
+    for (i = 0; i < N; i++)
+        VACC_L[i] = addend[i].UW & 0x0000FFFF;
+    for (i = 0; i < N; i++)
+        addend[i].UW = (addend[i].UW >> 16) + (0x000000000000 >> 16);
+    for (i = 0; i < N; i++)
+        addend[i].UW += (u16)VACC_M[i];
+    for (i = 0; i < N; i++)
+        VACC_M[i] = addend[i].UW & 0x0000FFFF;
+    for (i = 0; i < N; i++)
+        VACC_H[i] += addend[i].UW >> 16;
+    SIGNED_CLAMP_AL(V_result);
     return;
 #endif
 }
@@ -617,7 +645,7 @@ VECTOR_OPERATION VMADN(v16 vs, v16 vt)
 
 /*
  * Writeback phase to the accumulator.
- * VMADM stores accumulator += the product achieved by VMUDM.
+ * VMADN stores accumulator += the product achieved by VMUDN.
  */
     acc_lo = *(v16 *)VACC_L;
     acc_md = *(v16 *)VACC_M;
