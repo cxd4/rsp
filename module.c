@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.14                                                         *
+* Release:  2014.12.06                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -115,7 +115,7 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
 
 EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
-    PluginInfo -> Version = 0x0101; /* zilmar #1.1 (only standard RSP spec) */
+    PluginInfo -> Version = PLUGIN_API_VERSION;
     PluginInfo -> Type = PLUGIN_TYPE_RSP;
     my_strcpy(PluginInfo -> Name, "Static Interpreter");
     PluginInfo -> NormalMemory = 0;

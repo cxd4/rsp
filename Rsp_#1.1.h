@@ -12,6 +12,10 @@ extern "C" {
 #define PLUGIN_TYPE_AUDIO           3
 #define PLUGIN_TYPE_CONTROLLER      4
 
+#ifndef PLUGIN_API_VERSION
+#define PLUGIN_API_VERSION      0x0101
+#endif
+
 /*
  * slight changes to zilmar's spec file for portability
  *
