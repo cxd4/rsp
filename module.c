@@ -312,7 +312,8 @@ void export_SP_memory(void)
  * `DllMain' symbol or, alternatively, link with /NOENTRY for no entry point.
  */
 #ifdef WIN32
-int __stdcall DllMain(void* hModule, u32 ul_reason_for_call, void* lpReserved)
+BOOL WINAPI DllMain(
+    HINSTANCE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
     hModule = lpReserved = NULL; /* unused */
     switch (ul_reason_for_call)
