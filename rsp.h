@@ -1,5 +1,5 @@
-#ifndef __RSP_1_1_H__
-#define __RSP_1_1_H__
+#ifndef __RSP_H__
+#define __RSP_H__
 
 #include "my_types.h"
 
@@ -13,25 +13,19 @@ extern "C" {
 #define PLUGIN_TYPE_CONTROLLER      4
 
 #ifndef PLUGIN_API_VERSION
-#define PLUGIN_API_VERSION      0x0101
+#define PLUGIN_API_VERSION      0x0102
 #endif
 
-/*
- * slight changes to zilmar's spec file for portability
- *
- * The raw plugin spec headers by zilmar required WIN32 definitions.
- *
- * Here, the sufficient ANSI approximations are given so that this header
- * will operate more independently.
- */
 struct a_struct__ {int unused;};
 typedef struct a_struct__* struct_p;
+
 typedef struct {
     i32 left;
     i32 top;
     i32 right;
     i32 bottom;
 } winapi_rect;
+
 typedef struct {
     struct_p hdc;
     int fErase;
@@ -42,13 +36,13 @@ typedef struct {
 } winapi_paintstruct;
 
 typedef struct {
-    u16 Version;        /* Should be set to 0x0101. */
-    u16 Type;           /* set to PLUGIN_TYPE_RSP */
-    char Name[100];     /* name of the DLL */
+    u16 Version;
+    u16 Type;          /* Set to PLUGIN_TYPE_RSP. */
+    char Name[100];    /* name of the DLL */
 
     /* If DLL supports memory these memory options then set them to TRUE. */
-    int NormalMemory;   /* a normal byte array */
-    int MemoryBswaped;  /* a normal byte array in little-endian byte order */
+    int NormalMemory;  /* a normal byte array */
+    int MemoryBswaped; /* a normal byte array in little-endian byte order */
 } PLUGIN_INFO;
 
 typedef struct {
@@ -91,11 +85,11 @@ typedef struct {
 
 typedef struct {
 	/* menu */
-	/* Items should have an ID between 5001 and 5100 .*/
+	/* Items should have an ID between 5001 and 5100. */
 	struct_p hRSPMenu;
 	void (*ProcessMenuItem)(int ID);
 
-	/* Break Points */
+	/* break points */
 	int UseBPoints;
 	char BPPanelName[20];
 	void (*Add_BPoint)(void);
@@ -104,7 +98,7 @@ typedef struct {
 	void (*PaintBPPanel)(winapi_paintstruct ps);
 	void (*ShowBPPanel)(void);
 	void (*RefreshBpoints)(struct_p hList);
-	void (*RemoveBpoint)(struct_p hList, int index );
+	void (*RemoveBpoint)(struct_p hList, int index);
 	void (*RemoveAllBpoint)(void);
 
 	/* RSP command window */
@@ -122,7 +116,7 @@ typedef struct {
     void (*Enter_Memory_Window)(void);
 } DEBUG_INFO;
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #define EXPORT      __declspec(dllexport)
 #define CALL        __cdecl
 #else
@@ -136,7 +130,7 @@ typedef struct {
             down allowing the DLL to de-initialise.
   input:    none
   output:   none
-*******************************************************************/ 
+*******************************************************************/
 EXPORT void CALL CloseDLL(void);
 
 /******************************************************************
@@ -145,7 +139,7 @@ EXPORT void CALL CloseDLL(void);
             to give further information about the DLL.
   input:    a handle to the window that calls this function
   output:   none
-*******************************************************************/ 
+*******************************************************************/
 EXPORT void CALL DllAbout(struct_p hParent);
 
 /******************************************************************
@@ -163,7 +157,7 @@ EXPORT void CALL DllConfig(struct_p hParent);
             to allow the user to test the DLL
   input:    a handle to the window that calls this function
   output:   none
-*******************************************************************/ 
+*******************************************************************/
 EXPORT void CALL DllTest(struct_p hParent);
 
 /******************************************************************
@@ -176,7 +170,7 @@ EXPORT void CALL DllTest(struct_p hParent);
             be greater than the number of cycles that the RSP
             should have performed.
             (this value is ignored if the RSP is stopped)
-*******************************************************************/ 
+*******************************************************************/
 EXPORT u32 CALL DoRspCycles(u32 Cycles);
 
 /******************************************************************
@@ -186,28 +180,28 @@ EXPORT u32 CALL DoRspCycles(u32 Cycles);
   input:    a pointer to a PLUGIN_INFO structure that needs to be
             filled by the function. (see def above)
   output:   none
-*******************************************************************/ 
-EXPORT void CALL GetDllInfo(PLUGIN_INFO* PluginInfo);
+*******************************************************************/
+EXPORT void CALL GetDllInfo(PLUGIN_INFO * PluginInfo);
 
 /******************************************************************
   Function: InitiateRSP
   Purpose:  This function is called when the DLL is started to give
-            information from the emulator that the n64 RSP 
+            information from the emulator that the n64 RSP
             interface needs
   input:    Rsp_Info is passed to this function which is defined
             above.
             CycleCount is the number of cycles between switching
             control between the RSP and r4300i core.
   output:   none
-*******************************************************************/ 
-EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, u32* CycleCount);
+*******************************************************************/
+EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, u32 * CycleCount);
 
 /******************************************************************
   Function: RomClosed
   Purpose:  This function is called when a rom is closed.
   input:    none
   output:   none
-*******************************************************************/ 
+*******************************************************************/
 EXPORT void CALL RomClosed(void);
 
 /*
@@ -224,7 +218,7 @@ EXPORT void CALL RomClosed(void);
             filled by the function. (see def above)
   output:   none
 *******************************************************************/
-EXPORT void CALL GetRspDebugInfo(RSPDEBUG_INFO* RSPDebugInfo);
+EXPORT void CALL GetRspDebugInfo(RSPDEBUG_INFO * RSPDebugInfo);
 
 /******************************************************************
   Function: InitiateRSPDebugger
@@ -249,16 +243,11 @@ EXPORT void CALL RomOpen(void);
 EXPORT void CALL EnableDebugging(int Enabled);
 EXPORT void CALL PluginLoaded(void);
 
-/************ Profiling **************/
-#ifndef FALSE
-#define FALSE       0
-#define TRUE        1
-#endif
-
-#define Default_ProfilingOn         FALSE
-#define Default_IndvidualBlock      FALSE
-#define Default_ShowErrors          FALSE
-#define Default_AudioHle            FALSE
+/************ profiling **************/
+#define Default_ProfilingOn         0
+#define Default_IndvidualBlock      0
+#define Default_ShowErrors          0
+#define Default_AudioHle            0
 
 #define InterpreterCPU      0
 #define RecompilerCPU       1

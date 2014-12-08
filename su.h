@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.17                                                         *
+* Release:  2014.12.08                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -17,10 +17,8 @@
 #define _SU_H_
 
 #include <stdio.h>
-
 #include "my_types.h"
-
-#include "Rsp_#1.1.h"
+#include "rsp.h"
 
 #define EXTERN_COMMAND_LIST_GBI
 #define EXTERN_COMMAND_LIST_ABI

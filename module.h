@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.13                                                         *
+* Release:  2014.12.08                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -16,9 +16,8 @@
 #ifndef _MODULE_H_
 #define _MODULE_H_
 
-#include "my_types.h"
-
-#include "Rsp_#1.1.h"
+#include <stdio.h>
+#include "rsp.h"
 
 #define CFG_FILE    "rsp_conf.bin"
 
