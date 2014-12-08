@@ -84,6 +84,35 @@ typedef float                   f32;
 typedef double                  f64;
 
 /*
+ * Pointer types, serving as the memory reference address to the actual type.
+ * I thought this was useful to have due to the various reasons for declaring
+ * or using variable pointers in various styles and complex scenarios.
+ *     ex) i32* pointer;
+ *     ex) i32 * pointer;
+ *     ex) i32 *a, *b, *c;
+ *     neutral:  `pi32 pointer;' or `pi32 a, b, c;'
+ */
+typedef i8*                     pi8;
+typedef i16*                    pi16;
+typedef i32*                    pi32;
+typedef i64*                    pi64;
+
+typedef s8*                     ps8;
+typedef s16*                    ps16;
+typedef s32*                    ps32;
+typedef s64*                    ps64;
+
+typedef u8*                     pu8;
+typedef u16*                    pu16;
+typedef u32*                    pu32;
+typedef u64*                    pu64;
+
+typedef f32*                    pf32;
+typedef f64*                    pf64;
+typedef void*                   p_void;
+typedef void(*p_func)(void);
+
+/*
  * Optimizing compilers aren't necessarily perfect compilers, but they do
  * have that extra chance of supporting explicit [anti-]inline instructions.
  */
