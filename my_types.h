@@ -76,6 +76,14 @@ typedef s32                     i32;
 typedef s64                     i64;
 
 /*
+ * Single- and double-precision floating-point data types have a little less
+ * room for maintenance across different CPU processors, as the C standard
+ * just provides `float' and `[long] double'.
+ */
+typedef float                   f32;
+typedef double                  f64;
+
+/*
  * Optimizing compilers aren't necessarily perfect compilers, but they do
  * have that extra chance of supporting explicit [anti-]inline instructions.
  */
