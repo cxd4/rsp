@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Standard Integer Type Definitions                                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.17                                                         *
+* Release:  2014.12.08                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -16,6 +16,10 @@
 #ifndef _MY_TYPES_H_
 #define _MY_TYPES_H_
 
+typedef char                    i8;
+typedef signed char             s8;
+typedef unsigned char           u8;
+
 /*
  * Use three procedures for standard integer type definitions from C.
  *     1.  If compiling with MSVC, use Microsoft's LLP64 fixed-size types.
@@ -25,26 +29,15 @@
  *         MSFT compilers has the pro of not raising subtle C89 warnings.
  *     3.  If C99 support was not found, hope for a LP64 model and the best.
  *         Even C89 regulates that short >= 16b; int >= 16b; long >= 32b.
- *
- * While not specifying [un-]signed for non-char results in signed data types
- * as per current standards, some algorithms are best read with an emphasis
- * on the actual need for sign- or zero-extension, if not indifference.
  */
 #ifdef _MSC_VER
 
-typedef __int8                  i8;
-typedef signed __int8           s8;
-typedef unsigned __int8         u8;
-
-typedef __int16                 i16;
 typedef signed __int16          s16;
 typedef unsigned __int16        u16;
 
-typedef __int32                 i32;
 typedef signed __int32          s32;
 typedef unsigned __int32        u32;
 
-typedef __int64                 i64;
 typedef signed __int64          s64;
 typedef unsigned __int64        u64;
 
@@ -52,45 +45,35 @@ typedef unsigned __int64        u64;
 
 #include <stdint.h>
 
-typedef uint8_t                 u8;
 typedef uint16_t                u16;
 typedef uint32_t                u32;
 typedef uint64_t                u64;
 
-typedef int16_t                 i16;
-typedef int32_t                 i32;
-typedef int64_t                 i64;
-
-typedef i16                     s16;
-typedef i32                     s32;
-typedef i64                     s64;
-
-/*
- * Type `i8' should be neutral to signedness and representative of the
- * indifference as to whether implementations or optimizations sign or not.
- */
-typedef char                    i8;
-typedef int8_t                  s8;
+typedef int16_t                 s16;
+typedef int32_t                 s32;
+typedef int64_t                 s64;
 
 #else
 
-typedef char                    i8;
-typedef signed char             s8;
-typedef unsigned char           u8;
-
-typedef short                   i16;
 typedef signed short            s16;
 typedef unsigned short          u16;
 
-typedef int                     i32;
 typedef signed int              s32;
 typedef unsigned int            u32;
 
-typedef long                    i64;
 typedef signed long             s64;
 typedef unsigned long           u64;
 
 #endif
+
+/*
+ * Although most types are signed by default, using `int' instead of `signed
+ * int' and `i32' instead of `s32' can be preferable to denote cases where
+ * the signedness of something operated on is irrelevant to the algorithm.
+ */
+typedef s16                     i16;
+typedef s32                     i32;
+typedef s64                     i64;
 
 /*
  * Optimizing compilers aren't necessarily perfect compilers, but they do
