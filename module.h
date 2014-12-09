@@ -37,9 +37,9 @@
 /*
  * Schedule binary dump exports to the DllConfig schedule delay queue.
  */
-#define CFG_QUEUE_E_DRAM    (*(int *)(conf + 0x04))
-#define CFG_QUEUE_E_DMEM    (*(int *)(conf + 0x08))
-#define CFG_QUEUE_E_IMEM    (*(int *)(conf + 0x0C))
+#define CFG_QUEUE_E_DRAM    (*(pi32)(conf + 0x04))
+#define CFG_QUEUE_E_DMEM    (*(pi32)(conf + 0x08))
+#define CFG_QUEUE_E_IMEM    (*(pi32)(conf + 0x0C))
 /*
  * Note:  This never actually made it into the configuration system.
  * Instead, DMEM and IMEM are always exported on every call to DllConfig().
@@ -50,9 +50,9 @@
  * (generally for correcting RSP clock behavior on Project64 2.x)
  * Also includes RSP register states debugger.
  */
-#define CFG_WAIT_FOR_CPU_HOST       (*(int *)(conf + 0x10))
-#define CFG_MEND_SEMAPHORE_LOCK     (*(int *)(conf + 0x14))
-#define CFG_TRACE_RSP_REGISTERS     (*(int *)(conf + 0x18))
+#define CFG_WAIT_FOR_CPU_HOST       (*(pi32)(conf + 0x10))
+#define CFG_MEND_SEMAPHORE_LOCK     (*(pi32)(conf + 0x14))
+#define CFG_TRACE_RSP_REGISTERS     (*(pi32)(conf + 0x18))
 
 /*
  * Update RSP configuration memory from local file resource.
@@ -77,8 +77,8 @@ extern void export_SP_memory(void);
  * low-level recreations of the C standard library functions for operating
  * systems that define a C run-time or dependency on top of fixed OS calls
  */
-NOINLINE extern void* my_calloc(size_t size);
-NOINLINE extern void my_free(void* ptr);
+NOINLINE extern p_void my_calloc(size_t size);
+NOINLINE extern void my_free(p_void ptr);
 NOINLINE extern size_t my_strlen(const char* str);
 NOINLINE extern char* my_strcpy(char* destination, const char* source);
 NOINLINE extern char* my_strcat(char* destination, const char* source);
@@ -86,8 +86,8 @@ NOINLINE extern int my_system(char* command);
 NOINLINE extern FILE* my_fopen(const char * filename, const char* mode);
 NOINLINE extern int my_fclose(FILE* stream);
 NOINLINE extern size_t my_fread(
-    void* ptr, size_t size, size_t count, FILE* stream);
+    p_void ptr, size_t size, size_t count, FILE* stream);
 NOINLINE extern size_t my_fwrite(
-    void* ptr, size_t size, size_t count, FILE* stream);
+    p_void ptr, size_t size, size_t count, FILE* stream);
 
 #endif

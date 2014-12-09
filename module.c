@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.06                                                         *
+* Release:  2014.12.08                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -38,14 +38,14 @@ EXPORT void CALL CloseDLL(void)
     return;
 }
 
-EXPORT void CALL DllAbout(struct_p hParent)
+EXPORT void CALL DllAbout(p_void hParent)
 {
     hParent = NULL;
     message(DLL_about);
     return;
 }
 
-EXPORT void CALL DllConfig(struct_p hParent)
+EXPORT void CALL DllConfig(p_void hParent)
 {
     hParent = NULL; /* unused */
     my_system("sp_cfgui");
@@ -123,7 +123,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
     return;
 }
 
-EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
+EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
 {
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
         *CycleCount = 0x00000000;
@@ -268,8 +268,8 @@ void step_SP_commands(uint32_t inst)
 
 NOINLINE void export_data_cache(void)
 {
-    u8* DMEM_swapped;
-    FILE* out;
+    pu8 DMEM_swapped;
+    FILE * out;
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
@@ -284,8 +284,8 @@ NOINLINE void export_data_cache(void)
 }
 NOINLINE void export_instruction_cache(void)
 {
-    u8* IMEM_swapped;
-    FILE* out;
+    pu8 IMEM_swapped;
+    FILE * out;
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
@@ -343,7 +343,7 @@ case 0: /* DLL_PROCESS_DETACH */
  * and to avoid std. lib run-time dependencies on certain operating systems.
  */
 
-NOINLINE void* my_calloc(size_t size)
+NOINLINE p_void my_calloc(size_t size)
 {
 #ifdef WIN32
     return GlobalAlloc(GPTR, size);
@@ -352,7 +352,7 @@ NOINLINE void* my_calloc(size_t size)
 #endif
 }
 
-NOINLINE void my_free(void* ptr)
+NOINLINE void my_free(p_void ptr)
 {
 #ifdef WIN32
     HANDLE this_should_be_null;
@@ -465,7 +465,7 @@ NOINLINE int my_fclose(FILE* stream)
     return (ret_slot);
 }
 
-NOINLINE size_t my_fread(void* ptr, size_t size, size_t count, FILE* stream)
+NOINLINE size_t my_fread(p_void ptr, size_t size, size_t count, FILE* stream)
 {
 #ifdef WIN32
     DWORD ret_slot;
@@ -479,7 +479,7 @@ NOINLINE size_t my_fread(void* ptr, size_t size, size_t count, FILE* stream)
     return (size_t)(ret_slot);
 }
 
-NOINLINE size_t my_fwrite(void* ptr, size_t size, size_t count, FILE* stream)
+NOINLINE size_t my_fwrite(p_void ptr, size_t size, size_t count, FILE* stream)
 {
 #ifdef WIN32
     DWORD ret_slot;

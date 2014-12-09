@@ -35,9 +35,9 @@
 #define GET_RCP_REG(member)     (*RSP_INFO_NAME.member)
 
 extern RSP_INFO RSP_INFO_NAME;
-extern u8* DRAM;
-extern u8* DMEM;
-extern u8* IMEM;
+extern pu8 DRAM;
+extern pu8 DMEM;
+extern pu8 IMEM;
 
 extern u8 conf[32];
 
@@ -93,8 +93,8 @@ extern void set_PC(int address);
 /* Let hardware architecture do the mask for us. */
 #endif
 
-#define SR_B(s, i)      (*(i8 *)(((i8 *)(SR + s)) + BES(i)))
-#define SR_S(s, i)      (*(i16 *)(((i8 *)(SR + s)) + HES(i)))
+#define SR_B(s, i)      (*(pi8)(((pi8)(SR + s)) + BES(i)))
+#define SR_S(s, i)      (*(pi16)(((pi8)(SR + s)) + HES(i)))
 #define SE(x, b)        (-(x & (1 << b)) | (x & ~(~0 << b)))
 #define ZE(x, b)        (+(x & (1 << b)) | (x & ~(~0 << b)))
 
@@ -109,14 +109,14 @@ extern void set_PC(int address);
  * Universal byte-access macro for 16*8 halfword vectors.
  * Use this macro if you are not sure whether the element is odd or even.
  */
-#define VR_B(vt,element)    (*(i8 *)((i8 *)(VR[vt]) + MES(element)))
+#define VR_B(vt,element)    (*(pi8)((pi8)(VR[vt]) + MES(element)))
 
 /*
  * Optimized byte-access macros for the vector registers.
  * Use these ONLY if you know the element is even (or odd in the second).
  */
-#define VR_A(vt,element)    (*(i8 *)((i8 *)(VR[vt]) + element + MES(0x0)))
-#define VR_U(vt,element)    (*(i8 *)((i8 *)(VR[vt]) + element - MES(0x0)))
+#define VR_A(vt,element)    (*(pi8)((pi8)(VR[vt]) + element + MES(0x0)))
+#define VR_U(vt,element)    (*(pi8)((pi8)(VR[vt]) + element - MES(0x0)))
 
 /*
  * Optimized halfword-access macro for indexing eight-element vectors.
@@ -124,7 +124,7 @@ extern void set_PC(int address);
  *
  * If the four-bit element is odd, then there is no solution in one hit.
  */
-#define VR_S(vt,element)    (*(i16 *)((i8 *)(VR[vt]) + element))
+#define VR_S(vt,element)    (*(pi16)((pi8)(VR[vt]) + element))
 
 /*** Scalar, Coprocessor Operations (system control) ***/
 #define SP_STATUS_HALT          (0x00000001 <<  0)
@@ -143,7 +143,7 @@ extern void set_PC(int address);
 #define SP_STATUS_SIG6          (0x00000001 << 13)
 #define SP_STATUS_SIG7          (0x00000001 << 14)
 
-extern u32* CR[16];
+extern pu32 CR[16];
 
 extern void SP_DMA_READ(void);
 extern void SP_DMA_WRITE(void);

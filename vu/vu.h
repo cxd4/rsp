@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.11.16                                                         *
+* Release:  2014.12.08                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -78,7 +78,7 @@ ALIGNED extern i16 V_result[N];
 #ifdef ARCH_MIN_SSE2
 typedef __m128i v16;
 #else
-typedef short * v16;
+typedef pi16 v16;
 #endif
 
 #ifdef ARCH_MIN_SSE2

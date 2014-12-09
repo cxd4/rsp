@@ -16,9 +16,6 @@ extern "C" {
 #define PLUGIN_API_VERSION      0x0102
 #endif
 
-struct a_struct__ {int unused;};
-typedef struct a_struct__* struct_p;
-
 typedef struct {
     i32 left;
     i32 top;
@@ -27,7 +24,7 @@ typedef struct {
 } winapi_rect;
 
 typedef struct {
-    struct_p hdc;
+    p_void hdc;
     int fErase;
     winapi_rect rcPaint;
     int fRestore;
@@ -46,74 +43,75 @@ typedef struct {
 } PLUGIN_INFO;
 
 typedef struct {
-    struct_p* hInst;
+    p_void hInst;
     int MemoryBswaped;
 
-    u8* RDRAM;
-    u8* DMEM;
-    u8* IMEM;
+    pu8 RDRAM;
+    pu8 DMEM;
+    pu8 IMEM;
 
-    u32* MI_INTR_REG;
+    pu32 MI_INTR_REG;
 
-    u32* SP_MEM_ADDR_REG;
-    u32* SP_DRAM_ADDR_REG;
-    u32* SP_RD_LEN_REG;
-    u32* SP_WR_LEN_REG;
-    u32* SP_STATUS_REG;
-    u32* SP_DMA_FULL_REG;
-    u32* SP_DMA_BUSY_REG;
-    u32* SP_PC_REG; /* This was supposed to be defined AFTER semaphore. */
-    u32* SP_SEMAPHORE_REG;
+    pu32 SP_MEM_ADDR_REG;
+    pu32 SP_DRAM_ADDR_REG;
+    pu32 SP_RD_LEN_REG;
+    pu32 SP_WR_LEN_REG;
+    pu32 SP_STATUS_REG;
+    pu32 SP_DMA_FULL_REG;
+    pu32 SP_DMA_BUSY_REG;
+    pu32 SP_PC_REG; /* This was supposed to be defined AFTER semaphore. */
+    pu32 SP_SEMAPHORE_REG;
 #if 0
-    u32* SP_PC_REG; /* CPU-mapped between SP and DP command buffer regs */
+    pu32 SP_PC_REG; /* CPU-mapped between SP and DP command buffer regs */
 #endif
-    u32* DPC_START_REG;
-    u32* DPC_END_REG;
-    u32* DPC_CURRENT_REG;
-    u32* DPC_STATUS_REG;
-    u32* DPC_CLOCK_REG;
-    u32* DPC_BUFBUSY_REG;
-    u32* DPC_PIPEBUSY_REG;
-    u32* DPC_TMEM_REG;
+    pu32 DPC_START_REG;
+    pu32 DPC_END_REG;
+    pu32 DPC_CURRENT_REG;
+    pu32 DPC_STATUS_REG;
+    pu32 DPC_CLOCK_REG;
+    pu32 DPC_BUFBUSY_REG;
+    pu32 DPC_PIPEBUSY_REG;
+    pu32 DPC_TMEM_REG;
 
-    void (*CheckInterrupts)(void);
-    void (*ProcessDList)(void);
-    void (*ProcessAList)(void);
-    void (*ProcessRdpList)(void);
-    void (*ShowCFB)(void);
+    p_func CheckInterrupts;
+    p_func ProcessDList;
+    p_func ProcessAList;
+    p_func ProcessRdpList;
+    p_func ShowCFB;
 } RSP_INFO;
 
+
 typedef struct {
-	/* menu */
-	/* Items should have an ID between 5001 and 5100. */
-	struct_p hRSPMenu;
-	void (*ProcessMenuItem)(int ID);
+    /* menu */
+    /* Items should have an ID between 5001 and 5100. */
+    p_void hRSPMenu;
+    void (*ProcessMenuItem)(int ID);
 
-	/* break points */
-	int UseBPoints;
-	char BPPanelName[20];
-	void (*Add_BPoint)(void);
-	void (*CreateBPPanel)(struct_p hDlg, winapi_rect rcBox);
-	void (*HideBPPanel)(void);
-	void (*PaintBPPanel)(winapi_paintstruct ps);
-	void (*ShowBPPanel)(void);
-	void (*RefreshBpoints)(struct_p hList);
-	void (*RemoveBpoint)(struct_p hList, int index);
-	void (*RemoveAllBpoint)(void);
+    /* break points */
+    int UseBPoints;
+    char BPPanelName[20];
+    p_func Add_BPoint;
+    void (*CreateBPPanel)(p_void hDlg, winapi_rect rcBox);
+    p_func HideBPPanel;
+    void (*PaintBPPanel)(winapi_paintstruct ps);
+    p_void ShowBPPanel;
+    void (*RefreshBpoints)(p_void hList);
+    void (*RemoveBpoint)(p_void hList, int index);
+    p_void RemoveAllBpoint;
 
-	/* RSP command window */
-	void (*Enter_RSP_Commands_Window)(void);
+    /* RSP command window */
+    p_func Enter_RSP_Commands_Window;
 } RSPDEBUG_INFO;
 
 typedef struct {
-    void (*UpdateBreakPoints)(void);
-    void (*UpdateMemory)(void);
-    void (*UpdateR4300iRegisters)(void);
-    void (*Enter_BPoint_Window)(void);
-    void (*Enter_R4300i_Commands_Window)(void);
-    void (*Enter_R4300i_Register_Window)(void);
-    void (*Enter_RSP_Commands_Window)(void);
-    void (*Enter_Memory_Window)(void);
+    p_func UpdateBreakPoints;
+    p_func UpdateMemory;
+    p_func UpdateR4300iRegisters;
+    p_func Enter_BPoint_Window;
+    p_func Enter_R4300i_Commands_Window;
+    p_func Enter_R4300i_Register_Window;
+    p_func Enter_RSP_Commands_Window;
+    p_func Enter_Memory_Window;
 } DEBUG_INFO;
 
 #if defined(_WIN32)
@@ -140,7 +138,7 @@ EXPORT void CALL CloseDLL(void);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/
-EXPORT void CALL DllAbout(struct_p hParent);
+EXPORT void CALL DllAbout(p_void hParent);
 
 /******************************************************************
   Function: DllConfig
@@ -149,7 +147,7 @@ EXPORT void CALL DllAbout(struct_p hParent);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/
-EXPORT void CALL DllConfig(struct_p hParent);
+EXPORT void CALL DllConfig(p_void hParent);
 
 /******************************************************************
   Function: DllTest
@@ -158,7 +156,7 @@ EXPORT void CALL DllConfig(struct_p hParent);
   input:    a handle to the window that calls this function
   output:   none
 *******************************************************************/
-EXPORT void CALL DllTest(struct_p hParent);
+EXPORT void CALL DllTest(p_void hParent);
 
 /******************************************************************
   Function: DoRspCycles
@@ -194,7 +192,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO * PluginInfo);
             control between the RSP and r4300i core.
   output:   none
 *******************************************************************/
-EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, u32 * CycleCount);
+EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount);
 
 /******************************************************************
   Function: RomClosed

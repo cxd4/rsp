@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.17                                                         *
+* Release:  2014.12.08                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -28,9 +28,9 @@ u32 inst;
 i32 SR[32];
 
 
-u8* DRAM;
-u8* DMEM;
-u8* IMEM;
+pu8 DRAM;
+pu8 DMEM;
+pu8 IMEM;
 
 NOINLINE void res_S(void)
 {
@@ -54,7 +54,7 @@ static word_32 SR_temp;
  * the SGI N64 extension to the MIPS R4000 and are not entirely implemented.
  */
 
-u32* CR[16];
+pu32 CR[16];
 u8 conf[32];
 
 void MFC0(int rt, int rd)
@@ -103,8 +103,8 @@ static void MT_DMA_WRITE_LENGTH(int rt)
 }
 static void MT_SP_STATUS(int rt)
 {
-    u32 * MI_INTR_REG;
-    u32 * SP_STATUS_REG;
+    pu32 MI_INTR_REG;
+    pu32 SP_STATUS_REG;
 
     if (SR[rt] & 0xFE000040)
         message("MTC0\nSP_STATUS");
@@ -239,7 +239,7 @@ void SP_DMA_READ(void)
         } while (i < length);
     } while (count);
     GET_RCP_REG(SP_DMA_BUSY_REG)  =  0x00000000;
-    GET_RCP_REG(SP_STATUS_REG)   &= ~0x00000004; /* SP_STATUS_DMABUSY */
+    GET_RCP_REG(SP_STATUS_REG)   &= ~SP_STATUS_DMA_BUSY;
     return;
 }
 void SP_DMA_WRITE(void)
@@ -270,7 +270,7 @@ void SP_DMA_WRITE(void)
         } while (i < length);
     } while (count);
     GET_RCP_REG(SP_DMA_BUSY_REG)  =  0x00000000;
-    GET_RCP_REG(SP_STATUS_REG)   &= ~0x00000004; /* SP_STATUS_DMABUSY */
+    GET_RCP_REG(SP_STATUS_REG)   &= ~SP_STATUS_DMA_BUSY;
     return;
 }
 
@@ -377,7 +377,7 @@ INLINE void LSV(int vt, int element, int offset, int base)
         message("LSV\nWeird addr.");
         return;
     }
-    VR_S(vt, e) = *(i16 *)(DMEM + addr - HES(0x000)*(correction - 1));
+    VR_S(vt, e) = *(pi16)(DMEM + addr - HES(0x000)*(correction - 1));
     return;
 }
 INLINE void LLV(int vt, int element, int offset, int base)
@@ -398,9 +398,9 @@ INLINE void LLV(int vt, int element, int offset, int base)
         return;
     }
     correction = HES(0x000)*(addr%0x004 - 1);
-    VR_S(vt, e+0x0) = *(i16 *)(DMEM + addr - correction);
+    VR_S(vt, e+0x0) = *(pi16)(DMEM + addr - correction);
     addr = (addr + 0x00000002) & 0x00000FFF; /* F3DLX 1.23:  addr%4 is 0x002. */
-    VR_S(vt, e+0x2) = *(i16 *)(DMEM + addr + correction);
+    VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + correction);
     return;
 }
 INLINE void LDV(int vt, int element, int offset, int base)
@@ -417,74 +417,74 @@ INLINE void LDV(int vt, int element, int offset, int base)
     switch (addr & 07)
     {
         case 00:
-            VR_S(vt, e+0x0) = *(i16 *)(DMEM + addr + HES(0x000));
-            VR_S(vt, e+0x2) = *(i16 *)(DMEM + addr + HES(0x002));
-            VR_S(vt, e+0x4) = *(i16 *)(DMEM + addr + HES(0x004));
-            VR_S(vt, e+0x6) = *(i16 *)(DMEM + addr + HES(0x006));
+            VR_S(vt, e+0x0) = *(pi16)(DMEM + addr + HES(0x000));
+            VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + HES(0x002));
+            VR_S(vt, e+0x4) = *(pi16)(DMEM + addr + HES(0x004));
+            VR_S(vt, e+0x6) = *(pi16)(DMEM + addr + HES(0x006));
             return;
         case 01: /* standard ABI ucodes (unlike e.g. MusyX w/ even addresses) */
-            VR_S(vt, e+0x0) = *(i16 *)(DMEM + addr + 0x000);
+            VR_S(vt, e+0x0) = *(pi16)(DMEM + addr + 0x000);
             VR_A(vt, e+0x2) = DMEM[addr + 0x002 - BES(0x000)];
             VR_U(vt, e+0x3) = DMEM[addr + 0x003 + BES(0x000)];
-            VR_S(vt, e+0x4) = *(i16 *)(DMEM + addr + 0x004);
+            VR_S(vt, e+0x4) = *(pi16)(DMEM + addr + 0x004);
             VR_A(vt, e+0x6) = DMEM[addr + 0x006 - BES(0x000)];
             addr += 0x007 + BES(00);
             addr &= 0x00000FFF;
             VR_U(vt, e+0x7) = DMEM[addr];
             return;
         case 02:
-            VR_S(vt, e+0x0) = *(i16 *)(DMEM + addr + 0x000 - HES(0x000));
-            VR_S(vt, e+0x2) = *(i16 *)(DMEM + addr + 0x002 + HES(0x000));
-            VR_S(vt, e+0x4) = *(i16 *)(DMEM + addr + 0x004 - HES(0x000));
+            VR_S(vt, e+0x0) = *(pi16)(DMEM + addr + 0x000 - HES(0x000));
+            VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + 0x002 + HES(0x000));
+            VR_S(vt, e+0x4) = *(pi16)(DMEM + addr + 0x004 - HES(0x000));
             addr += 0x006 + HES(00);
             addr &= 0x00000FFF;
-            VR_S(vt, e+0x6) = *(i16 *)(DMEM + addr);
+            VR_S(vt, e+0x6) = *(pi16)(DMEM + addr);
             return;
         case 03: /* standard ABI ucodes (unlike e.g. MusyX w/ even addresses) */
             VR_A(vt, e+0x0) = DMEM[addr + 0x000 - BES(0x000)];
             VR_U(vt, e+0x1) = DMEM[addr + 0x001 + BES(0x000)];
-            VR_S(vt, e+0x2) = *(i16 *)(DMEM + addr + 0x002);
+            VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + 0x002);
             VR_A(vt, e+0x4) = DMEM[addr + 0x004 - BES(0x000)];
             addr += 0x005 + BES(00);
             addr &= 0x00000FFF;
             VR_U(vt, e+0x5) = DMEM[addr];
-            VR_S(vt, e+0x6) = *(i16 *)(DMEM + addr + 0x001 - BES(0x000));
+            VR_S(vt, e+0x6) = *(pi16)(DMEM + addr + 0x001 - BES(0x000));
             return;
         case 04:
-            VR_S(vt, e+0x0) = *(i16 *)(DMEM + addr + HES(0x000));
-            VR_S(vt, e+0x2) = *(i16 *)(DMEM + addr + HES(0x002));
+            VR_S(vt, e+0x0) = *(pi16)(DMEM + addr + HES(0x000));
+            VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + HES(0x002));
             addr += 0x004 + WES(00);
             addr &= 0x00000FFF;
-            VR_S(vt, e+0x4) = *(i16 *)(DMEM + addr + HES(0x000));
-            VR_S(vt, e+0x6) = *(i16 *)(DMEM + addr + HES(0x002));
+            VR_S(vt, e+0x4) = *(pi16)(DMEM + addr + HES(0x000));
+            VR_S(vt, e+0x6) = *(pi16)(DMEM + addr + HES(0x002));
             return;
         case 05: /* standard ABI ucodes (unlike e.g. MusyX w/ even addresses) */
-            VR_S(vt, e+0x0) = *(i16 *)(DMEM + addr + 0x000);
+            VR_S(vt, e+0x0) = *(pi16)(DMEM + addr + 0x000);
             VR_A(vt, e+0x2) = DMEM[addr + 0x002 - BES(0x000)];
             addr += 0x003;
             addr &= 0x00000FFF;
             VR_U(vt, e+0x3) = DMEM[addr + BES(0x000)];
-            VR_S(vt, e+0x4) = *(i16 *)(DMEM + addr + 0x001);
+            VR_S(vt, e+0x4) = *(pi16)(DMEM + addr + 0x001);
             VR_A(vt, e+0x6) = DMEM[addr + BES(0x003)];
             VR_U(vt, e+0x7) = DMEM[addr + BES(0x004)];
             return;
         case 06:
-            VR_S(vt, e+0x0) = *(i16 *)(DMEM + addr - HES(0x000));
+            VR_S(vt, e+0x0) = *(pi16)(DMEM + addr - HES(0x000));
             addr += 0x002;
             addr &= 0x00000FFF;
-            VR_S(vt, e+0x2) = *(i16 *)(DMEM + addr + HES(0x000));
-            VR_S(vt, e+0x4) = *(i16 *)(DMEM + addr + HES(0x002));
-            VR_S(vt, e+0x6) = *(i16 *)(DMEM + addr + HES(0x004));
+            VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + HES(0x000));
+            VR_S(vt, e+0x4) = *(pi16)(DMEM + addr + HES(0x002));
+            VR_S(vt, e+0x6) = *(pi16)(DMEM + addr + HES(0x004));
             return;
         case 07: /* standard ABI ucodes (unlike e.g. MusyX w/ even addresses) */
             VR_A(vt, e+0x0) = DMEM[addr - BES(0x000)];
             addr += 0x001;
             addr &= 0x00000FFF;
             VR_U(vt, e+0x1) = DMEM[addr + BES(0x000)];
-            VR_S(vt, e+0x2) = *(i16 *)(DMEM + addr + 0x001);
+            VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + 0x001);
             VR_A(vt, e+0x4) = DMEM[addr + BES(0x003)];
             VR_U(vt, e+0x5) = DMEM[addr + BES(0x004)];
-            VR_S(vt, e+0x6) = *(i16 *)(DMEM + addr + 0x005);
+            VR_S(vt, e+0x6) = *(pi16)(DMEM + addr + 0x005);
             return;
     }
 }
@@ -526,9 +526,9 @@ INLINE void SLV(int vt, int element, int offset, int base)
         return;
     }
     correction = HES(0x000)*(addr%0x004 - 1);
-    *(i16 *)(DMEM + addr - correction) = VR_S(vt, e+0x0);
+    *(pi16)(DMEM + addr - correction) = VR_S(vt, e+0x0);
     addr = (addr + 0x00000002) & 0x00000FFF; /* F3DLX 0.95:  "Mario Kart 64" */
-    *(i16 *)(DMEM + addr + correction) = VR_S(vt, e+0x2);
+    *(pi16)(DMEM + addr + correction) = VR_S(vt, e+0x2);
     return;
 }
 INLINE void SDV(int vt, int element, int offset, int base)
@@ -548,70 +548,70 @@ INLINE void SDV(int vt, int element, int offset, int base)
     switch (addr & 07)
     {
         case 00:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR_S(vt, e+0x0);
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR_S(vt, e+0x2);
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR_S(vt, e+0x4);
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR_S(vt, e+0x6);
+            *(pi16)(DMEM + addr + HES(0x000)) = VR_S(vt, e+0x0);
+            *(pi16)(DMEM + addr + HES(0x002)) = VR_S(vt, e+0x2);
+            *(pi16)(DMEM + addr + HES(0x004)) = VR_S(vt, e+0x4);
+            *(pi16)(DMEM + addr + HES(0x006)) = VR_S(vt, e+0x6);
             return;
         case 01: /* "Tetrisphere" audio ucode */
-            *(i16 *)(DMEM + addr + 0x000) = VR_S(vt, e+0x0);
+            *(pi16)(DMEM + addr + 0x000) = VR_S(vt, e+0x0);
             DMEM[addr + 0x002 - BES(0x000)] = VR_A(vt, e+0x2);
             DMEM[addr + 0x003 + BES(0x000)] = VR_U(vt, e+0x3);
-            *(i16 *)(DMEM + addr + 0x004) = VR_S(vt, e+0x4);
+            *(pi16)(DMEM + addr + 0x004) = VR_S(vt, e+0x4);
             DMEM[addr + 0x006 - BES(0x000)] = VR_A(vt, e+0x6);
             addr += 0x007 + BES(0x000);
             addr &= 0x00000FFF;
             DMEM[addr] = VR_U(vt, e+0x7);
             return;
         case 02:
-            *(i16 *)(DMEM + addr + 0x000 - HES(0x000)) = VR_S(vt, e+0x0);
-            *(i16 *)(DMEM + addr + 0x002 + HES(0x000)) = VR_S(vt, e+0x2);
-            *(i16 *)(DMEM + addr + 0x004 - HES(0x000)) = VR_S(vt, e+0x4);
+            *(pi16)(DMEM + addr + 0x000 - HES(0x000)) = VR_S(vt, e+0x0);
+            *(pi16)(DMEM + addr + 0x002 + HES(0x000)) = VR_S(vt, e+0x2);
+            *(pi16)(DMEM + addr + 0x004 - HES(0x000)) = VR_S(vt, e+0x4);
             addr += 0x006 + HES(0x000);
             addr &= 0x00000FFF;
-            *(i16 *)(DMEM + addr) = VR_S(vt, e+0x6);
+            *(pi16)(DMEM + addr) = VR_S(vt, e+0x6);
             return;
         case 03: /* "Tetrisphere" audio ucode */
             DMEM[addr + 0x000 - BES(0x000)] = VR_A(vt, e+0x0);
             DMEM[addr + 0x001 + BES(0x000)] = VR_U(vt, e+0x1);
-            *(i16 *)(DMEM + addr + 0x002) = VR_S(vt, e+0x2);
+            *(pi16)(DMEM + addr + 0x002) = VR_S(vt, e+0x2);
             DMEM[addr + 0x004 - BES(0x000)] = VR_A(vt, e+0x4);
             addr += 0x005 + BES(0x000);
             addr &= 0x00000FFF;
             DMEM[addr] = VR_U(vt, e+0x5);
-            *(i16 *)(DMEM + addr + 0x001 - BES(0x000)) = VR_S(vt, 0x6);
+            *(pi16)(DMEM + addr + 0x001 - BES(0x000)) = VR_S(vt, 0x6);
             return;
         case 04:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR_S(vt, e+0x0);
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR_S(vt, e+0x2);
+            *(pi16)(DMEM + addr + HES(0x000)) = VR_S(vt, e+0x0);
+            *(pi16)(DMEM + addr + HES(0x002)) = VR_S(vt, e+0x2);
             addr = (addr + 0x004) & 0x00000FFF;
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR_S(vt, e+0x4);
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR_S(vt, e+0x6);
+            *(pi16)(DMEM + addr + HES(0x000)) = VR_S(vt, e+0x4);
+            *(pi16)(DMEM + addr + HES(0x002)) = VR_S(vt, e+0x6);
             return;
         case 05: /* "Tetrisphere" audio ucode */
-            *(i16 *)(DMEM + addr + 0x000) = VR_S(vt, e+0x0);
+            *(pi16)(DMEM + addr + 0x000) = VR_S(vt, e+0x0);
             DMEM[addr + 0x002 - BES(0x000)] = VR_A(vt, e+0x2);
             addr = (addr + 0x003) & 0x00000FFF;
             DMEM[addr + BES(0x000)] = VR_U(vt, e+0x3);
-            *(i16 *)(DMEM + addr + 0x001) = VR_S(vt, e+0x4);
+            *(pi16)(DMEM + addr + 0x001) = VR_S(vt, e+0x4);
             DMEM[addr + BES(0x003)] = VR_A(vt, e+0x6);
             DMEM[addr + BES(0x004)] = VR_U(vt, e+0x7);
             return;
         case 06:
-            *(i16 *)(DMEM + addr - HES(0x000)) = VR_S(vt, e+0x0);
+            *(pi16)(DMEM + addr - HES(0x000)) = VR_S(vt, e+0x0);
             addr = (addr + 0x002) & 0x00000FFF;
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR_S(vt, e+0x2);
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR_S(vt, e+0x4);
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR_S(vt, e+0x6);
+            *(pi16)(DMEM + addr + HES(0x000)) = VR_S(vt, e+0x2);
+            *(pi16)(DMEM + addr + HES(0x002)) = VR_S(vt, e+0x4);
+            *(pi16)(DMEM + addr + HES(0x004)) = VR_S(vt, e+0x6);
             return;
         case 07: /* "Tetrisphere" audio ucode */
             DMEM[addr - BES(0x000)] = VR_A(vt, e+0x0);
             addr = (addr + 0x001) & 0x00000FFF;
             DMEM[addr + BES(0x000)] = VR_U(vt, e+0x1);
-            *(i16 *)(DMEM + addr + 0x001) = VR_S(vt, e+0x2);
+            *(pi16)(DMEM + addr + 0x001) = VR_S(vt, e+0x2);
             DMEM[addr + BES(0x003)] = VR_A(vt, e+0x4);
             DMEM[addr + BES(0x004)] = VR_U(vt, e+0x5);
-            *(i16 *)(DMEM + addr + 0x005) = VR_S(vt, e+0x6);
+            *(pi16)(DMEM + addr + 0x005) = VR_S(vt, e+0x6);
             return;
     }
 }
@@ -1143,56 +1143,56 @@ INLINE void LQV(int vt, int element, int offset, int base)
     switch (b/2) /* mistake in SGI patent regarding LQV */
     {
         case 0x0/2:
-            VR_S(vt,e+0x0) = *(i16 *)(DMEM + addr + HES(0x000));
-            VR_S(vt,e+0x2) = *(i16 *)(DMEM + addr + HES(0x002));
-            VR_S(vt,e+0x4) = *(i16 *)(DMEM + addr + HES(0x004));
-            VR_S(vt,e+0x6) = *(i16 *)(DMEM + addr + HES(0x006));
-            VR_S(vt,e+0x8) = *(i16 *)(DMEM + addr + HES(0x008));
-            VR_S(vt,e+0xA) = *(i16 *)(DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0xC) = *(i16 *)(DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0xE) = *(i16 *)(DMEM + addr + HES(0x00E));
+            VR_S(vt,e+0x0) = *(pi16)(DMEM + addr + HES(0x000));
+            VR_S(vt,e+0x2) = *(pi16)(DMEM + addr + HES(0x002));
+            VR_S(vt,e+0x4) = *(pi16)(DMEM + addr + HES(0x004));
+            VR_S(vt,e+0x6) = *(pi16)(DMEM + addr + HES(0x006));
+            VR_S(vt,e+0x8) = *(pi16)(DMEM + addr + HES(0x008));
+            VR_S(vt,e+0xA) = *(pi16)(DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0xC) = *(pi16)(DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0xE) = *(pi16)(DMEM + addr + HES(0x00E));
             return;
         case 0x2/2:
-            VR_S(vt,e+0x0) = *(i16 *)(DMEM + addr + HES(0x002));
-            VR_S(vt,e+0x2) = *(i16 *)(DMEM + addr + HES(0x004));
-            VR_S(vt,e+0x4) = *(i16 *)(DMEM + addr + HES(0x006));
-            VR_S(vt,e+0x6) = *(i16 *)(DMEM + addr + HES(0x008));
-            VR_S(vt,e+0x8) = *(i16 *)(DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0xA) = *(i16 *)(DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0xC) = *(i16 *)(DMEM + addr + HES(0x00E));
+            VR_S(vt,e+0x0) = *(pi16)(DMEM + addr + HES(0x002));
+            VR_S(vt,e+0x2) = *(pi16)(DMEM + addr + HES(0x004));
+            VR_S(vt,e+0x4) = *(pi16)(DMEM + addr + HES(0x006));
+            VR_S(vt,e+0x6) = *(pi16)(DMEM + addr + HES(0x008));
+            VR_S(vt,e+0x8) = *(pi16)(DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0xA) = *(pi16)(DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0xC) = *(pi16)(DMEM + addr + HES(0x00E));
             return;
         case 0x4/2:
-            VR_S(vt,e+0x0) = *(i16 *)(DMEM + addr + HES(0x004));
-            VR_S(vt,e+0x2) = *(i16 *)(DMEM + addr + HES(0x006));
-            VR_S(vt,e+0x4) = *(i16 *)(DMEM + addr + HES(0x008));
-            VR_S(vt,e+0x6) = *(i16 *)(DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0x8) = *(i16 *)(DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0xA) = *(i16 *)(DMEM + addr + HES(0x00E));
+            VR_S(vt,e+0x0) = *(pi16)(DMEM + addr + HES(0x004));
+            VR_S(vt,e+0x2) = *(pi16)(DMEM + addr + HES(0x006));
+            VR_S(vt,e+0x4) = *(pi16)(DMEM + addr + HES(0x008));
+            VR_S(vt,e+0x6) = *(pi16)(DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0x8) = *(pi16)(DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0xA) = *(pi16)(DMEM + addr + HES(0x00E));
             return;
         case 0x6/2:
-            VR_S(vt,e+0x0) = *(i16 *)(DMEM + addr + HES(0x006));
-            VR_S(vt,e+0x2) = *(i16 *)(DMEM + addr + HES(0x008));
-            VR_S(vt,e+0x4) = *(i16 *)(DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0x6) = *(i16 *)(DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0x8) = *(i16 *)(DMEM + addr + HES(0x00E));
+            VR_S(vt,e+0x0) = *(pi16)(DMEM + addr + HES(0x006));
+            VR_S(vt,e+0x2) = *(pi16)(DMEM + addr + HES(0x008));
+            VR_S(vt,e+0x4) = *(pi16)(DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0x6) = *(pi16)(DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0x8) = *(pi16)(DMEM + addr + HES(0x00E));
             return;
         case 0x8/2: /* "Resident Evil 2" cinematics and Boss Game Studios */
-            VR_S(vt,e+0x0) = *(i16 *)(DMEM + addr + HES(0x008));
-            VR_S(vt,e+0x2) = *(i16 *)(DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0x4) = *(i16 *)(DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0x6) = *(i16 *)(DMEM + addr + HES(0x00E));
+            VR_S(vt,e+0x0) = *(pi16)(DMEM + addr + HES(0x008));
+            VR_S(vt,e+0x2) = *(pi16)(DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0x4) = *(pi16)(DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0x6) = *(pi16)(DMEM + addr + HES(0x00E));
             return;
         case 0xA/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR_S(vt,e+0x0) = *(i16 *)(DMEM + addr + HES(0x00A));
-            VR_S(vt,e+0x2) = *(i16 *)(DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0x4) = *(i16 *)(DMEM + addr + HES(0x00E));
+            VR_S(vt,e+0x0) = *(pi16)(DMEM + addr + HES(0x00A));
+            VR_S(vt,e+0x2) = *(pi16)(DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0x4) = *(pi16)(DMEM + addr + HES(0x00E));
             return;
         case 0xC/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR_S(vt,e+0x0) = *(i16 *)(DMEM + addr + HES(0x00C));
-            VR_S(vt,e+0x2) = *(i16 *)(DMEM + addr + HES(0x00E));
+            VR_S(vt,e+0x0) = *(pi16)(DMEM + addr + HES(0x00C));
+            VR_S(vt,e+0x2) = *(pi16)(DMEM + addr + HES(0x00E));
             return;
         case 0xE/2: /* "Conker's Bad Fur Day" audio microcode by Rareware */
-            VR_S(vt,e+0x0) = *(i16 *)(DMEM + addr + HES(0x00E));
+            VR_S(vt,e+0x0) = *(pi16)(DMEM + addr + HES(0x00E));
             return;
     }
 }
@@ -1218,46 +1218,46 @@ NOINLINE void LRV(int vt, int element, int offset, int base)
     switch (b/2)
     {
         case 0xE/2:
-            VR[vt][01] = *(i16 *)(DMEM + addr + HES(0x000));
-            VR[vt][02] = *(i16 *)(DMEM + addr + HES(0x002));
-            VR[vt][03] = *(i16 *)(DMEM + addr + HES(0x004));
-            VR[vt][04] = *(i16 *)(DMEM + addr + HES(0x006));
-            VR[vt][05] = *(i16 *)(DMEM + addr + HES(0x008));
-            VR[vt][06] = *(i16 *)(DMEM + addr + HES(0x00A));
-            VR[vt][07] = *(i16 *)(DMEM + addr + HES(0x00C));
+            VR[vt][01] = *(pi16)(DMEM + addr + HES(0x000));
+            VR[vt][02] = *(pi16)(DMEM + addr + HES(0x002));
+            VR[vt][03] = *(pi16)(DMEM + addr + HES(0x004));
+            VR[vt][04] = *(pi16)(DMEM + addr + HES(0x006));
+            VR[vt][05] = *(pi16)(DMEM + addr + HES(0x008));
+            VR[vt][06] = *(pi16)(DMEM + addr + HES(0x00A));
+            VR[vt][07] = *(pi16)(DMEM + addr + HES(0x00C));
             return;
         case 0xC/2:
-            VR[vt][02] = *(i16 *)(DMEM + addr + HES(0x000));
-            VR[vt][03] = *(i16 *)(DMEM + addr + HES(0x002));
-            VR[vt][04] = *(i16 *)(DMEM + addr + HES(0x004));
-            VR[vt][05] = *(i16 *)(DMEM + addr + HES(0x006));
-            VR[vt][06] = *(i16 *)(DMEM + addr + HES(0x008));
-            VR[vt][07] = *(i16 *)(DMEM + addr + HES(0x00A));
+            VR[vt][02] = *(pi16)(DMEM + addr + HES(0x000));
+            VR[vt][03] = *(pi16)(DMEM + addr + HES(0x002));
+            VR[vt][04] = *(pi16)(DMEM + addr + HES(0x004));
+            VR[vt][05] = *(pi16)(DMEM + addr + HES(0x006));
+            VR[vt][06] = *(pi16)(DMEM + addr + HES(0x008));
+            VR[vt][07] = *(pi16)(DMEM + addr + HES(0x00A));
             return;
         case 0xA/2:
-            VR[vt][03] = *(i16 *)(DMEM + addr + HES(0x000));
-            VR[vt][04] = *(i16 *)(DMEM + addr + HES(0x002));
-            VR[vt][05] = *(i16 *)(DMEM + addr + HES(0x004));
-            VR[vt][06] = *(i16 *)(DMEM + addr + HES(0x006));
-            VR[vt][07] = *(i16 *)(DMEM + addr + HES(0x008));
+            VR[vt][03] = *(pi16)(DMEM + addr + HES(0x000));
+            VR[vt][04] = *(pi16)(DMEM + addr + HES(0x002));
+            VR[vt][05] = *(pi16)(DMEM + addr + HES(0x004));
+            VR[vt][06] = *(pi16)(DMEM + addr + HES(0x006));
+            VR[vt][07] = *(pi16)(DMEM + addr + HES(0x008));
             return;
         case 0x8/2:
-            VR[vt][04] = *(i16 *)(DMEM + addr + HES(0x000));
-            VR[vt][05] = *(i16 *)(DMEM + addr + HES(0x002));
-            VR[vt][06] = *(i16 *)(DMEM + addr + HES(0x004));
-            VR[vt][07] = *(i16 *)(DMEM + addr + HES(0x006));
+            VR[vt][04] = *(pi16)(DMEM + addr + HES(0x000));
+            VR[vt][05] = *(pi16)(DMEM + addr + HES(0x002));
+            VR[vt][06] = *(pi16)(DMEM + addr + HES(0x004));
+            VR[vt][07] = *(pi16)(DMEM + addr + HES(0x006));
             return;
         case 0x6/2:
-            VR[vt][05] = *(i16 *)(DMEM + addr + HES(0x000));
-            VR[vt][06] = *(i16 *)(DMEM + addr + HES(0x002));
-            VR[vt][07] = *(i16 *)(DMEM + addr + HES(0x004));
+            VR[vt][05] = *(pi16)(DMEM + addr + HES(0x000));
+            VR[vt][06] = *(pi16)(DMEM + addr + HES(0x002));
+            VR[vt][07] = *(pi16)(DMEM + addr + HES(0x004));
             return;
         case 0x4/2:
-            VR[vt][06] = *(i16 *)(DMEM + addr + HES(0x000));
-            VR[vt][07] = *(i16 *)(DMEM + addr + HES(0x002));
+            VR[vt][06] = *(pi16)(DMEM + addr + HES(0x000));
+            VR[vt][07] = *(pi16)(DMEM + addr + HES(0x002));
             return;
         case 0x2/2:
-            VR[vt][07] = *(i16 *)(DMEM + addr + HES(0x000));
+            VR[vt][07] = *(pi16)(DMEM + addr + HES(0x000));
             return;
         case 0x0/2:
             return;
@@ -1283,38 +1283,38 @@ INLINE void SQV(int vt, int element, int offset, int base)
     switch (b)
     {
         case 00:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR[vt][00];
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR[vt][01];
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR[vt][02];
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR[vt][03];
-            *(i16 *)(DMEM + addr + HES(0x008)) = VR[vt][04];
-            *(i16 *)(DMEM + addr + HES(0x00A)) = VR[vt][05];
-            *(i16 *)(DMEM + addr + HES(0x00C)) = VR[vt][06];
-            *(i16 *)(DMEM + addr + HES(0x00E)) = VR[vt][07];
+            *(pi16)(DMEM + addr + HES(0x000)) = VR[vt][00];
+            *(pi16)(DMEM + addr + HES(0x002)) = VR[vt][01];
+            *(pi16)(DMEM + addr + HES(0x004)) = VR[vt][02];
+            *(pi16)(DMEM + addr + HES(0x006)) = VR[vt][03];
+            *(pi16)(DMEM + addr + HES(0x008)) = VR[vt][04];
+            *(pi16)(DMEM + addr + HES(0x00A)) = VR[vt][05];
+            *(pi16)(DMEM + addr + HES(0x00C)) = VR[vt][06];
+            *(pi16)(DMEM + addr + HES(0x00E)) = VR[vt][07];
             return;
         case 02:
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR[vt][00];
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR[vt][01];
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR[vt][02];
-            *(i16 *)(DMEM + addr + HES(0x008)) = VR[vt][03];
-            *(i16 *)(DMEM + addr + HES(0x00A)) = VR[vt][04];
-            *(i16 *)(DMEM + addr + HES(0x00C)) = VR[vt][05];
-            *(i16 *)(DMEM + addr + HES(0x00E)) = VR[vt][06];
+            *(pi16)(DMEM + addr + HES(0x002)) = VR[vt][00];
+            *(pi16)(DMEM + addr + HES(0x004)) = VR[vt][01];
+            *(pi16)(DMEM + addr + HES(0x006)) = VR[vt][02];
+            *(pi16)(DMEM + addr + HES(0x008)) = VR[vt][03];
+            *(pi16)(DMEM + addr + HES(0x00A)) = VR[vt][04];
+            *(pi16)(DMEM + addr + HES(0x00C)) = VR[vt][05];
+            *(pi16)(DMEM + addr + HES(0x00E)) = VR[vt][06];
             return;
         case 04:
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR[vt][00];
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR[vt][01];
-            *(i16 *)(DMEM + addr + HES(0x008)) = VR[vt][02];
-            *(i16 *)(DMEM + addr + HES(0x00A)) = VR[vt][03];
-            *(i16 *)(DMEM + addr + HES(0x00C)) = VR[vt][04];
-            *(i16 *)(DMEM + addr + HES(0x00E)) = VR[vt][05];
+            *(pi16)(DMEM + addr + HES(0x004)) = VR[vt][00];
+            *(pi16)(DMEM + addr + HES(0x006)) = VR[vt][01];
+            *(pi16)(DMEM + addr + HES(0x008)) = VR[vt][02];
+            *(pi16)(DMEM + addr + HES(0x00A)) = VR[vt][03];
+            *(pi16)(DMEM + addr + HES(0x00C)) = VR[vt][04];
+            *(pi16)(DMEM + addr + HES(0x00E)) = VR[vt][05];
             return;
         case 06:
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR[vt][00];
-            *(i16 *)(DMEM + addr + HES(0x008)) = VR[vt][01];
-            *(i16 *)(DMEM + addr + HES(0x00A)) = VR[vt][02];
-            *(i16 *)(DMEM + addr + HES(0x00C)) = VR[vt][03];
-            *(i16 *)(DMEM + addr + HES(0x00E)) = VR[vt][04];
+            *(pi16)(DMEM + addr + HES(0x006)) = VR[vt][00];
+            *(pi16)(DMEM + addr + HES(0x008)) = VR[vt][01];
+            *(pi16)(DMEM + addr + HES(0x00A)) = VR[vt][02];
+            *(pi16)(DMEM + addr + HES(0x00C)) = VR[vt][03];
+            *(pi16)(DMEM + addr + HES(0x00E)) = VR[vt][04];
             return;
         default:
             message("SQV\nWeird addr.");
@@ -1343,46 +1343,46 @@ NOINLINE void SRV(int vt, int element, int offset, int base)
     switch (b/2)
     {
         case 0xE/2:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR[vt][01];
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR[vt][02];
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR[vt][03];
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR[vt][04];
-            *(i16 *)(DMEM + addr + HES(0x008)) = VR[vt][05];
-            *(i16 *)(DMEM + addr + HES(0x00A)) = VR[vt][06];
-            *(i16 *)(DMEM + addr + HES(0x00C)) = VR[vt][07];
+            *(pi16)(DMEM + addr + HES(0x000)) = VR[vt][01];
+            *(pi16)(DMEM + addr + HES(0x002)) = VR[vt][02];
+            *(pi16)(DMEM + addr + HES(0x004)) = VR[vt][03];
+            *(pi16)(DMEM + addr + HES(0x006)) = VR[vt][04];
+            *(pi16)(DMEM + addr + HES(0x008)) = VR[vt][05];
+            *(pi16)(DMEM + addr + HES(0x00A)) = VR[vt][06];
+            *(pi16)(DMEM + addr + HES(0x00C)) = VR[vt][07];
             return;
         case 0xC/2:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR[vt][02];
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR[vt][03];
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR[vt][04];
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR[vt][05];
-            *(i16 *)(DMEM + addr + HES(0x008)) = VR[vt][06];
-            *(i16 *)(DMEM + addr + HES(0x00A)) = VR[vt][07];
+            *(pi16)(DMEM + addr + HES(0x000)) = VR[vt][02];
+            *(pi16)(DMEM + addr + HES(0x002)) = VR[vt][03];
+            *(pi16)(DMEM + addr + HES(0x004)) = VR[vt][04];
+            *(pi16)(DMEM + addr + HES(0x006)) = VR[vt][05];
+            *(pi16)(DMEM + addr + HES(0x008)) = VR[vt][06];
+            *(pi16)(DMEM + addr + HES(0x00A)) = VR[vt][07];
             return;
         case 0xA/2:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR[vt][03];
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR[vt][04];
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR[vt][05];
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR[vt][06];
-            *(i16 *)(DMEM + addr + HES(0x008)) = VR[vt][07];
+            *(pi16)(DMEM + addr + HES(0x000)) = VR[vt][03];
+            *(pi16)(DMEM + addr + HES(0x002)) = VR[vt][04];
+            *(pi16)(DMEM + addr + HES(0x004)) = VR[vt][05];
+            *(pi16)(DMEM + addr + HES(0x006)) = VR[vt][06];
+            *(pi16)(DMEM + addr + HES(0x008)) = VR[vt][07];
             return;
         case 0x8/2:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR[vt][04];
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR[vt][05];
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR[vt][06];
-            *(i16 *)(DMEM + addr + HES(0x006)) = VR[vt][07];
+            *(pi16)(DMEM + addr + HES(0x000)) = VR[vt][04];
+            *(pi16)(DMEM + addr + HES(0x002)) = VR[vt][05];
+            *(pi16)(DMEM + addr + HES(0x004)) = VR[vt][06];
+            *(pi16)(DMEM + addr + HES(0x006)) = VR[vt][07];
             return;
         case 0x6/2:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR[vt][05];
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR[vt][06];
-            *(i16 *)(DMEM + addr + HES(0x004)) = VR[vt][07];
+            *(pi16)(DMEM + addr + HES(0x000)) = VR[vt][05];
+            *(pi16)(DMEM + addr + HES(0x002)) = VR[vt][06];
+            *(pi16)(DMEM + addr + HES(0x004)) = VR[vt][07];
             return;
         case 0x4/2:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR[vt][06];
-            *(i16 *)(DMEM + addr + HES(0x002)) = VR[vt][07];
+            *(pi16)(DMEM + addr + HES(0x000)) = VR[vt][06];
+            *(pi16)(DMEM + addr + HES(0x002)) = VR[vt][07];
             return;
         case 0x2/2:
-            *(i16 *)(DMEM + addr + HES(0x000)) = VR[vt][07];
+            *(pi16)(DMEM + addr + HES(0x000)) = VR[vt][07];
             return;
         case 0x0/2:
             return;
@@ -1416,7 +1416,7 @@ INLINE void LTV(int vt, int element, int offset, int base)
         return;
     }
     for (i = 0; i < 8; i++) /* SGI screwed LTV up on N64.  See STV instead. */
-        VR[vt+i][(-e/2 + i) & 07] = *(i16 *)(DMEM + addr + HES(2*i));
+        VR[vt+i][(-e/2 + i) & 07] = *(pi16)(DMEM + addr + HES(2*i));
     return;
 }
 NOINLINE void SWV(int vt, int element, int offset, int base)
@@ -1462,7 +1462,7 @@ INLINE void STV(int vt, int element, int offset, int base)
         return;
     }
     for (i = 0; i < 8; i++)
-        *(i16 *)(DMEM + addr + HES(2*i)) = VR[vt + (e/2 + i)%8][i];
+        *(pi16)(DMEM + addr + HES(2*i)) = VR[vt + (e/2 + i)%8][i];
     return;
 }
 
@@ -1481,9 +1481,9 @@ void ULW(int rd, u32 addr)
     }
     else /* addr & 0x00000002 */
     {
-        SR_temp.H[01] = *(i16 *)(DMEM + addr - HES(0x000));
+        SR_temp.H[01] = *(pi16)(DMEM + addr - HES(0x000));
         addr = (addr + 0x002) & 0xFFF;
-        SR_temp.H[00] = *(i16 *)(DMEM + addr + HES(0x000));
+        SR_temp.H[00] = *(pi16)(DMEM + addr + HES(0x000));
     }
     SR[rd] = SR_temp.W;
  /* SR[0] = 0x00000000; */
@@ -1504,9 +1504,9 @@ void USW(int rs, u32 addr)
     }
     else /* addr & 0x00000002 */
     {
-        *(i16 *)(DMEM + addr - HES(0x000)) = SR_temp.H[01];
+        *(pi16)(DMEM + addr - HES(0x000)) = SR_temp.H[01];
         addr = (addr + 0x002) & 0xFFF;
-        *(i16 *)(DMEM + addr + HES(0x000)) = SR_temp.H[00];
+        *(pi16)(DMEM + addr + HES(0x000)) = SR_temp.H[00];
     }
     return;
 }
@@ -1528,9 +1528,9 @@ NOINLINE void run_task(void)
             MFC0_count[i] = 0;
     }
     PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));
-    while (((GET_RCP_REG(SP_STATUS_REG) & 0x00000001) == 0x00000000))
+    while (((GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT) == 0x00000000))
     {
-        inst = *(i32 *)(IMEM + FIT_IMEM(PC));
+        inst = *(pi32)(IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
         PC = (PC + 0x004);
 EX:
@@ -1795,7 +1795,7 @@ EX:
                     else
                     {
                         addr -= HES(0x000)*(addr%0x004 - 1);
-                        SR[rt] = *(s16 *)(DMEM + addr);
+                        SR[rt] = *(ps16)(DMEM + addr);
                     }
                     SR[0] = 0x00000000;
                     CONTINUE
@@ -1805,7 +1805,7 @@ EX:
                     if (addr%0x004 != 0x000)
                         ULW(rt, addr);
                     else
-                        SR[rt] = *(i32 *)(DMEM + addr);
+                        SR[rt] = *(pi32)(DMEM + addr);
                     SR[0] = 0x00000000;
                     CONTINUE
                 case 044: /* LBU */
@@ -1828,7 +1828,7 @@ EX:
                     else
                     {
                         addr -= HES(0x000)*(addr%0x004 - 1);
-                        SR[rt] = *(u16 *)(DMEM + addr);
+                        SR[rt] = *(pu16)(DMEM + addr);
                     }
                     SR[0] = 0x00000000;
                     CONTINUE
@@ -1848,7 +1848,7 @@ EX:
                         CONTINUE
                     }
                     addr -= HES(0x000)*(addr%0x004 - 1);
-                    *(i16 *)(DMEM + addr) = (i16)(SR[rt]);
+                    *(pi16)(DMEM + addr) = (i16)(SR[rt]);
                     CONTINUE
                 case 053: /* SW */
                     offset = (s16)(inst);
@@ -1856,7 +1856,7 @@ EX:
                     if (addr%0x004 != 0x000)
                         USW(rt, addr);
                     else
-                        *(i32 *)(DMEM + addr) = SR[rt];
+                        *(pi32)(DMEM + addr) = SR[rt];
                     CONTINUE
                 case 062: /* LWC2 */
                     offset = (signed)(inst);
@@ -1969,7 +1969,7 @@ EX:
 #else
         continue;
 BRANCH:
-        inst = *(i32 *)(IMEM + FIT_IMEM(PC));
+        inst = *(pi32)(IMEM + FIT_IMEM(PC));
         PC = temp_PC & 0x00000FFC;
         goto EX;
 #endif
