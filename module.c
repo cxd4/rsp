@@ -65,14 +65,14 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
         return 0x00000000;
     }
 
-    switch (*(i32 *)(DMEM + 0xFC0))
+    switch (*(pi32)(DMEM + 0xFC0))
     { /* Simulation barrier to redirect processing externally. */
 #ifdef EXTERN_COMMAND_LIST_GBI
         case 0x00000001:
             if (CFG_HLE_GFX == 0)
                 break;
 
-            if (*(i32 *)(DMEM + 0xFF0) == 0x00000000)
+            if (*(pi32)(DMEM + 0xFF0) == 0x00000000)
                 break; /* Resident Evil 2, null task pointers */
             if (GET_RSP_INFO(ProcessDList) == NULL)
                 { /* branch */ }
@@ -181,7 +181,7 @@ NOINLINE void message(const char* body)
     char* argv;
     int i, j;
 
-    argv = my_calloc(4096);
+    argv = my_calloc(4096, 1);
     my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
     i = 0;
     j = my_strlen(argv);
@@ -273,7 +273,7 @@ NOINLINE void export_data_cache(void)
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
-    DMEM_swapped = my_calloc(4096);
+    DMEM_swapped = my_calloc(4096, 1);
     for (i = 0; i < 4096; i++)
         DMEM_swapped[i] = DMEM[BES(i)];
     out = my_fopen("rcpcache.dhex", "wb");
@@ -289,7 +289,7 @@ NOINLINE void export_instruction_cache(void)
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
-    IMEM_swapped = my_calloc(4096);
+    IMEM_swapped = my_calloc(4096, 1);
     for (i = 0; i < 4096; i++)
         IMEM_swapped[i] = IMEM[BES(i)];
     out = my_fopen("rcpcache.ihex", "wb");
@@ -343,12 +343,12 @@ case 0: /* DLL_PROCESS_DETACH */
  * and to avoid std. lib run-time dependencies on certain operating systems.
  */
 
-NOINLINE p_void my_calloc(size_t size)
+NOINLINE p_void my_calloc(size_t count, size_t size)
 {
 #ifdef WIN32
-    return GlobalAlloc(GPTR, size);
+    return GlobalAlloc(GPTR, size * count);
 #else
-    return calloc(size);
+    return calloc(count, size);
 #endif
 }
 
