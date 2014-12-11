@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.08                                                         *
+* Release:  2014.12.11                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -185,50 +185,62 @@ NOINLINE extern void res_S(void);
 
 NOINLINE extern void MFC0(int rt, int rd);
 
+/*
+ * example syntax (basically the same for all LWC2/SWC2 ops):
+ * LTWV    $v0[0], -64($at)
+ * SBV     $v0[9], 0xFFE($0)
+ */
+typedef void(*mwc2_func)(int vt, int element, signed int offset, int base);
+
+extern mwc2_func LWC2[2 * 8*2];
+extern mwc2_func SWC2[2 * 8*2];
+
+NOINLINE void res_lsw(int vt, int element, signed int offset, int base);
+
 /*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
-INLINE extern void LBV(int vt, int element, int offset, int base);
-INLINE extern void LSV(int vt, int element, int offset, int base);
-INLINE extern void LLV(int vt, int element, int offset, int base);
-INLINE extern void LDV(int vt, int element, int offset, int base);
-INLINE extern void SBV(int vt, int element, int offset, int base);
-INLINE extern void SSV(int vt, int element, int offset, int base);
-INLINE extern void SLV(int vt, int element, int offset, int base);
-INLINE extern void SDV(int vt, int element, int offset, int base);
+extern void LBV(int vt, int element, signed int offset, int base);
+extern void LSV(int vt, int element, signed int offset, int base);
+extern void LLV(int vt, int element, signed int offset, int base);
+extern void LDV(int vt, int element, signed int offset, int base);
+extern void SBV(int vt, int element, signed int offset, int base);
+extern void SSV(int vt, int element, signed int offset, int base);
+extern void SLV(int vt, int element, signed int offset, int base);
+extern void SDV(int vt, int element, signed int offset, int base);
 
 /*
  * Group II vector loads and stores:
  * PV and UV (As of RCP implementation, XV and ZV are reserved opcodes.)
  */
-INLINE extern void LPV(int vt, int element, int offset, int base);
-INLINE extern void LUV(int vt, int element, int offset, int base);
-INLINE extern void SPV(int vt, int element, int offset, int base);
-INLINE extern void SUV(int vt, int element, int offset, int base);
+extern void LPV(int vt, int element, signed int offset, int base);
+extern void LUV(int vt, int element, signed int offset, int base);
+extern void SPV(int vt, int element, signed int offset, int base);
+extern void SUV(int vt, int element, signed int offset, int base);
 
 /*
  * Group III vector loads and stores:
  * HV, FV, and AV (As of RCP implementation, AV opcodes are reserved.)
  */
-NOINLINE extern void LHV(int vt, int element, int offset, int base);
-NOINLINE extern void LFV(int vt, int element, int offset, int base);
-NOINLINE extern void SHV(int vt, int element, int offset, int base);
-NOINLINE extern void SFV(int vt, int element, int offset, int base);
+extern void LHV(int vt, int element, signed int offset, int base);
+extern void LFV(int vt, int element, signed int offset, int base);
+extern void SHV(int vt, int element, signed int offset, int base);
+extern void SFV(int vt, int element, signed int offset, int base);
 
 /*
  * Group IV vector loads and stores:
  * QV and RV
  */
-INLINE extern void LQV(int vt, int element, int offset, int base);
-NOINLINE extern void LRV(int vt, int element, int offset, int base);
-INLINE extern void SQV(int vt, int element, int offset, int base);
-NOINLINE extern void SRV(int vt, int element, int offset, int base);
+extern void LQV(int vt, int element, signed int offset, int base);
+extern void LRV(int vt, int element, signed int offset, int base);
+extern void SQV(int vt, int element, signed int offset, int base);
+extern void SRV(int vt, int element, signed int offset, int base);
 
 /*
  * Group V vector loads and stores
  * TV and SWV (As of RCP implementation, LTWV opcode was undesired.)
  */
-INLINE extern void LTV(int vt, int element, int offset, int base);
-NOINLINE extern void SWV(int vt, int element, int offset, int base);
-INLINE extern void STV(int vt, int element, int offset, int base);
+extern void LTV(int vt, int element, signed int offset, int base);
+extern void SWV(int vt, int element, signed int offset, int base);
+extern void STV(int vt, int element, signed int offset, int base);
 
 NOINLINE extern void run_task(void);
 

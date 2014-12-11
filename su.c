@@ -350,7 +350,7 @@ void CTC2(int rt, int rd)
 }
 
 /*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
-INLINE void LBV(int vt, int element, int offset, int base)
+void LBV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     const int e = element;
@@ -359,7 +359,7 @@ INLINE void LBV(int vt, int element, int offset, int base)
     VR_B(vt, e) = DMEM[BES(addr)];
     return;
 }
-INLINE void LSV(int vt, int element, int offset, int base)
+void LSV(int vt, int element, signed int offset, int base)
 {
     int correction;
     register u32 addr;
@@ -380,7 +380,7 @@ INLINE void LSV(int vt, int element, int offset, int base)
     VR_S(vt, e) = *(pi16)(DMEM + addr - HES(0x000)*(correction - 1));
     return;
 }
-INLINE void LLV(int vt, int element, int offset, int base)
+void LLV(int vt, int element, signed int offset, int base)
 {
     int correction;
     register u32 addr;
@@ -403,7 +403,7 @@ INLINE void LLV(int vt, int element, int offset, int base)
     VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + correction);
     return;
 }
-INLINE void LDV(int vt, int element, int offset, int base)
+void LDV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     const int e = element;
@@ -488,7 +488,7 @@ INLINE void LDV(int vt, int element, int offset, int base)
             return;
     }
 }
-INLINE void SBV(int vt, int element, int offset, int base)
+void SBV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     const int e = element;
@@ -497,7 +497,7 @@ INLINE void SBV(int vt, int element, int offset, int base)
     DMEM[BES(addr)] = VR_B(vt, e);
     return;
 }
-INLINE void SSV(int vt, int element, int offset, int base)
+void SSV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     const int e = element;
@@ -508,7 +508,7 @@ INLINE void SSV(int vt, int element, int offset, int base)
     DMEM[BES(addr)] = VR_B(vt, (e + 0x1) & 0xF);
     return;
 }
-INLINE void SLV(int vt, int element, int offset, int base)
+void SLV(int vt, int element, signed int offset, int base)
 {
     int correction;
     register u32 addr;
@@ -531,7 +531,7 @@ INLINE void SLV(int vt, int element, int offset, int base)
     *(pi16)(DMEM + addr + correction) = VR_S(vt, e+0x2);
     return;
 }
-INLINE void SDV(int vt, int element, int offset, int base)
+void SDV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     const int e = element;
@@ -616,15 +616,34 @@ INLINE void SDV(int vt, int element, int offset, int base)
     }
 }
 
-static char transfer_debug[32] = "XXV     $v00[0x0], 0x000($00)";
+static char transfer_debug[32] = "?WC2    $v00[0x0], 0x000($00)";
 static const char digits[16] = {
     '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
 };
+
+NOINLINE void res_lsw(int vt, int element, signed int offset, int base)
+{
+    transfer_debug[10] = '0' + (unsigned char)vt/10;
+    transfer_debug[11] = '0' + (unsigned char)vt%10;
+
+    transfer_debug[15] = digits[element & 0xF];
+
+    transfer_debug[21] = digits[(offset & 0xFFF) >>  8];
+    transfer_debug[22] = digits[(offset & 0x0FF) >>  4];
+    transfer_debug[23] = digits[(offset & 0x00F) >>  0];
+
+    transfer_debug[26] = '0' + (unsigned char)base/10;
+    transfer_debug[27] = '0' + (unsigned char)base%10;
+
+    message(transfer_debug);
+    return;
+}
+
 /*
  * Group II vector loads and stores:
  * PV and UV (As of RCP implementation, XV and ZV are reserved opcodes.)
  */
-INLINE void LPV(int vt, int element, int offset, int base)
+void LPV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     register int b;
@@ -736,7 +755,7 @@ INLINE void LPV(int vt, int element, int offset, int base)
             return;
     }
 }
-INLINE void LUV(int vt, int element, int offset, int base)
+void LUV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     register int b;
@@ -855,7 +874,7 @@ INLINE void LUV(int vt, int element, int offset, int base)
             return;
     }
 }
-INLINE void SPV(int vt, int element, int offset, int base)
+void SPV(int vt, int element, signed int offset, int base)
 {
     register int b;
     register u32 addr;
@@ -967,7 +986,7 @@ INLINE void SPV(int vt, int element, int offset, int base)
             return;
     }
 }
-INLINE void SUV(int vt, int element, int offset, int base)
+void SUV(int vt, int element, signed int offset, int base)
 {
     register int b;
     register u32 addr;
@@ -1015,7 +1034,7 @@ INLINE void SUV(int vt, int element, int offset, int base)
  * Group III vector loads and stores:
  * HV, FV, and AV (As of RCP implementation, AV opcodes are reserved.)
  */
-NOINLINE void LHV(int vt, int element, int offset, int base)
+void LHV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     const int e = element;
@@ -1042,27 +1061,12 @@ NOINLINE void LHV(int vt, int element, int offset, int base)
     VR[vt][00] = DMEM[addr + HES(0x000)] << 7;
     return;
 }
-NOINLINE void LFV(int vt, int element, int offset, int base)
+void LFV(int vt, int element, signed int offset, int base)
 { /* Dummy implementation only:  Do any games execute this? */
-    transfer_debug[0] = 'L';
-    transfer_debug[1] = 'F';
-
-    transfer_debug[10] = '0' + (unsigned char)vt/10;
-    transfer_debug[11] = '0' + (unsigned char)vt%10;
-
-    transfer_debug[15] = digits[element & 0xF];
-
-    transfer_debug[21] = digits[(offset & 0xFFF) >>  8];
-    transfer_debug[22] = digits[(offset & 0x0FF) >>  4];
-    transfer_debug[23] = digits[(offset & 0x00F) >>  0];
-
-    transfer_debug[26] = '0' + (unsigned char)base/10;
-    transfer_debug[27] = '0' + (unsigned char)base%10;
-
-    message(transfer_debug);
+    res_lsw(vt, element, offset, base);
     return;
 }
-NOINLINE void SHV(int vt, int element, int offset, int base)
+void SHV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     const int e = element;
@@ -1089,7 +1093,7 @@ NOINLINE void SHV(int vt, int element, int offset, int base)
     DMEM[addr + HES(0x000)] = (u8)(VR[vt][00] >> 7);
     return;
 }
-NOINLINE void SFV(int vt, int element, int offset, int base)
+void SFV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     const int e = element;
@@ -1121,7 +1125,7 @@ NOINLINE void SFV(int vt, int element, int offset, int base)
  * Group IV vector loads and stores:
  * QV and RV
  */
-INLINE void LQV(int vt, int element, int offset, int base)
+void LQV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     register int b;
@@ -1196,7 +1200,7 @@ INLINE void LQV(int vt, int element, int offset, int base)
             return;
     }
 }
-NOINLINE void LRV(int vt, int element, int offset, int base)
+void LRV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     register int b;
@@ -1263,7 +1267,7 @@ NOINLINE void LRV(int vt, int element, int offset, int base)
             return;
     }
 }
-INLINE void SQV(int vt, int element, int offset, int base)
+void SQV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     register int b;
@@ -1321,7 +1325,7 @@ INLINE void SQV(int vt, int element, int offset, int base)
             return;
     }
 }
-NOINLINE void SRV(int vt, int element, int offset, int base)
+void SRV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
     register int b;
@@ -1393,7 +1397,7 @@ NOINLINE void SRV(int vt, int element, int offset, int base)
  * Group V vector loads and stores
  * TV and SWV (As of RCP implementation, LTWV opcode was undesired.)
  */
-INLINE void LTV(int vt, int element, int offset, int base)
+void LTV(int vt, int element, signed int offset, int base)
 {
     register int i;
     register u32 addr;
@@ -1419,27 +1423,12 @@ INLINE void LTV(int vt, int element, int offset, int base)
         VR[vt+i][(-e/2 + i) & 07] = *(pi16)(DMEM + addr + HES(2*i));
     return;
 }
-NOINLINE void SWV(int vt, int element, int offset, int base)
+void SWV(int vt, int element, signed int offset, int base)
 { /* Dummy implementation only:  Do any games execute this? */
-    transfer_debug[0] = 'S';
-    transfer_debug[1] = 'W';
-
-    transfer_debug[10] = '0' + (unsigned char)vt/10;
-    transfer_debug[11] = '0' + (unsigned char)vt%10;
-
-    transfer_debug[15] = digits[element & 0xF];
-
-    transfer_debug[21] = digits[(offset & 0xFFF) >>  8];
-    transfer_debug[22] = digits[(offset & 0x0FF) >>  4];
-    transfer_debug[23] = digits[(offset & 0x00F) >>  0];
-
-    transfer_debug[26] = '0' + (unsigned char)base/10;
-    transfer_debug[27] = '0' + (unsigned char)base%10;
-
-    message(transfer_debug);
+    res_lsw(vt, element, offset, base);
     return;
 }
-INLINE void STV(int vt, int element, int offset, int base)
+void STV(int vt, int element, signed int offset, int base)
 {
     register int i;
     register u32 addr;
@@ -1515,6 +1504,19 @@ int temp_PC;
 #ifdef WAIT_FOR_CPU_HOST
 short MFC0_count[32];
 #endif
+
+mwc2_func LWC2[2 * 8*2] = {
+    LBV    ,LSV    ,LLV    ,LDV    ,LQV    ,LRV    ,LPV    ,LUV    ,
+    LHV    ,LFV    ,res_lsw,LTV    ,res_lsw,res_lsw,res_lsw,res_lsw,
+    res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,
+    res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,
+};
+mwc2_func SWC2[2 * 8*2] = {
+    SBV    ,SSV    ,SLV    ,SDV    ,SQV    ,SRV    ,SPV    ,SUV    ,
+    SHV    ,SFV    ,SWV    ,STV    ,res_lsw,res_lsw,res_lsw,res_lsw,
+    res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,
+    res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,
+};
 
 NOINLINE void run_task(void)
 {
@@ -1861,91 +1863,12 @@ EX:
                 case 062: /* LWC2 */
                     offset = (signed)(inst);
                     offset = SE(offset, 6);
-                    switch (rd)
-                    {
-                        case 000: /* LBV */
-                            LBV(rt, element, offset, base);
-                            CONTINUE
-                        case 001: /* LSV */
-                            LSV(rt, element, offset, base);
-                            CONTINUE
-                        case 002: /* LLV */
-                            LLV(rt, element, offset, base);
-                            CONTINUE
-                        case 003: /* LDV */
-                            LDV(rt, element, offset, base);
-                            CONTINUE
-                        case 004: /* LQV */
-                            LQV(rt, element, offset, base);
-                            CONTINUE
-                        case 005: /* LRV */
-                            LRV(rt, element, offset, base);
-                            CONTINUE
-                        case 006: /* LPV */
-                            LPV(rt, element, offset, base);
-                            CONTINUE
-                        case 007: /* LUV */
-                            LUV(rt, element, offset, base);
-                            CONTINUE
-                        case 010: /* LHV */
-                            LHV(rt, element, offset, base);
-                            CONTINUE
-                        case 011: /* LFV */
-                            LFV(rt, element, offset, base);
-                            CONTINUE
-                        case 013: /* LTV */
-                            LTV(rt, element, offset, base);
-                            CONTINUE
-                        default:
-                            res_S();
-                            CONTINUE
-                    }
+                    LWC2[rd](rt, element, offset, base);
                     CONTINUE
                 case 072: /* SWC2 */
                     offset = (signed)(inst);
                     offset = SE(offset, 6);
-                    switch (rd)
-                    {
-                        case 000: /* SBV */
-                            SBV(rt, element, offset, base);
-                            CONTINUE
-                        case 001: /* SSV */
-                            SSV(rt, element, offset, base);
-                            CONTINUE
-                        case 002: /* SLV */
-                            SLV(rt, element, offset, base);
-                            CONTINUE
-                        case 003: /* SDV */
-                            SDV(rt, element, offset, base);
-                            CONTINUE
-                        case 004: /* SQV */
-                            SQV(rt, element, offset, base);
-                            CONTINUE
-                        case 005: /* SRV */
-                            SRV(rt, element, offset, base);
-                            CONTINUE
-                        case 006: /* SPV */
-                            SPV(rt, element, offset, base);
-                            CONTINUE
-                        case 007: /* SUV */
-                            SUV(rt, element, offset, base);
-                            CONTINUE
-                        case 010: /* SHV */
-                            SHV(rt, element, offset, base);
-                            CONTINUE
-                        case 011: /* SFV */
-                            SFV(rt, element, offset, base);
-                            CONTINUE
-                        case 012: /* SWV */
-                            SWV(rt, element, offset, base);
-                            CONTINUE
-                        case 013: /* STV */
-                            STV(rt, element, offset, base);
-                            CONTINUE
-                        default:
-                            res_S();
-                            CONTINUE
-                    }
+                    SWC2[rd](rt, element, offset, base);
                     CONTINUE
                 default:
                     res_S();
