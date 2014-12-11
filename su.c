@@ -1957,13 +1957,13 @@ EX:
         {
             stage = 0*stage;
             PC = temp_PC & 0x00000FFC;
-            *RSP.SP_PC_REG = temp_PC;
+            GET_RCP_REG(SP_PC_REG) = temp_PC;
         }
         else
         {
             stage = 2*stage; /* next IW in branch delay slot? */
             PC = (PC + 0x004) & 0xFFC;
-            *RSP.SP_PC_REG = 0x04001000 + PC;
+            GET_RCP_REG(SP_PC_REG) = 0x04001000 + PC;
         }
         continue;
 #else
