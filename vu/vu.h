@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.08                                                         *
+* Release:  2014.12.13                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -15,9 +15,7 @@
 #ifndef _VU_H_
 #define _VU_H_
 
-#ifdef ARCH_MIN_SSSE3
-#include <tmmintrin.h>
-#elif ARCH_MIN_SSE2
+#ifdef ARCH_MIN_SSE2
 #include <emmintrin.h>
 #endif
 
