@@ -34,6 +34,8 @@
 #define GET_RSP_INFO(member)    (RSP_INFO_NAME.member)
 #define GET_RCP_REG(member)     (*RSP_INFO_NAME.member)
 
+extern int CPU_running;
+
 extern RSP_INFO RSP_INFO_NAME;
 extern pu8 DRAM;
 extern pu8 DMEM;

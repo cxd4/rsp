@@ -23,6 +23,8 @@
  */
 #include "module.h"
 
+int CPU_running;
+
 u32 inst;
 
 i32 SR[32];
@@ -66,7 +68,8 @@ void MFC0(int rt, int rd)
         if (CFG_MEND_SEMAPHORE_LOCK == 0)
             return;
         GET_RCP_REG(SP_SEMAPHORE_REG) = 0x00000001;
-        GET_RCP_REG(SP_STATUS_REG) |= 0x00000001; /* temporarily breaking CPU */
+        GET_RCP_REG(SP_STATUS_REG) |= SP_STATUS_HALT; /* temporary hack */
+        CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
         return;
     }
     if (rd == 0x4)
@@ -75,6 +78,7 @@ void MFC0(int rt, int rd)
             return;
         ++MFC0_count[rt];
         GET_RCP_REG(SP_STATUS_REG) |= (MFC0_count[rt] > 07);
+        CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & 1;
     }
     return;
 }
@@ -137,6 +141,7 @@ static void MT_SP_STATUS(int rt)
     *SP_STATUS_REG |=  (!!(SR[rt] & 0x00400000) << 13);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00800000) << 14);
     *SP_STATUS_REG |=  (!!(SR[rt] & 0x01000000) << 14);
+    CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & 1;
     return;
 }
 static void MT_SP_RESERVED(int rt)
@@ -170,7 +175,7 @@ static void MT_CMD_END(int rt)
 }
 static void MT_CMD_STATUS(int rt)
 {
-    u32 * DPC_STATUS_REG;
+    pu32 DPC_STATUS_REG;
 
     if (SR[rt] & 0xFFFFFD80) /* unsupported or reserved bits */
         message("MTC0\nCMD_STATUS");
@@ -1530,7 +1535,9 @@ NOINLINE void run_task(void)
             MFC0_count[i] = 0;
     }
     PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));
-    while (((GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT) == 0x00000000))
+    CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
+
+    while (CPU_running != 0)
     {
         p_vector_func vector_op;
 #ifdef ARCH_MIN_SSE2
@@ -1599,6 +1606,7 @@ EX:
                 JUMP;
             case 015: /* BREAK */
                 *CR[0x4] |= SP_STATUS_BROKE | SP_STATUS_HALT;
+                CPU_running = 0;
                 if (*CR[0x4] & SP_STATUS_INTR_BREAK)
                 { /* SP_STATUS_INTR_BREAK */
                     GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
@@ -1954,5 +1962,6 @@ BRANCH:
         return;
     }
     *CR[0x4] &= ~SP_STATUS_HALT; /* CPU restarts with the correct SIGs. */
+    CPU_running = 1;
     return;
 }
