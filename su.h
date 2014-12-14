@@ -87,8 +87,8 @@ extern short MFC0_count[32];
 #define LINK_OFF    (BASE_OFF + 0x004)
 extern void set_PC(int address);
 
-#if (0)
-#define MASK_SA(sa) (sa & 31)
+#if (0x7FFFFFFFul >> 037 != 0x7FFFFFFFul >> ~0U)
+#define MASK_SA(sa) (sa & 037)
 /* Force masking in software. */
 #else
 #define MASK_SA(sa) (sa)
