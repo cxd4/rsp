@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.13                                                         *
+* Release:  2014.12.25                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -59,7 +59,7 @@ static word_32 SR_temp;
 pu32 CR[16];
 u8 conf[32];
 
-void MFC0(int rt, int rd)
+void SP_CP0_MF(int rt, int rd)
 {
     SR[rt] = *(CR[rd]);
     SR[0] = 0x00000000;
@@ -210,12 +210,13 @@ static void MT_READ_ONLY(int rt)
     return;
 }
 
-static void (*MTC0[16])(int) = {
+static void (*SP_CP0_MT[16])(int) = {
 MT_DMA_CACHE       ,MT_DMA_DRAM        ,MT_DMA_READ_LENGTH ,MT_DMA_WRITE_LENGTH,
 MT_SP_STATUS       ,MT_READ_ONLY       ,MT_READ_ONLY       ,MT_SP_RESERVED,
 MT_CMD_START       ,MT_CMD_END         ,MT_READ_ONLY       ,MT_CMD_STATUS,
 MT_CMD_CLOCK       ,MT_READ_ONLY       ,MT_READ_ONLY       ,MT_READ_ONLY
-}; 
+};
+
 void SP_DMA_READ(void)
 {
     register unsigned int length;
@@ -1730,10 +1731,10 @@ EX:
             switch (base)
             {
             case 000: /* MFC0 */
-                MFC0(rt, rd & 0xF);
+                SP_CP0_MF(rt, rd & 0xF);
                 CONTINUE;
             case 004: /* MTC0 */
-                MTC0[rd & 0xF](rt);
+                SP_CP0_MT[rd & 0xF](rt);
                 CONTINUE;
             default:
                 res_S();
@@ -1753,16 +1754,16 @@ EX:
 #endif
             switch (base)
             {
-            case 000: /* MFC2 */
+            case 000:
                 MFC2(vt, vs, vd >>= 1);
                 CONTINUE;
-            case 002: /* CFC2 */
+            case 002:
                 CFC2(vt, vs);
                 CONTINUE;
-            case 004: /* MTC2 */
+            case 004:
                 MTC2(vt, vs, vd >>= 1);
                 CONTINUE;
-            case 006: /* CTC2 */
+            case 006:
                 CTC2(vt, vs);
                 CONTINUE;
             case 020:

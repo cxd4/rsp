@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.13                                                         *
+* Release:  2014.12.25                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -185,7 +185,7 @@ extern void USW(int rs, u32 addr);
 
 NOINLINE extern void res_S(void);
 
-NOINLINE extern void MFC0(int rt, int rd);
+extern void SP_CP0_MF(int rt, int rd);
 
 /*
  * example syntax (basically the same for all LWC2/SWC2 ops):
