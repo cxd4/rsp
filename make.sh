@@ -53,5 +53,5 @@ as -o $obj/vu/logical.o  $obj/vu/logical.s
 as -o $obj/vu/divide.o   $obj/vu/divide.s
 
 echo Linking assembled object files...
-ld --shared -o $obj/rsp.so $OBJ_LIST
-strip -o $obj/rsp.so $obj/rsp.so
+ld --shared -o $obj/rspdebug.so $OBJ_LIST
+strip -o $obj/rsp.so $obj/rspdebug.so
