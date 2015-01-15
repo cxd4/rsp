@@ -27,8 +27,7 @@
 RSP_INFO RSP_INFO_NAME;
 
 static const char DLL_about[] =
-    "RSP Interpreter by Iconoclast&&ECHO."\
-    "&&ECHO "\
+    "RSP Interpreter by Iconoclast\n"\
     "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
     "RSP driver examples:  bpoint, zilmar, Ville Linde";
 
