@@ -442,11 +442,11 @@ NOINLINE FILE* my_fopen(const char * filename, const char* mode)
         (mode[0] == 'r') ? GENERIC_READ : GENERIC_WRITE,
         (mode[0] == 'r') ? FILE_SHARE_READ : FILE_SHARE_WRITE,
         NULL,
-        CREATE_ALWAYS,
+        (mode[0] == 'r') ? OPEN_EXISTING : CREATE_ALWAYS,
 #if 0
         FILE_FLAG_WRITE_THROUGH | FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING,
 #else
-        FILE_FLAG_WRITE_THROUGH,
+        (mode[0] == 'r') ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_WRITE_THROUGH,
 #endif
         NULL
     );
