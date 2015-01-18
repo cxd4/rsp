@@ -39,9 +39,9 @@ extern "C" {
  * `GET_RCP_REG(MI_INTR_REG) |= MI_INTR_MASK_SP;'.
  */
 #ifndef RSP_INFO_NAME
-#define RSP_INFO_NAME           RCP_info_RSP
-#define GET_RSP_INFO(member)    ((RSP_INFO_NAME).(member))
-#define GET_RCP_REG(member)     (*(RSP_INFO_NAME).(member))
+#define RSP_INFO_NAME           RCP_info_SP
+#define GET_RSP_INFO(member)    ((RSP_INFO_NAME).member)
+#define GET_RCP_REG(member)     (*(RSP_INFO_NAME).member)
 #endif
 
 typedef struct {
