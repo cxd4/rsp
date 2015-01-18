@@ -548,7 +548,7 @@ void SDV(int vt, int element, signed int offset, int base)
         register int i;
 
         for (i = 0; i < 8; i++)
-            DMEM[BES(addr &= 0x00000FFF)] = VR_B(vt, (e+i)&0xF);
+            DMEM[BES(addr++ & 0x00000FFF)] = VR_B(vt, (e+i)&0xF);
         return;
     }
     switch (addr & 07)
