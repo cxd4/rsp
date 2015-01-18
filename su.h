@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.25                                                         *
+* Release:  2015.01.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -29,10 +29,6 @@
 #define SP_EXECUTE_LOG
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ
 #endif
-
-#define RSP_INFO_NAME           RSP_info
-#define GET_RSP_INFO(member)    (RSP_INFO_NAME.member)
-#define GET_RCP_REG(member)     (*RSP_INFO_NAME.member)
 
 extern int CPU_running;
 
