@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Test Selects    *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.15                                                         *
+* Release:  2015.01.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -299,8 +299,10 @@ INLINE static void do_cr(short* VD, short* VS, short* VT)
 
     vector_copy(VC, VT);
     for (i = 0; i < N; i++)
-        sn[i] = (signed short)(VS[i] ^ VT[i]) >> 15;
-#if (0)
+        sn[i] = VS[i] ^ VT[i];
+    for (i = 0; i < N; i++)
+        sn[i] = (sn[i] < 0) ? ~0 : 0;
+#ifdef _DEBUG
     for (i = 0; i < N; i++)
         le[i] = sn[i] ? (VT[i] <= ~VS[i]) : (VT[i] <= ~0x0000);
     for (i = 0; i < N; i++)
@@ -317,7 +319,8 @@ INLINE static void do_cr(short* VD, short* VS, short* VT)
 #endif
     for (i = 0; i < N; i++)
         VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
-    merge(VACC_L, le, VC, VS);
+    merge(cmp, sn, le, ge);
+    merge(VACC_L, cmp, VC, VS);
     vector_copy(VD, VACC_L);
 
     vector_copy(clip, ge);
