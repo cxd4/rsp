@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Instruction Mnemonics for Vector Unit Computational Test Selects   *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.15                                                         *
+* Release:  2015.01.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -35,6 +35,6 @@ VECTOR_EXTERN
 VECTOR_EXTERN
     VMRG   (v16 vs, v16 vt);
 
-extern INLINE void merge(short* VD, short* cmp, short* pass, short* fail);
+extern INLINE void merge(pi16 VD, pi16 cmp, pi16 pass, pi16 fail);
 
 #endif

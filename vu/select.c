@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Test Selects    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.17                                                         *
+* Release:  2015.01.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -27,15 +27,15 @@
  *     else
  *         dest = element_b;
  */
-INLINE void merge(short* VD, short* cmp, short* pass, short* fail)
+INLINE void merge(pi16 VD, pi16 cmp, pi16 pass, pi16 fail)
 {
     register int i;
-#if (0)
+#if (0 != 0)
 /* Do not use this version yet, as it still does not vectorize to SSE2. */
     for (i = 0; i < N; i++)
         VD[i] = (cmp[i] != 0) ? pass[i] : fail[i];
 #else
-    short diff[N];
+    i16 diff[N];
 
     for (i = 0; i < N; i++)
         diff[i] = pass[i] - fail[i];
@@ -45,10 +45,10 @@ INLINE void merge(short* VD, short* cmp, short* pass, short* fail)
     return;
 }
 
-INLINE static void do_lt(short* VD, short* VS, short* VT)
+INLINE static void do_lt(pi16 VD, pi16 VS, pi16 VT)
 {
-    short cn[N];
-    short eq[N];
+    i16 cn[N];
+    i16 eq[N];
     register int i;
 
     for (i = 0; i < N; i++)
@@ -73,7 +73,7 @@ INLINE static void do_lt(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_eq(short* VD, short* VS, short* VT)
+INLINE static void do_eq(pi16 VD, pi16 VS, pi16 VT)
 {
     register int i;
 
@@ -97,7 +97,7 @@ INLINE static void do_eq(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_ne(short* VD, short* VS, short* VT)
+INLINE static void do_ne(pi16 VD, pi16 VS, pi16 VT)
 {
     register int i;
 
@@ -121,10 +121,10 @@ INLINE static void do_ne(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_ge(short* VD, short* VS, short* VT)
+INLINE static void do_ge(pi16 VD, pi16 VS, pi16 VT)
 {
-    short ce[N];
-    short eq[N];
+    i16 ce[N];
+    i16 eq[N];
     register int i;
 
     for (i = 0; i < N; i++)
@@ -149,17 +149,17 @@ INLINE static void do_ge(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_cl(short* VD, short* VS, short* VT)
+INLINE static void do_cl(pi16 VD, pi16 VS, pi16 VT)
 {
-    ALIGNED unsigned short VB[N], VC[N];
-    ALIGNED short eq[N], ge[N], le[N];
-    ALIGNED short gen[N], len[N], lz[N], uz[N], sn[N];
-    short diff[N];
-    short cmp[N];
+    ALIGNED u16 VB[N], VC[N];
+    ALIGNED i16 eq[N], ge[N], le[N];
+    ALIGNED i16 gen[N], len[N], lz[N], uz[N], sn[N];
+    i16 diff[N];
+    i16 cmp[N];
     register int i;
 
-    vector_copy((short *)VB, VS);
-    vector_copy((short *)VC, VT);
+    vector_copy((pi16)VB, VS);
+    vector_copy((pi16)VC, VT);
 
 /*
     for (i = 0; i < N; i++)
@@ -183,7 +183,7 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         diff[i] = VB[i] - VC[i];
     for (i = 0; i < N; i++)
-        uz[i] = (VB[i] + (unsigned short)VT[i] - 65536) >> 31;
+        uz[i] = (VB[i] + (u16)VT[i] - 65536) >> 31;
     for (i = 0; i < N; i++)
         lz[i] = (diff[i] == 0x0000);
     for (i = 0; i < N; i++)
@@ -208,7 +208,7 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     merge(ge, cmp, gen, clip);
 
     merge(cmp, sn, le, ge);
-    merge(VACC_L, cmp, (short *)VC, VS);
+    merge(VACC_L, cmp, (pi16)VC, VS);
     vector_copy(VD, VACC_L);
 
     vector_copy(clip, ge);
@@ -222,13 +222,13 @@ INLINE static void do_cl(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_ch(short* VD, short* VS, short* VT)
+INLINE static void do_ch(pi16 VD, pi16 VS, pi16 VT)
 {
-    ALIGNED short VC[N];
-    ALIGNED short eq[N], ge[N], le[N];
-    ALIGNED short sn[N];
+    ALIGNED i16 VC[N];
+    ALIGNED i16 eq[N], ge[N], le[N];
+    ALIGNED i16 sn[N];
 #ifndef _DEBUG
-    short diff[N];
+    i16 diff[N];
 #endif
     i16 cch[N]; /* corner case hack:  -(-32768) with undefined sign */
     register int i;
@@ -270,7 +270,7 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
         ge[i] = (diff[i] >= VT[i]);
 
     for (i = 0; i < N; i++)
-        sn[i] = (unsigned short)(sn[i]) >> 15; /* ~0 to 1, 0 to 0 */
+        sn[i] = (u16)(sn[i]) >> 15; /* ~0 to 1, 0 to 0 */
 
     for (i = 0; i < N; i++)
         diff[i] = VC[i] - VS[i];
@@ -293,11 +293,11 @@ INLINE static void do_ch(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_cr(short* VD, short* VS, short* VT)
+INLINE static void do_cr(pi16 VD, pi16 VS, pi16 VT)
 {
-    ALIGNED short ge[N], le[N], sn[N];
-    ALIGNED short VC[N];
-    short cmp[N];
+    ALIGNED i16 ge[N], le[N], sn[N];
+    ALIGNED i16 VC[N];
+    i16 cmp[N];
     register int i;
 
     vector_copy(VC, VT);
@@ -337,7 +337,7 @@ INLINE static void do_cr(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_mrg(short* VD, short* VS, short* VT)
+INLINE static void do_mrg(pi16 VD, pi16 VS, pi16 VT)
 {
     merge(VACC_L, comp, VS, VT);
     vector_copy(VD, VACC_L);

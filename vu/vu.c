@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.13                                                         *
+* Release:  2015.01.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -250,21 +250,21 @@ static const int ei[1 << 4][8] = {
     { 07, 07, 07, 07, 07, 07, 07, 07 }  /* 7 */
 };
 
-int sub_mask[16] = {
-    0x0,
-    0x0,
-    0x1, 0x1,
-    0x3, 0x3, 0x3, 0x3,
-    0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
+static const int log_mask[1 << 4] = { /* inverse logarithms, truncated to int */
+    1 - 1,
+    1 - 1,
+    2 - 1, 2 - 1,
+    4 - 1, 4 - 1, 4 - 1, 4 - 1,
+    8 - 1, 8 - 1, 8 - 1, 8 - 1, 8 - 1, 8 - 1, 8 - 1, 8 - 1,
 };
 
 INLINE VECTOR_OPERATION SHUFFLE_VECTOR(v16 vd, const int e)
 {
-    short SV[8];
+    i16 SV[8];
     register int i, j;
 
 #if (0 == 0)
-    j = sub_mask[e];
+    j = log_mask[e];
     for (i = 0; i < N; i++)
         SV[i] = vd[(i & ~j) | (e & j)];
 #else

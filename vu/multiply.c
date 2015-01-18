@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Multiplies      *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.28                                                         *
+* Release:  2015.01.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -27,7 +27,7 @@
 #define _mm_mullo_epu16(dst, src) \
     _mm_mullo_epi16(dst, src)
 
-static INLINE void SIGNED_CLAMP_AM(short* VD)
+static INLINE void SIGNED_CLAMP_AM(pi16 VD)
 { /* typical sign-clamp of accumulator-mid (bits 31:16) */
     v16 dst, src;
     v16 pvd, pvs;
@@ -42,9 +42,9 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
     return;
 }
 #else
-static INLINE void SIGNED_CLAMP_AM(short* VD)
+static INLINE void SIGNED_CLAMP_AM(pi16 VD)
 { /* typical sign-clamp of accumulator-mid (bits 31:16) */
-    short hi[N], lo[N];
+    i16 hi[N], lo[N];
     register int i;
 
     for (i = 0; i < N; i++)
@@ -66,10 +66,10 @@ static INLINE void SIGNED_CLAMP_AM(short* VD)
 }
 #endif
 
-static INLINE void UNSIGNED_CLAMP(short* VD)
+static INLINE void UNSIGNED_CLAMP(pi16 VD)
 { /* sign-zero hybrid clamp of accumulator-mid (bits 31:16) */
-    ALIGNED short temp[N];
-    short cond[N];
+    ALIGNED i16 temp[N];
+    i16 cond[N];
     register int i;
 
     SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */
@@ -82,10 +82,10 @@ static INLINE void UNSIGNED_CLAMP(short* VD)
     return;
 }
 
-static INLINE void SIGNED_CLAMP_AL(short* VD)
+static INLINE void SIGNED_CLAMP_AL(pi16 VD)
 { /* sign-clamp accumulator-low (bits 15:0) */
-    ALIGNED short temp[N];
-    short cond[N];
+    ALIGNED i16 temp[N];
+    i16 cond[N];
     register int i;
 
     SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */
@@ -97,7 +97,7 @@ static INLINE void SIGNED_CLAMP_AL(short* VD)
     return;
 }
 
-INLINE static void do_macf(short* VD, short* VS, short* VT)
+INLINE static void do_macf(pi16 VD, pi16 VS, pi16 VT)
 {
     i32 product[N];
     u32 addend[N];
@@ -108,15 +108,15 @@ INLINE static void do_macf(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         addend[i] = (product[i] << 1) & 0x00000000FFFF;
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_L[i]) + addend[i];
+        addend[i] = (u16)(VACC_L[i]) + addend[i];
     for (i = 0; i < N; i++)
-        VACC_L[i] = (short)(addend[i]);
+        VACC_L[i] = (i16)(addend[i]);
     for (i = 0; i < N; i++)
-        addend[i] = (addend[i] >> 16) + (unsigned short)(product[i] >> 15);
+        addend[i] = (addend[i] >> 16) + (u16)(product[i] >> 15);
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
+        addend[i] = (u16)(VACC_M[i]) + addend[i];
     for (i = 0; i < N; i++)
-        VACC_M[i] = (short)(addend[i]);
+        VACC_M[i] = (i16)(addend[i]);
     for (i = 0; i < N; i++)
         VACC_H[i] -= (product[i] < 0);
     for (i = 0; i < N; i++)
@@ -125,7 +125,7 @@ INLINE static void do_macf(short* VD, short* VS, short* VT)
     return;
 }
 
-INLINE static void do_macu(short* VD, short* VS, short* VT)
+INLINE static void do_macu(pi16 VD, pi16 VS, pi16 VT)
 {
     i32 product[N];
     u32 addend[N];
@@ -136,15 +136,15 @@ INLINE static void do_macu(short* VD, short* VS, short* VT)
     for (i = 0; i < N; i++)
         addend[i] = (product[i] << 1) & 0x00000000FFFF;
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_L[i]) + addend[i];
+        addend[i] = (u16)(VACC_L[i]) + addend[i];
     for (i = 0; i < N; i++)
-        VACC_L[i] = (short)(addend[i]);
+        VACC_L[i] = (i16)(addend[i]);
     for (i = 0; i < N; i++)
-        addend[i] = (addend[i] >> 16) + (unsigned short)(product[i] >> 15);
+        addend[i] = (addend[i] >> 16) + (u16)(product[i] >> 15);
     for (i = 0; i < N; i++)
-        addend[i] = (unsigned short)(VACC_M[i]) + addend[i];
+        addend[i] = (u16)(VACC_M[i]) + addend[i];
     for (i = 0; i < N; i++)
-        VACC_M[i] = (short)(addend[i]);
+        VACC_M[i] = (i16)(addend[i]);
     for (i = 0; i < N; i++)
         VACC_H[i] -= (product[i] < 0);
     for (i = 0; i < N; i++)
