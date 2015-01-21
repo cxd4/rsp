@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.18                                                         *
+* Release:  2015.01.21                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -24,7 +24,7 @@
 #include "pack.h"
 #endif
 
-ALIGNED i16 VR[32][N];
+ALIGNED i16 VR[32][N << VR_STATIC_WRAPAROUND];
 ALIGNED i16 VACC[3][N];
 #ifndef ARCH_MIN_SSE2
 ALIGNED i16 V_result[N];

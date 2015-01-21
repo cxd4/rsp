@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.13                                                         *
+* Release:  2015.01.21                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -25,6 +25,19 @@
 /* N:  number of processor elements in SIMD processor */
 
 /*
+ * Illegal, unaligned LWC2 operations on the RSP may write past the terminal
+ * byte of a vector, while SWC2 operations may have to wrap around stores
+ * from the end to the start of a vector.  Both of these risk out-of-bounds
+ * memory access, but by doubling the number of bytes allocated (shift left)
+ * per each vector register, we could stabilize and probably optimize this.
+ */
+#if 0
+#define VR_STATIC_WRAPAROUND    0
+#else
+#define VR_STATIC_WRAPAROUND    1
+#endif
+
+/*
  * We are going to need this for vector operations doing scalar things.
  * The divides and VSAW need bit-wise information from the instruction word.
  */
@@ -38,7 +51,7 @@ extern u32 inst;
  * For ?WC2 we may need to do byte-precision access just as directly.
  * This is amended by using the `VU_S` and `VU_B` macros defined in `rsp.h`.
  */
-ALIGNED extern i16 VR[32][N];
+ALIGNED extern i16 VR[32][N << VR_STATIC_WRAPAROUND];
 
 /*
  * The RSP accumulator is a vector of 3 48-bit integers.  Nearly all of the

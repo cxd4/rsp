@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.12.25                                                         *
+* Release:  2015.01.21                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -540,15 +540,21 @@ void SLV(int vt, int element, signed int offset, int base)
 void SDV(int vt, int element, signed int offset, int base)
 {
     register u32 addr;
-    const int e = element;
+    const unsigned int e = element;
 
     addr = (SR[base] + 8*offset) & 0x00000FFF;
     if (e > 0x8 || (e & 0x1))
     { /* Illegal elements with Boss Game Studios publications. */
-        register int i;
+        register unsigned int i;
 
+#if (VR_STATIC_WRAPAROUND == 1)
+        vector_copy(VR[vt] + N, VR[vt]);
+        for (i = 0; i < 8; i++)
+            DMEM[BES(addr++ & 0x00000FFF)] = VR_B(vt, e + i);
+#else
         for (i = 0; i < 8; i++)
             DMEM[BES(addr++ & 0x00000FFF)] = VR_B(vt, (e+i)&0xF);
+#endif
         return;
     }
     switch (addr & 07)
@@ -1281,11 +1287,17 @@ void SQV(int vt, int element, signed int offset, int base)
 
     addr = (SR[base] + 16*offset) & 0x00000FFF;
     if (e != 0x0)
-    { /* happens with "Mia Hamm Soccer 64" */
+    { /* illegal SQV, happens with "Mia Hamm Soccer 64" */
         register unsigned int i;
 
+#if (VR_STATIC_WRAPAROUND == 1)
+        vector_copy(VR[vt] + N, VR[vt]);
+        for (i = 0; i < 16 - addr%16; i++)
+            DMEM[BES((addr + i) & 0xFFF)] = VR_B(vt, e + i);
+#else
         for (i = 0; i < 16 - addr%16; i++)
             DMEM[BES((addr + i) & 0xFFF)] = VR_B(vt, (e + i) & 0xF);
+#endif
         return;
     }
     b = addr & 0x0000000F;
