@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Divides         *
 * Authors:  Iconoclast                                                         *
-* Release:  2014.10.17                                                         *
+* Release:  2015.01.27                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1060,8 +1060,8 @@ enum {
 };
 enum {
     SP_DIV_PRECISION_SINGLE = 0,
-    SP_DIV_PRECISION_DOUBLE = 1,
-    SP_DIV_PRECISION_CURRENT
+    SP_DIV_PRECISION_DOUBLE = ~0u
+/*, SP_DIV_PRECISION_CURRENT */
 };
 
 INLINE static void do_div(i32 data, int sqrt, int precision)
@@ -1097,11 +1097,11 @@ INLINE static void do_div(i32 data, int sqrt, int precision)
     fetch = div_ROM[addr];
     shift ^= 31; /* flipping shift direction from left- to right- */
     shift >>= (sqrt == SP_DIV_SQRT_YES);
-    DivOut = (0x40000000 | (fetch << 14)) >> shift;
+    DivOut = (0x40000000ul | (fetch << 14)) >> shift;
     if (DivIn == 0) /* corner case:  overflow via division by zero */
-        DivOut = 0x7FFFFFFF;
+        DivOut = 0x7FFFFFFFul;
     else if (DivIn == -32768) /* corner case:  signed underflow barrier */
-        DivOut = 0xFFFF0000;
+        DivOut = 0xFFFF0000ul;
     else
         DivOut ^= (DivIn < 0) ? ~0 : 0;
     return;
@@ -1140,7 +1140,7 @@ VECTOR_OPERATION VRCPL(v16 vs, v16 vt)
     const int target = (inst >> 16) & 31;
     const unsigned int element = (inst >> 21) & 0x7;
 
-    DivIn &= -DPH;
+    DivIn &= DPH;
     DivIn |= (u16)VR[target][element];
     do_div(DivIn, SP_DIV_SQRT_NO, DPH);
 #ifdef ARCH_MIN_SSE2
@@ -1240,7 +1240,7 @@ VECTOR_OPERATION VRSQL(v16 vs, v16 vt)
     const int target = (inst >> 16) & 31;
     const unsigned int element = (inst >> 21) & 0x7;
 
-    DivIn &= -DPH;
+    DivIn &= DPH;
     DivIn |= (u16)VR[target][element];
     do_div(DivIn, SP_DIV_SQRT_YES, DPH);
 #ifdef ARCH_MIN_SSE2
