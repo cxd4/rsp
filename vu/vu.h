@@ -271,4 +271,89 @@ extern void set_VCE(u8 VCE);
 #define B(x)    ((x) & 3)
 #define SHUFFLE(a,b,c,d)    ((B(d)<<6) | (B(c)<<4) | (B(b)<<2) | (B(a)<<0))
 
+/*
+ * RSP vector opcode function names are currently just literally named after
+ * the actual opcode that is being emulated, but names this short could
+ * collide with global symbols exported from somewhere else within the
+ * emulation thread.  (This did happen on Linux Mupen64, with my old function
+ * name "MFC0", which had to be renamed.)  Rather than uglify the function
+ * names, we'll treat them as macros from now on, should the need arise.
+ */
+#define VMULF       mulf_v_msp
+#define VMULU       mulu_v_msp
+#define VMULI       rndp_v_msp
+#define VMULQ       mulq_v_msp
+
+#define VMUDL       mudl_v_msp
+#define VMUDM       mudm_v_msp
+#define VMUDN       mudn_v_msp
+#define VMUDH       mudh_v_msp
+
+#define VMACF       macf_v_msp
+#define VMACU       macu_v_msp
+#define VMACI       rndn_v_msp
+#define VMACQ       macq_v_msp
+
+#define VMADL       madl_v_msp
+#define VMADM       madm_v_msp
+#define VMADN       madn_v_msp
+#define VMADH       madh_v_msp
+
+#define VADD        add_v_msp
+#define VSUB        sub_v_msp
+#define VSUT        sut_v_msp
+#define VABS        abs_v_msp
+
+#define VADDC       addc_v_msp
+#define VSUBC       subc_v_msp
+#define VADDB       addb_v_msp
+#define VSUBB       subb_v_msp
+
+#define VACCB       accb_v_msp
+#define VSUCB       sucb_v_msp
+#define VSAD        sad_v_msp
+#define VSAC        sac_v_msp
+
+#define VSUM        sum_v_msp
+#define VSAW        sar_v_msp
+/* #define VACC */
+/* #define VSUC */
+
+#define VLT         lt_v_msp
+#define VEQ         eq_v_msp
+#define VNE         ne_v_msp
+#define VGE         ge_v_msp
+
+#define VCL         cl_v_msp
+#define VCH         ch_v_msp
+#define VCR         cr_v_msp
+#define VMRG        mrg_v_msp
+
+#define VAND        and_v_msp
+#define VNAND       nand_v_msp
+#define VOR         or_v_msp
+#define VNOR        nor_v_msp
+#define VXOR        xor_v_msp
+#define VNXOR       nxor_v_msp
+
+#define VRCP        rcp_v_msp
+#define VRCPL       rcpl_v_msp
+#define VRCPH       rcph_v_msp
+#define VMOV        mov_v_msp
+
+#define VRSQ        rsq_v_msp
+#define VRSQL       rsql_v_msp
+#define VRSQH       rsqh_v_msp
+#define VNOP        nop_v_msp
+
+#define VEXTT       extt_v_msp
+#define VEXTQ       extq_v_msp
+#define VEXTN       extn_v_msp
+
+
+#define VINST       inst_v_msp
+#define VINSQ       insq_v_msp
+#define VINSN       insn_v_msp
+#define VNULLOP     nop_v_msp
+
 #endif

@@ -65,6 +65,12 @@ VECTOR_OPERATION res_M(v16 vs, v16 vt)
 #endif
 }
 
+/*
+ * Op-code-accurate matrix of all the known RSP vector operations.
+ * To do:  Either remove VMACQ, or add VRNDP, VRNDN, and VMULQ.
+ *
+ * Note that these are not our literal function names, just macro names.
+ */
 VECTOR_OPERATION (*COP2_C2[8 * 8])(v16, v16) = {
     VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
     VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
