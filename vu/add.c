@@ -156,6 +156,9 @@ INLINE static void do_abs(pi16 VD, pi16 VS, pi16 VT)
 
     vector_copy(res, VT);
     for (i = 0; i < N; i++)
+        cch[i]  = (res[i] == -32768);
+
+    for (i = 0; i < N; i++)
         neg[i]  = (VS[i] <  0x0000);
     for (i = 0; i < N; i++)
         pos[i]  = (VS[i] >  0x0000);
@@ -169,8 +172,6 @@ INLINE static void do_abs(pi16 VD, pi16 VS, pi16 VT)
 
     for (i = 0; i < N; i++)
         res[i] *= nez[i];
-    for (i = 0; i < N; i++)
-        cch[i]  = (res[i] == -32768);
     for (i = 0; i < N; i++)
         res[i] -= cch[i];
     vector_copy(VACC_L, res);
