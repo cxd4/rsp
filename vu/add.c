@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Adds            *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.27                                                         *
+* Release:  2015.01.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -120,10 +120,10 @@ INLINE static void clr_ci(pi16 VD, pi16 VS, pi16 VT)
     for (i = 0; i < N; i++)
         VACC_L[i] = VS[i] + VT[i] + co[i];
     SIGNED_CLAMP_ADD(VD, VS, VT);
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
+
+ /* CTC2    $0, $vco # zeroing RSP flags VCF[0] */
+    vector_wipe(ne);
+    vector_wipe(co);
     return;
 }
 
@@ -134,10 +134,10 @@ INLINE static void clr_bi(pi16 VD, pi16 VS, pi16 VT)
     for (i = 0; i < N; i++)
         VACC_L[i] = VS[i] - VT[i] - co[i];
     SIGNED_CLAMP_SUB(VD, VS, VT);
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
+
+ /* CTC2    $0, $vco # zeroing RSP flags VCF[0] */
+    vector_wipe(ne);
+    vector_wipe(co);
     return;
 }
 
@@ -162,8 +162,7 @@ INLINE static void do_abs(pi16 VD, pi16 VS, pi16 VT)
         neg[i]  = (VS[i] <  0x0000);
     for (i = 0; i < N; i++)
         pos[i]  = (VS[i] >  0x0000);
-    for (i = 0; i < N; i++)
-        nez[i]  = 0;
+    vector_wipe(nez);
 
     for (i = 0; i < N; i++)
         nez[i] -= neg[i];
@@ -189,8 +188,8 @@ INLINE static void set_co(pi16 VD, pi16 VS, pi16 VT)
     for (i = 0; i < N; i++)
         VACC_L[i] = VS[i] + VT[i];
     vector_copy(VD, VACC_L);
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
+
+    vector_wipe(ne);
     for (i = 0; i < N; i++)
         co[i] = sum[i] >> 16; /* native:  (sum[i] > +65535) */
     return;

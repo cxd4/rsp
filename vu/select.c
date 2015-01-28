@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Test Selects    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.18                                                         *
+* Release:  2015.01.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -58,18 +58,18 @@ INLINE static void do_lt(pi16 VD, pi16 VS, pi16 VT)
     for (i = 0; i < N; i++)
         eq[i] = eq[i] & cn[i];
     for (i = 0; i < N; i++)
-        clip[i] = 0;
-    for (i = 0; i < N; i++)
         comp[i] = (VS[i] < VT[i]); /* less than */
     for (i = 0; i < N; i++)
         comp[i] = comp[i] | eq[i]; /* ... or equal (uncommonly) */
 
     merge(VACC_L, comp, VS, VT);
     vector_copy(VD, VACC_L);
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
+
+ /* CTC2    $0, $vco # zeroing RSP flags VCF[0] */
+    vector_wipe(ne);
+    vector_wipe(co);
+
+    vector_wipe(clip);
     return;
 }
 
@@ -77,8 +77,6 @@ INLINE static void do_eq(pi16 VD, pi16 VS, pi16 VT)
 {
     register int i;
 
-    for (i = 0; i < N; i++)
-        clip[i] = 0;
     for (i = 0; i < N; i++)
         comp[i] = (VS[i] == VT[i]);
     for (i = 0; i < N; i++)
@@ -90,10 +88,11 @@ INLINE static void do_eq(pi16 VD, pi16 VS, pi16 VT)
 #endif
     vector_copy(VD, VACC_L);
 
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
+ /* CTC2    $0, $vco # zeroing RSP flags VCF[0] */
+    vector_wipe(ne);
+    vector_wipe(co);
+
+    vector_wipe(clip);
     return;
 }
 
@@ -101,8 +100,6 @@ INLINE static void do_ne(pi16 VD, pi16 VS, pi16 VT)
 {
     register int i;
 
-    for (i = 0; i < N; i++)
-        clip[i] = 0;
     for (i = 0; i < N; i++)
         comp[i] = (VS[i] != VT[i]);
     for (i = 0; i < N; i++)
@@ -114,10 +111,11 @@ INLINE static void do_ne(pi16 VD, pi16 VS, pi16 VT)
 #endif
     vector_copy(VD, VACC_L);
 
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
+ /* CTC2    $0, $vco # zeroing RSP flags VCF[0] */
+    vector_wipe(ne);
+    vector_wipe(co);
+
+    vector_wipe(clip);
     return;
 }
 
@@ -134,18 +132,18 @@ INLINE static void do_ge(pi16 VD, pi16 VS, pi16 VT)
     for (i = 0; i < N; i++)
         eq[i] = eq[i] & ce[i];
     for (i = 0; i < N; i++)
-        clip[i] = 0;
-    for (i = 0; i < N; i++)
         comp[i] = (VS[i] > VT[i]); /* greater than */
     for (i = 0; i < N; i++)
         comp[i] = comp[i] | eq[i]; /* ... or equal (commonly) */
 
     merge(VACC_L, comp, VS, VT);
     vector_copy(VD, VACC_L);
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
+
+ /* CTC2    $0, $vco # zeroing RSP flags VCF[0] */
+    vector_wipe(ne);
+    vector_wipe(co);
+
+    vector_wipe(clip);
     return;
 }
 
@@ -211,14 +209,15 @@ INLINE static void do_cl(pi16 VD, pi16 VS, pi16 VT)
     merge(VACC_L, cmp, (pi16)VC, VS);
     vector_copy(VD, VACC_L);
 
+ /* CTC2    $0, $vco # zeroing RSP flags VCF[0] */
+    vector_wipe(ne);
+    vector_wipe(co);
+
     vector_copy(clip, ge);
     vector_copy(comp, le);
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
-    for (i = 0; i < N; i++)
-        vce[i] = 0;
+
+ /* CTC2    $0, $vce # zeroing RSP flags VCF[2] */
+    vector_wipe(vce);
     return;
 }
 
@@ -326,14 +325,15 @@ INLINE static void do_cr(pi16 VD, pi16 VS, pi16 VT)
     merge(VACC_L, cmp, VC, VS);
     vector_copy(VD, VACC_L);
 
+ /* CTC2    $0, $vco # zeroing RSP flags VCF[0] */
+    vector_wipe(ne);
+    vector_wipe(co);
+
     vector_copy(clip, ge);
     vector_copy(comp, le);
-    for (i = 0; i < N; i++)
-        ne[i] = 0;
-    for (i = 0; i < N; i++)
-        co[i] = 0;
-    for (i = 0; i < N; i++)
-        vce[i] = 0;
+
+ /* CTC2    $0, $vce # zeroing RSP flags VCF[2] */
+    vector_wipe(vce);
     return;
 }
 
