@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.18                                                         *
+* Release:  2015.01.27                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -125,21 +125,21 @@ extern void set_PC(int address);
 #define VR_S(vt,element)    (*(pi16)((pi8)(VR[vt]) + element))
 
 /*** Scalar, Coprocessor Operations (system control) ***/
-#define SP_STATUS_HALT          (0x00000001 <<  0)
-#define SP_STATUS_BROKE         (0x00000001 <<  1)
-#define SP_STATUS_DMA_BUSY      (0x00000001 <<  2)
-#define SP_STATUS_DMA_FULL      (0x00000001 <<  3)
-#define SP_STATUS_IO_FULL       (0x00000001 <<  4)
-#define SP_STATUS_SSTEP         (0x00000001 <<  5)
-#define SP_STATUS_INTR_BREAK    (0x00000001 <<  6)
-#define SP_STATUS_SIG0          (0x00000001 <<  7)
-#define SP_STATUS_SIG1          (0x00000001 <<  8)
-#define SP_STATUS_SIG2          (0x00000001 <<  9)
-#define SP_STATUS_SIG3          (0x00000001 << 10)
-#define SP_STATUS_SIG4          (0x00000001 << 11)
-#define SP_STATUS_SIG5          (0x00000001 << 12)
-#define SP_STATUS_SIG6          (0x00000001 << 13)
-#define SP_STATUS_SIG7          (0x00000001 << 14)
+#define SP_STATUS_HALT          (0x00000001ul <<  0)
+#define SP_STATUS_BROKE         (0x00000001ul <<  1)
+#define SP_STATUS_DMA_BUSY      (0x00000001ul <<  2)
+#define SP_STATUS_DMA_FULL      (0x00000001ul <<  3)
+#define SP_STATUS_IO_FULL       (0x00000001ul <<  4)
+#define SP_STATUS_SSTEP         (0x00000001ul <<  5)
+#define SP_STATUS_INTR_BREAK    (0x00000001ul <<  6)
+#define SP_STATUS_SIG0          (0x00000001ul <<  7)
+#define SP_STATUS_SIG1          (0x00000001ul <<  8)
+#define SP_STATUS_SIG2          (0x00000001ul <<  9)
+#define SP_STATUS_SIG3          (0x00000001ul << 10)
+#define SP_STATUS_SIG4          (0x00000001ul << 11)
+#define SP_STATUS_SIG5          (0x00000001ul << 12)
+#define SP_STATUS_SIG6          (0x00000001ul << 13)
+#define SP_STATUS_SIG7          (0x00000001ul << 14)
 
 extern pu32 CR[16];
 
