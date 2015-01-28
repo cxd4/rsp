@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.27                                                         *
+* Release:  2015.01.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -135,11 +135,11 @@ static void MT_SP_STATUS(int rt)
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000080) <<  6);
     *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000100) <<  6);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000200) <<  7);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000400) <<  7);
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000400) <<  7); /* yield request? */
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000800) <<  8);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00001000) <<  8);
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00001000) <<  8); /* yielded? */
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00002000) <<  9);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00004000) <<  9);
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00004000) <<  9); /* task done? */
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00008000) << 10);
     *SP_STATUS_REG |=  (!!(SR[rt] & 0x00010000) << 10);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00020000) << 11);
@@ -315,26 +315,10 @@ void rwW_VCE(u16 VCE)
     return;
 }
 
-static u16 (*R_VCF[32])(void) = {
-    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
-/* Hazard reaction barrier:  RD = (UINT16)(inst) >> 11, without &= 3. */
-    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
-    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
-    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
-    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
-    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
-    get_VCO,get_VCC,rwR_VCE,rwR_VCE,
+static u16 (*R_VCF[4])(void) = {
     get_VCO,get_VCC,rwR_VCE,rwR_VCE,
 };
-static void (*W_VCF[32])(u16) = {
-    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
-/* Hazard reaction barrier:  RD = (UINT16)(inst) >> 11, without &= 3. */
-    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
-    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
-    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
-    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
-    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
-    set_VCO,set_VCC,rwW_VCE,rwW_VCE,
+static void (*W_VCF[4])(u16) = {
     set_VCO,set_VCC,rwW_VCE,rwW_VCE,
 };
 void MFC2(int rt, int vs, int e)
@@ -354,13 +338,13 @@ void MTC2(int rt, int vd, int e)
 }
 void CFC2(int rt, int rd)
 {
-    SR[rt] = (s16)R_VCF[rd]();
+    SR[rt] = (s16)R_VCF[rd & 3]();
     SR[0] = 0x00000000;
     return;
 }
 void CTC2(int rt, int rd)
 {
-    W_VCF[rd](SR[rt] & 0x0000FFFF);
+    W_VCF[rd & 3](SR[rt] & 0x0000FFFF);
     return;
 }
 
