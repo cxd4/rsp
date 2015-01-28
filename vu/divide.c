@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Divides         *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.27                                                         *
+* Release:  2015.01.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1060,7 +1060,7 @@ enum {
 };
 enum {
     SP_DIV_PRECISION_SINGLE = 0,
-    SP_DIV_PRECISION_DOUBLE = ~0u
+    SP_DIV_PRECISION_DOUBLE = ~0
 /*, SP_DIV_PRECISION_CURRENT */
 };
 
