@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.21                                                         *
+* Release:  2015.01.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -108,16 +108,16 @@ VECTOR_EXTERN (*COP2_C2[8*7 + 8])(v16, v16);
 #define vector_copy(vd, vs) { \
     *(v16 *)(vd) = *(v16 *)(vs); }
 #define vector_wipe(vd) { \
-    (vd) = _mm_xor_si128(vd, vd); }
+    *(v16 *)&(vd) = _mm_cmpgt_epi16(*(v16 *)&(vd), *(v16 *)&(vd)); }
 #define vector_fill(vd) { \
-    (vd) = _mm_cmpeq_epi16(vd, vd); }
+    *(v16 *)&(vd) = _mm_cmpeq_epi16(*(v16 *)&(vd), *(v16 *)&(vd)); }
 
 #define vector_and(vd, vs) { \
-    (vd) = _mm_and_si128    (vd, vs); }
+    *(v16 *)&(vd) = _mm_and_si128  (*(v16 *)&(vd), *(v16 *)&(vs)); }
 #define vector_or(vd, vs) { \
-    (vd) = _mm_or_si128     (vd, vs); }
+    *(v16 *)&(vd) = _mm_or_si128   (*(v16 *)&(vd), *(v16 *)&(vs)); }
 #define vector_xor(vd, vs) { \
-    (vd) = _mm_xor_si128    (vd, vs); }
+    *(v16 *)&(vd) = _mm_xor_si128  (*(v16 *)&(vd), *(v16 *)&(vs)); }
 
 /*
  * Every competent vector unit should have at least two vector comparison
@@ -126,11 +126,11 @@ VECTOR_EXTERN (*COP2_C2[8*7 + 8])(v16, v16);
  * Default examples when compiling for the x86 SSE2 architecture below.
  */
 #define vector_cmplt(vd, vs) { \
-    (vd) = _mm_cmplt_epi16  (vd, vs); }
+    *(v16 *)&(vd) = _mm_cmplt_epi16(*(v16 *)&(vd), *(v16 *)&(vs)); }
 #define vector_cmpeq(vd, vs) { \
-    (vd) = _mm_cmpeq_epi16  (vd, vs); }
+    *(v16 *)&(vd) = _mm_cmpeq_epi16(*(v16 *)&(vd), *(v16 *)&(vs)); }
 #define vector_cmpgt(vd, vs) { \
-    (vd) = _mm_cmpgt_epi16  (vd, vs); }
+    *(v16 *)&(vd) = _mm_cmpgt_epi16(*(v16 *)&(vd), *(v16 *)&(vs)); }
 
 #else
 
