@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.21                                                         *
+* Release:  2015.01.27                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -146,14 +146,14 @@ static void MT_SP_STATUS(int rt)
 }
 static void MT_SP_RESERVED(int rt)
 {
-    const u32 source = SR[rt] & 0x00000000; /* forced (zilmar, dox) */
+    const u32 source = SR[rt] & 0x00000000ul; /* forced (zilmar, dox) */
 
     GET_RCP_REG(SP_SEMAPHORE_REG) = source;
     return;
 }
 static void MT_CMD_START(int rt)
 {
-    const u32 source = SR[rt] & 0xFFFFFFF8; /* Funnelcube demo */
+    const u32 source = SR[rt] & 0xFFFFFFF8ul; /* Funnelcube demo by marshallh */
 
     if (GET_RCP_REG(DPC_BUFBUSY_REG)) /* lock hazards not implemented */
         message("MTC0\nCMD_START");
@@ -167,7 +167,7 @@ static void MT_CMD_END(int rt)
 {
     if (GET_RCP_REG(DPC_BUFBUSY_REG))
         message("MTC0\nCMD_END"); /* This is just CA-related. */
-    GET_RCP_REG(DPC_END_REG) = SR[rt] & 0xFFFFFFF8;
+    GET_RCP_REG(DPC_END_REG) = SR[rt] & 0xFFFFFFF8ul;
     if (GET_RSP_INFO(ProcessRdpList) == NULL) /* zilmar GFX #1.2 */
         return;
     GET_RSP_INFO(ProcessRdpList)();
@@ -177,7 +177,7 @@ static void MT_CMD_STATUS(int rt)
 {
     pu32 DPC_STATUS_REG;
 
-    if (SR[rt] & 0xFFFFFD80) /* unsupported or reserved bits */
+    if (SR[rt] & 0xFFFFFD80ul) /* unsupported or reserved bits */
         message("MTC0\nCMD_STATUS");
     DPC_STATUS_REG = GET_RSP_INFO(DPC_STATUS_REG);
 
@@ -187,11 +187,11 @@ static void MT_CMD_STATUS(int rt)
     *DPC_STATUS_REG |=  (!!(SR[rt] & 0x00000008) << 1);
     *DPC_STATUS_REG &= ~(!!(SR[rt] & 0x00000010) << 2);
     *DPC_STATUS_REG |=  (!!(SR[rt] & 0x00000020) << 2);
-/* Some NUS-CIC-6105 SP tasks try to clear some zeroed DPC registers. */
-    GET_RCP_REG(DPC_TMEM_REG)     &= ~0 * !(SR[rt] & 0x00000040);
- /* GET_RCP_REG(DPC_PIPEBUSY_REG) &= ~0 * !(SR[rt] & 0x00000080); */
- /* GET_RCP_REG(DPC_BUFBUSY_REG)  &= ~0 * !(SR[rt] & 0x00000100); */
-    GET_RCP_REG(DPC_CLOCK_REG)    &= ~0 * !(SR[rt] & 0x00000200);
+/* Some NUS-CIC-6105 SP tasks try to clear some DPC cycle timers. */
+    GET_RCP_REG(DPC_TMEM_REG)     &= !(SR[rt] & 0x00000040) ? ~0u : 0u;
+ /* GET_RCP_REG(DPC_PIPEBUSY_REG) &= !(SR[rt] & 0x00000080) ? ~0u : 0u; */
+ /* GET_RCP_REG(DPC_BUFBUSY_REG)  &= !(SR[rt] & 0x00000100) ? ~0u : 0u; */
+    GET_RCP_REG(DPC_CLOCK_REG)    &= !(SR[rt] & 0x00000200) ? ~0u : 0u;
     return;
 }
 static void MT_CMD_CLOCK(int rt)
@@ -223,9 +223,9 @@ void SP_DMA_READ(void)
     register unsigned int count;
     register unsigned int skip;
 
-    length = (GET_RCP_REG(SP_RD_LEN_REG) & 0x00000FFF) >>  0;
-    count  = (GET_RCP_REG(SP_RD_LEN_REG) & 0x000FF000) >> 12;
-    skip   = (GET_RCP_REG(SP_RD_LEN_REG) & 0xFFF00000) >> 20;
+    length = (GET_RCP_REG(SP_RD_LEN_REG) & 0x00000FFFul) >>  0;
+    count  = (GET_RCP_REG(SP_RD_LEN_REG) & 0x000FF000ul) >> 12;
+    skip   = (GET_RCP_REG(SP_RD_LEN_REG) & 0xFFF00000ul) >> 20;
     /* length |= 07; // already corrected by mtc0 */
     ++length;
     ++count;
@@ -238,8 +238,8 @@ void SP_DMA_READ(void)
         --count;
         do
         {
-            offC = (count*length + *CR[0x0] + i) & 0x00001FF8;
-            offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8;
+            offC = (count*length + *CR[0x0] + i) & 0x00001FF8ul;
+            offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8ul;
             *(pi64)(DMEM + offC) = *(pi64)(DRAM + offD);
             i += 0x008;
         } while (i < length);
@@ -254,9 +254,9 @@ void SP_DMA_WRITE(void)
     register unsigned int count;
     register unsigned int skip;
 
-    length = (GET_RCP_REG(SP_WR_LEN_REG) & 0x00000FFF) >>  0;
-    count  = (GET_RCP_REG(SP_WR_LEN_REG) & 0x000FF000) >> 12;
-    skip   = (GET_RCP_REG(SP_WR_LEN_REG) & 0xFFF00000) >> 20;
+    length = (GET_RCP_REG(SP_WR_LEN_REG) & 0x00000FFFul) >>  0;
+    count  = (GET_RCP_REG(SP_WR_LEN_REG) & 0x000FF000ul) >> 12;
+    skip   = (GET_RCP_REG(SP_WR_LEN_REG) & 0xFFF00000ul) >> 20;
     /* length |= 07; // already corrected by mtc0 */
     ++length;
     ++count;
@@ -269,8 +269,8 @@ void SP_DMA_WRITE(void)
         --count;
         do
         {
-            offC = (count*length + *CR[0x0] + i) & 0x00001FF8;
-            offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8;
+            offC = (count*length + *CR[0x0] + i) & 0x00001FF8ul;
+            offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8ul;
             *(pi64)(DRAM + offD) = *(pi64)(DMEM + offC);
             i += 0x000008;
         } while (i < length);
