@@ -15,6 +15,15 @@
 
 #define EMULATE_STATIC_PC
 
+/*
+ * The number of times to tolerate executing `MFC0    $at, $c4`.
+ * Replace $at with any register--the timeout limit is per each.
+ *
+ * Set to a higher value to avoid prematurely quitting the interpreter.
+ * Set to a lower value for speed...you could get away with 10 sometimes.
+ */
+#define MF_SP_STATUS_TIMEOUT    8192
+
 #include "su.h"
 
 /*
@@ -77,7 +86,7 @@ void SP_CP0_MF(int rt, int rd)
         if (CFG_WAIT_FOR_CPU_HOST == 0)
             return;
         ++MFC0_count[rt];
-        GET_RCP_REG(SP_STATUS_REG) |= (MFC0_count[rt] > 07);
+        GET_RCP_REG(SP_STATUS_REG) |= (MFC0_count[rt] >= MF_SP_STATUS_TIMEOUT);
         CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & 1;
     }
     return;
@@ -85,12 +94,12 @@ void SP_CP0_MF(int rt, int rd)
 
 static void MT_DMA_CACHE(int rt)
 {
-    *CR[0x0] = SR[rt] & 0xFFFFFFF8; /* & 0x00001FF8 */
+    *CR[0x0] = SR[rt] & 0xFFFFFFF8ul; /* & 0x00001FF8 */
     return; /* Reserved upper bits are ignored during DMA R/W. */
 }
 static void MT_DMA_DRAM(int rt)
 {
-    *CR[0x1] = SR[rt] & 0xFFFFFFF8; /* & 0x00FFFFF8 */
+    *CR[0x1] = SR[rt] & 0xFFFFFFF8ul; /* & 0x00FFFFF8 */
     return; /* Let the reserved bits get sent, but the pointer is 24-bit. */
 }
 static void MT_DMA_READ_LENGTH(int rt)
