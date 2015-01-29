@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.27                                                         *
+* Release:  2015.01.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -81,7 +81,7 @@ extern short MFC0_count[32];
 
 #define SLOT_OFF    (BASE_OFF + 0x000)
 #define LINK_OFF    (BASE_OFF + 0x004)
-extern void set_PC(int address);
+extern void set_PC(unsigned int address);
 
 #if (0x7FFFFFFFul >> 037 != 0x7FFFFFFFul >> ~0U)
 #define MASK_SA(sa) (sa & 037)
@@ -158,14 +158,14 @@ extern i16 vce[8];
 extern u16 rwR_VCE(void);
 extern void rwW_VCE(u16 VCE);
 
-extern void MFC2(int rt, int vs, int e);
-extern void MTC2(int rt, int vd, int e);
-extern void CFC2(int rt, int rd);
-extern void CTC2(int rt, int rd);
+extern void MFC2(unsigned int rt, unsigned int vs, unsigned int e);
+extern void MTC2(unsigned int rt, unsigned int vd, unsigned int e);
+extern void CFC2(unsigned int rt, unsigned int rd);
+extern void CTC2(unsigned int rt, unsigned int rd);
 
 /*** Modern pseudo-operations (not real instructions, but nice shortcuts) ***/
-extern void ULW(int rd, u32 addr);
-extern void USW(int rs, u32 addr);
+extern void ULW(unsigned int rd, u32 addr);
+extern void USW(unsigned int rs, u32 addr);
 
 /*
  * The scalar unit controls the primary R4000 operations implementation,
@@ -181,64 +181,74 @@ extern void USW(int rs, u32 addr);
 
 NOINLINE extern void res_S(void);
 
-extern void SP_CP0_MF(int rt, int rd);
+extern void SP_CP0_MF(unsigned int rt, unsigned int rd);
 
 /*
  * example syntax (basically the same for all LWC2/SWC2 ops):
  * LTWV    $v0[0], -64($at)
  * SBV     $v0[9], 0xFFE($0)
  */
-typedef void(*mwc2_func)(int vt, int element, signed int offset, int base);
+typedef void(*mwc2_func)(
+    unsigned int vt,
+    unsigned int element,
+    signed int offset,
+    unsigned int base
+);
 
 extern mwc2_func LWC2[2 * 8*2];
 extern mwc2_func SWC2[2 * 8*2];
 
-NOINLINE void res_lsw(int vt, int element, signed int offset, int base);
+extern void res_lsw(
+    unsigned int vt,
+    unsigned int element,
+    signed int offset,
+    unsigned int base
+);
 
 /*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
-extern void LBV(int vt, int element, signed int offset, int base);
-extern void LSV(int vt, int element, signed int offset, int base);
-extern void LLV(int vt, int element, signed int offset, int base);
-extern void LDV(int vt, int element, signed int offset, int base);
-extern void SBV(int vt, int element, signed int offset, int base);
-extern void SSV(int vt, int element, signed int offset, int base);
-extern void SLV(int vt, int element, signed int offset, int base);
-extern void SDV(int vt, int element, signed int offset, int base);
+extern void LBV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void LSV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void LLV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void LDV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SBV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SSV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SLV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SDV(unsigned vt, unsigned element, signed offset, unsigned base);
 
 /*
  * Group II vector loads and stores:
  * PV and UV (As of RCP implementation, XV and ZV are reserved opcodes.)
  */
-extern void LPV(int vt, int element, signed int offset, int base);
-extern void LUV(int vt, int element, signed int offset, int base);
-extern void SPV(int vt, int element, signed int offset, int base);
-extern void SUV(int vt, int element, signed int offset, int base);
+extern void LPV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void LUV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SPV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SUV(unsigned vt, unsigned element, signed offset, unsigned base);
 
 /*
  * Group III vector loads and stores:
  * HV, FV, and AV (As of RCP implementation, AV opcodes are reserved.)
  */
-extern void LHV(int vt, int element, signed int offset, int base);
-extern void LFV(int vt, int element, signed int offset, int base);
-extern void SHV(int vt, int element, signed int offset, int base);
-extern void SFV(int vt, int element, signed int offset, int base);
+extern void LHV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void LFV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SHV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SFV(unsigned vt, unsigned element, signed offset, unsigned base);
 
 /*
  * Group IV vector loads and stores:
  * QV and RV
  */
-extern void LQV(int vt, int element, signed int offset, int base);
-extern void LRV(int vt, int element, signed int offset, int base);
-extern void SQV(int vt, int element, signed int offset, int base);
-extern void SRV(int vt, int element, signed int offset, int base);
+extern void LQV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void LRV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SQV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SRV(unsigned vt, unsigned element, signed offset, unsigned base);
 
 /*
  * Group V vector loads and stores
  * TV and SWV (As of RCP implementation, LTWV opcode was undesired.)
  */
-extern void LTV(int vt, int element, signed int offset, int base);
-extern void SWV(int vt, int element, signed int offset, int base);
-extern void STV(int vt, int element, signed int offset, int base);
+extern void LTV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void SWV(unsigned vt, unsigned element, signed offset, unsigned base);
+extern void STV(unsigned vt, unsigned element, signed offset, unsigned base);
 
 NOINLINE extern void run_task(void);
 

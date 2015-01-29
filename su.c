@@ -49,7 +49,7 @@ NOINLINE void res_S(void)
     return;
 }
 
-void set_PC(int address)
+void set_PC(unsigned int address)
 {
     temp_PC = 0x04001000 + (address & 0xFFC);
 #ifndef EMULATE_STATIC_PC
@@ -68,7 +68,7 @@ static word_32 SR_temp;
 pu32 CR[16];
 u8 conf[32];
 
-void SP_CP0_MF(int rt, int rd)
+void SP_CP0_MF(unsigned int rt, unsigned int rd)
 {
     SR[rt] = *(CR[rd]);
     SR[0] = 0x00000000;
@@ -92,29 +92,29 @@ void SP_CP0_MF(int rt, int rd)
     return;
 }
 
-static void MT_DMA_CACHE(int rt)
+static void MT_DMA_CACHE(unsigned int rt)
 {
     *CR[0x0] = SR[rt] & 0xFFFFFFF8ul; /* & 0x00001FF8 */
     return; /* Reserved upper bits are ignored during DMA R/W. */
 }
-static void MT_DMA_DRAM(int rt)
+static void MT_DMA_DRAM(unsigned int rt)
 {
     *CR[0x1] = SR[rt] & 0xFFFFFFF8ul; /* & 0x00FFFFF8 */
     return; /* Let the reserved bits get sent, but the pointer is 24-bit. */
 }
-static void MT_DMA_READ_LENGTH(int rt)
+static void MT_DMA_READ_LENGTH(unsigned int rt)
 {
     *CR[0x2] = SR[rt] | 07;
     SP_DMA_READ();
     return;
 }
-static void MT_DMA_WRITE_LENGTH(int rt)
+static void MT_DMA_WRITE_LENGTH(unsigned int rt)
 {
     *CR[0x3] = SR[rt] | 07;
     SP_DMA_WRITE();
     return;
 }
-static void MT_SP_STATUS(int rt)
+static void MT_SP_STATUS(unsigned int rt)
 {
     pu32 MI_INTR_REG;
     pu32 SP_STATUS_REG;
@@ -153,14 +153,14 @@ static void MT_SP_STATUS(int rt)
     CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & 1;
     return;
 }
-static void MT_SP_RESERVED(int rt)
+static void MT_SP_RESERVED(unsigned int rt)
 {
     const u32 source = SR[rt] & 0x00000000ul; /* forced (zilmar, dox) */
 
     GET_RCP_REG(SP_SEMAPHORE_REG) = source;
     return;
 }
-static void MT_CMD_START(int rt)
+static void MT_CMD_START(unsigned int rt)
 {
     const u32 source = SR[rt] & 0xFFFFFFF8ul; /* Funnelcube demo by marshallh */
 
@@ -172,7 +172,7 @@ static void MT_CMD_START(int rt)
   = source;
     return;
 }
-static void MT_CMD_END(int rt)
+static void MT_CMD_END(unsigned int rt)
 {
     if (GET_RCP_REG(DPC_BUFBUSY_REG))
         message("MTC0\nCMD_END"); /* This is just CA-related. */
@@ -182,7 +182,7 @@ static void MT_CMD_END(int rt)
     GET_RSP_INFO(ProcessRdpList)();
     return;
 }
-static void MT_CMD_STATUS(int rt)
+static void MT_CMD_STATUS(unsigned int rt)
 {
     pu32 DPC_STATUS_REG;
 
@@ -203,13 +203,13 @@ static void MT_CMD_STATUS(int rt)
     GET_RCP_REG(DPC_CLOCK_REG)    &= !(SR[rt] & 0x00000200) ? ~0u : 0u;
     return;
 }
-static void MT_CMD_CLOCK(int rt)
+static void MT_CMD_CLOCK(unsigned int rt)
 {
     message("MTC0\nCMD_CLOCK"); /* read-only?? */
     GET_RCP_REG(DPC_CLOCK_REG) = SR[rt];
     return; /* Appendix says this is RW; elsewhere it says R. */
 }
-static void MT_READ_ONLY(int rt)
+static void MT_READ_ONLY(unsigned int rt)
 {
     static char write_to_read_only[] = "Invalid MTC0 from SR[00].";
 
@@ -219,7 +219,7 @@ static void MT_READ_ONLY(int rt)
     return;
 }
 
-static void (*SP_CP0_MT[16])(int) = {
+static void (*SP_CP0_MT[16])(unsigned int) = {
 MT_DMA_CACHE       ,MT_DMA_DRAM        ,MT_DMA_READ_LENGTH ,MT_DMA_WRITE_LENGTH,
 MT_SP_STATUS       ,MT_READ_ONLY       ,MT_READ_ONLY       ,MT_SP_RESERVED,
 MT_CMD_START       ,MT_CMD_END         ,MT_READ_ONLY       ,MT_CMD_STATUS,
@@ -321,7 +321,7 @@ static u16 (*R_VCF[4])(void) = {
 static void (*W_VCF[4])(u16) = {
     set_VCO,set_VCC,rwW_VCE,rwW_VCE,
 };
-void MFC2(int rt, int vs, int e)
+void MFC2(unsigned int rt, unsigned int vs, unsigned int e)
 {
     SR_B(rt, 2) = VR_B(vs, e);
     e = (e + 0x1) & 0xF;
@@ -330,38 +330,38 @@ void MFC2(int rt, int vs, int e)
     SR[0] = 0x00000000;
     return;
 }
-void MTC2(int rt, int vd, int e)
+void MTC2(unsigned int rt, unsigned int vd, unsigned int e)
 {
     VR_B(vd, e+0x0) = SR_B(rt, 2);
     VR_B(vd, e+0x1) = SR_B(rt, 3);
     return; /* If element == 0xF, it does not matter; loads do not wrap over. */
 }
-void CFC2(int rt, int rd)
+void CFC2(unsigned int rt, unsigned int rd)
 {
     SR[rt] = (s16)R_VCF[rd & 3]();
     SR[0] = 0x00000000;
     return;
 }
-void CTC2(int rt, int rd)
+void CTC2(unsigned int rt, unsigned int rd)
 {
     W_VCF[rd & 3](SR[rt] & 0x0000FFFF);
     return;
 }
 
 /*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
-void LBV(int vt, int element, signed int offset, int base)
+void LBV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    const int e = element;
+    const unsigned int e = element;
 
     addr = (SR[base] + 1*offset) & 0x00000FFF;
     VR_B(vt, e) = DMEM[BES(addr)];
     return;
 }
-void LSV(int vt, int element, signed int offset, int base)
+void LSV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
-    int correction;
     register u32 addr;
+    int correction;
     const int e = element;
 
     if (e & 0x1)
@@ -379,10 +379,10 @@ void LSV(int vt, int element, signed int offset, int base)
     VR_S(vt, e) = *(pi16)(DMEM + addr - HES(0x000)*(correction - 1));
     return;
 }
-void LLV(int vt, int element, signed int offset, int base)
+void LLV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
-    int correction;
     register u32 addr;
+    int correction;
     const int e = element;
 
     if (e & 0x1)
@@ -402,10 +402,10 @@ void LLV(int vt, int element, signed int offset, int base)
     VR_S(vt, e+0x2) = *(pi16)(DMEM + addr + correction);
     return;
 }
-void LDV(int vt, int element, signed int offset, int base)
+void LDV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    const int e = element;
+    const unsigned int e = element;
 
     if (e & 0x1)
     {
@@ -487,19 +487,19 @@ void LDV(int vt, int element, signed int offset, int base)
             return;
     }
 }
-void SBV(int vt, int element, signed int offset, int base)
+void SBV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    const int e = element;
+    const unsigned int e = element;
 
     addr = (SR[base] + 1*offset) & 0x00000FFF;
     DMEM[BES(addr)] = VR_B(vt, e);
     return;
 }
-void SSV(int vt, int element, signed int offset, int base)
+void SSV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    const int e = element;
+    const unsigned int e = element;
 
     addr = (SR[base] + 2*offset) & 0x00000FFF;
     DMEM[BES(addr)] = VR_B(vt, (e + 0x0));
@@ -507,11 +507,11 @@ void SSV(int vt, int element, signed int offset, int base)
     DMEM[BES(addr)] = VR_B(vt, (e + 0x1) & 0xF);
     return;
 }
-void SLV(int vt, int element, signed int offset, int base)
+void SLV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
-    int correction;
     register u32 addr;
-    const int e = element;
+    int correction;
+    const unsigned int e = element;
 
     if ((e & 0x1) || e > 0xC) /* must support illegal even elements in F3DEX2 */
     {
@@ -530,7 +530,7 @@ void SLV(int vt, int element, signed int offset, int base)
     *(pi16)(DMEM + addr + correction) = VR_S(vt, e+0x2);
     return;
 }
-void SDV(int vt, int element, signed int offset, int base)
+void SDV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
     const unsigned int e = element;
@@ -626,7 +626,11 @@ static const char digits[16] = {
     '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
 };
 
-NOINLINE void res_lsw(int vt, int element, signed int offset, int base)
+NOINLINE void res_lsw(
+    unsigned vt,
+    unsigned element,
+    signed offset,
+    unsigned base)
 {
     transfer_debug[10] = '0' + (unsigned char)vt/10;
     transfer_debug[11] = '0' + (unsigned char)vt%10;
@@ -648,7 +652,7 @@ NOINLINE void res_lsw(int vt, int element, signed int offset, int base)
  * Group II vector loads and stores:
  * PV and UV (As of RCP implementation, XV and ZV are reserved opcodes.)
  */
-void LPV(int vt, int element, signed int offset, int base)
+void LPV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
     register int b;
@@ -760,21 +764,20 @@ void LPV(int vt, int element, signed int offset, int base)
             return;
     }
 }
-void LUV(int vt, int element, signed int offset, int base)
+void LUV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    register int b;
-    int e = element;
+    register unsigned int b;
+    const unsigned int e = element;
 
     addr = (SR[base] + 8*offset) & 0x00000FFF;
     if (e != 0x0)
     { /* "Mia Hamm Soccer 64" SP exception override (zilmar) */
-        addr += -e & 0xF;
+        addr += (~e + 0x1) & 0xF;
         for (b = 0; b < 8; b++)
         {
             VR[vt][b] = DMEM[BES(addr &= 0x00000FFF)] << 7;
-            --e;
-            addr -= 16 * (e == 0x0);
+            addr -= 16 * (e - b - 1 == 0x0);
             ++addr;
         }
         return;
@@ -879,11 +882,11 @@ void LUV(int vt, int element, signed int offset, int base)
             return;
     }
 }
-void SPV(int vt, int element, signed int offset, int base)
+void SPV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
-    register int b;
     register u32 addr;
-    const int e = element;
+    register unsigned int b;
+    const unsigned int e = element;
 
     if (e != 0x0)
     {
@@ -991,11 +994,11 @@ void SPV(int vt, int element, signed int offset, int base)
             return;
     }
 }
-void SUV(int vt, int element, signed int offset, int base)
+void SUV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
-    register int b;
     register u32 addr;
-    const int e = element;
+    register unsigned int b;
+    const unsigned int e = element;
 
     if (e != 0x0)
     {
@@ -1039,10 +1042,10 @@ void SUV(int vt, int element, signed int offset, int base)
  * Group III vector loads and stores:
  * HV, FV, and AV (As of RCP implementation, AV opcodes are reserved.)
  */
-void LHV(int vt, int element, signed int offset, int base)
+void LHV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    const int e = element;
+    const unsigned int e = element;
 
     if (e != 0x0)
     {
@@ -1066,15 +1069,15 @@ void LHV(int vt, int element, signed int offset, int base)
     VR[vt][00] = DMEM[addr + HES(0x000)] << 7;
     return;
 }
-void LFV(int vt, int element, signed int offset, int base)
+void LFV(unsigned vt, unsigned element, signed offset, unsigned base)
 { /* Dummy implementation only:  Do any games execute this? */
     res_lsw(vt, element, offset, base);
     return;
 }
-void SHV(int vt, int element, signed int offset, int base)
+void SHV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    const int e = element;
+    const unsigned int e = element;
 
     if (e != 0x0)
     {
@@ -1098,10 +1101,10 @@ void SHV(int vt, int element, signed int offset, int base)
     DMEM[addr + HES(0x000)] = (u8)(VR[vt][00] >> 7);
     return;
 }
-void SFV(int vt, int element, signed int offset, int base)
+void SFV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    const int e = element;
+    const unsigned int e = element;
 
     addr = (SR[base] + 16*offset) & 0x00000FFF;
     addr &= 0x00000FF3;
@@ -1130,11 +1133,11 @@ void SFV(int vt, int element, signed int offset, int base)
  * Group IV vector loads and stores:
  * QV and RV
  */
-void LQV(int vt, int element, signed int offset, int base)
+void LQV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    register int b;
-    const int e = element; /* Boss Game Studios illegal elements */
+    register unsigned int b;
+    const unsigned int e = element; /* Boss Game Studios illegal elements */
 
     if (e & 0x1)
     {
@@ -1205,11 +1208,11 @@ void LQV(int vt, int element, signed int offset, int base)
             return;
     }
 }
-void LRV(int vt, int element, signed int offset, int base)
+void LRV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    register int b;
-    const int e = element;
+    register unsigned int b;
+    const unsigned int e = element;
 
     if (e != 0x0)
     {
@@ -1272,11 +1275,11 @@ void LRV(int vt, int element, signed int offset, int base)
             return;
     }
 }
-void SQV(int vt, int element, signed int offset, int base)
+void SQV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    register int b;
-    const int e = element;
+    register unsigned int b;
+    const unsigned int e = element;
 
     addr = (SR[base] + 16*offset) & 0x00000FFF;
     if (e != 0x0)
@@ -1336,11 +1339,11 @@ void SQV(int vt, int element, signed int offset, int base)
             return;
     }
 }
-void SRV(int vt, int element, signed int offset, int base)
+void SRV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
-    register int b;
-    const int e = element;
+    register unsigned int b;
+    const unsigned int e = element;
 
     if (e != 0x0)
     {
@@ -1408,11 +1411,11 @@ void SRV(int vt, int element, signed int offset, int base)
  * Group V vector loads and stores
  * TV and SWV (As of RCP implementation, LTWV opcode was undesired.)
  */
-void LTV(int vt, int element, signed int offset, int base)
+void LTV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
-    register int i;
     register u32 addr;
-    const int e = element;
+    register unsigned int i;
+    const unsigned int e = element;
 
     if (e & 1)
     {
@@ -1431,19 +1434,19 @@ void LTV(int vt, int element, signed int offset, int base)
         return;
     }
     for (i = 0; i < 8; i++) /* SGI screwed LTV up on N64.  See STV instead. */
-        VR[vt+i][(-e/2 + i) & 07] = *(pi16)(DMEM + addr + HES(2*i));
+        VR[vt+i][(e/-2 + i) & 07] = *(pi16)(DMEM + addr + HES(2*i));
     return;
 }
-void SWV(int vt, int element, signed int offset, int base)
+void SWV(unsigned vt, unsigned element, signed offset, unsigned base)
 { /* Dummy implementation only:  Do any games execute this? */
     res_lsw(vt, element, offset, base);
     return;
 }
-void STV(int vt, int element, signed int offset, int base)
+void STV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
-    register int i;
     register u32 addr;
-    const int e = element;
+    register unsigned int i;
+    const unsigned int e = element;
 
     if (e & 1)
     {
@@ -1467,7 +1470,7 @@ void STV(int vt, int element, signed int offset, int base)
 }
 
 /*** Modern pseudo-operations (not real instructions, but nice shortcuts) ***/
-void ULW(int rd, u32 addr)
+void ULW(unsigned int rd, u32 addr)
 { /* "Unaligned Load Word" */
     if (addr & 0x00000001)
     {
@@ -1489,7 +1492,7 @@ void ULW(int rd, u32 addr)
  /* SR[0] = 0x00000000; */
     return;
 }
-void USW(int rs, u32 addr)
+void USW(unsigned int rs, u32 addr)
 { /* "Unaligned Store Word" */
     SR_temp.W = SR[rs];
     if (addr & 0x00000001)
@@ -1531,11 +1534,11 @@ mwc2_func SWC2[2 * 8*2] = {
 
 NOINLINE void run_task(void)
 {
-    register int PC;
+    register unsigned int PC;
 
     if (CFG_WAIT_FOR_CPU_HOST != 0)
     {
-        register int i;
+        register unsigned int i;
 
         for (i = 0; i < 32; i++)
             MFC0_count[i] = 0;
@@ -1569,7 +1572,7 @@ EX:
         rt = (inst >> 16) & 31;
         rd = (u16)(inst) >> 11;
         base = rs & 31;
-#if 0
+#ifdef _DEBUG
         SR[0] = 0x00000000; /* already handled on per-instruction basis */
 #endif
         switch (op)

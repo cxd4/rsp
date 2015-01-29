@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.21                                                         *
+* Release:  2015.01.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -264,10 +264,10 @@ static const int log_mask[1 << 4] = { /* inverse logarithms, truncated to int */
     8 - 1, 8 - 1, 8 - 1, 8 - 1, 8 - 1, 8 - 1, 8 - 1, 8 - 1,
 };
 
-INLINE VECTOR_OPERATION SHUFFLE_VECTOR(v16 vd, const int e)
+INLINE VECTOR_OPERATION SHUFFLE_VECTOR(v16 vd, const unsigned int e)
 {
     i16 SV[8];
-    register int i, j;
+    register unsigned int i, j;
 
 #if (0 == 0)
     j = log_mask[e];
@@ -276,16 +276,16 @@ INLINE VECTOR_OPERATION SHUFFLE_VECTOR(v16 vd, const int e)
 #else
     if (e & 0x8)
         for (i = 0; i < N; i++)
-            SV[i] = vd[(i & 0x0) | (e & 0x7)];
+            SV[i] = vd[(i & ~0x7) | (e & 0x7)];
     else if (e & 0x4)
         for (i = 0; i < N; i++)
-            SV[i] = vd[(i & 0xC) | (e & 0x3)];
+            SV[i] = vd[(i & ~0x3) | (e & 0x3)];
     else if (e & 0x2)
         for (i = 0; i < N; i++)
-            SV[i] = vd[(i & 0xE) | (e & 0x1)];
+            SV[i] = vd[(i & ~0x1) | (e & 0x1)];
     else /* if ((e == 0b0000) || (e == 0b0001)) */
         for (i = 0; i < N; i++)
-            SV[i] = vd[(i & 0x7) | (e & 0x0)];
+            SV[i] = vd[(i & ~0x0) | (e & 0x0)];
 #endif
     vector_copy(vd, SV);
     return;
