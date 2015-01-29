@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.28                                                         *
+* Release:  2015.01.29                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -362,7 +362,7 @@ void LSV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
     int correction;
-    const int e = element;
+    const unsigned int e = element;
 
     if (e & 0x1)
     {
@@ -383,7 +383,7 @@ void LLV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
     int correction;
-    const int e = element;
+    const unsigned int e = element;
 
     if (e & 0x1)
     {
@@ -656,7 +656,7 @@ void LPV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
     register int b;
-    const int e = element;
+    const unsigned int e = element;
 
     if (e != 0x0)
     {
