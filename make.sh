@@ -18,7 +18,7 @@ OBJ_LIST="\
 FLAGS_ANSI="\
     -O3 \
     -DPLUGIN_API_VERSION=0x0101 \
-    -march-native \
+    -march=native \
     -mstackrealign \
     -Wall \
     -pedantic"
@@ -26,7 +26,7 @@ FLAGS_x86="\
     -O3 \
     -DPLUGIN_API_VERSION=0x0101 \
     -DARCH_MIN_SSE2 \
-    -march-native \
+    -march=native \
     -mstackrealign \
     -Wall \
     -pedantic"
