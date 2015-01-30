@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.28                                                         *
+* Release:  2015.01.30                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -153,7 +153,7 @@ extern u8 get_VCE(void);
 extern void set_VCO(u16 VCO);
 extern void set_VCC(u16 VCC);
 extern void set_VCE(u8 VCE);
-extern i16 vce[8];
+extern i16 cf_vce[8];
 
 extern u16 rwR_VCE(void);
 extern void rwW_VCE(u16 VCE);

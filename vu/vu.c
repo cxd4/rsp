@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.28                                                         *
+* Release:  2015.01.30                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -35,11 +35,11 @@ ALIGNED i16 V_result[N];
  * However, since SSE2 uses 128-bit XMM's, and Win32 `int` storage is 32-bit,
  * we have the problem of 32*8 > 128 bits, so we use `short` to reduce packs.
  */
-ALIGNED i16 ne[8]; /* $vco:  high byte "NOTEQUAL" */
-ALIGNED i16 co[8]; /* $vco:  low byte "carry/borrow in/out" */
-ALIGNED i16 clip[8]; /* $vcc:  high byte (clip tests:  VCL, VCH, VCR) */
-ALIGNED i16 comp[8]; /* $vcc:  low byte (VEQ, VNE, VLT, VGE, VCL, VCH, VCR) */
-ALIGNED i16 vce[8]; /* $vce:  vector compare extension register */
+ALIGNED i16 cf_ne[N]; /* $vco:  high "NOTEQUAL" */
+ALIGNED i16 cf_co[N]; /* $vco:  low "carry/borrow in/out" */
+ALIGNED i16 cf_clip[N]; /* $vcc:  high (clip tests:  VCL, VCH, VCR) */
+ALIGNED i16 cf_comp[N]; /* $vcc:  low (VEQ, VNE, VLT, VGE, VCL, VCH, VCR) */
+ALIGNED i16 cf_vce[N]; /* $vce:  vector compare extension register */
 
 VECTOR_OPERATION res_V(v16 vs, v16 vt)
 {
@@ -88,22 +88,22 @@ u16 get_VCO(void)
     register u16 VCO;
 
     VCO = 0x0000
-      | (ne[0xF % 8] << 0xF)
-      | (ne[0xE % 8] << 0xE)
-      | (ne[0xD % 8] << 0xD)
-      | (ne[0xC % 8] << 0xC)
-      | (ne[0xB % 8] << 0xB)
-      | (ne[0xA % 8] << 0xA)
-      | (ne[0x9 % 8] << 0x9)
-      | (ne[0x8 % 8] << 0x8)
-      | (co[0x7 % 8] << 0x7)
-      | (co[0x6 % 8] << 0x6)
-      | (co[0x5 % 8] << 0x5)
-      | (co[0x4 % 8] << 0x4)
-      | (co[0x3 % 8] << 0x3)
-      | (co[0x2 % 8] << 0x2)
-      | (co[0x1 % 8] << 0x1)
-      | (co[0x0 % 8] << 0x0);
+      | (cf_ne[0xF % 8] << 0xF)
+      | (cf_ne[0xE % 8] << 0xE)
+      | (cf_ne[0xD % 8] << 0xD)
+      | (cf_ne[0xC % 8] << 0xC)
+      | (cf_ne[0xB % 8] << 0xB)
+      | (cf_ne[0xA % 8] << 0xA)
+      | (cf_ne[0x9 % 8] << 0x9)
+      | (cf_ne[0x8 % 8] << 0x8)
+      | (cf_co[0x7 % 8] << 0x7)
+      | (cf_co[0x6 % 8] << 0x6)
+      | (cf_co[0x5 % 8] << 0x5)
+      | (cf_co[0x4 % 8] << 0x4)
+      | (cf_co[0x3 % 8] << 0x3)
+      | (cf_co[0x2 % 8] << 0x2)
+      | (cf_co[0x1 % 8] << 0x1)
+      | (cf_co[0x0 % 8] << 0x0);
     return (VCO); /* Big endian becomes little. */
 }
 u16 get_VCC(void)
@@ -111,22 +111,22 @@ u16 get_VCC(void)
     register u16 VCC;
 
     VCC = 0x0000
-      | (clip[0xF % 8] << 0xF)
-      | (clip[0xE % 8] << 0xE)
-      | (clip[0xD % 8] << 0xD)
-      | (clip[0xC % 8] << 0xC)
-      | (clip[0xB % 8] << 0xB)
-      | (clip[0xA % 8] << 0xA)
-      | (clip[0x9 % 8] << 0x9)
-      | (clip[0x8 % 8] << 0x8)
-      | (comp[0x7 % 8] << 0x7)
-      | (comp[0x6 % 8] << 0x6)
-      | (comp[0x5 % 8] << 0x5)
-      | (comp[0x4 % 8] << 0x4)
-      | (comp[0x3 % 8] << 0x3)
-      | (comp[0x2 % 8] << 0x2)
-      | (comp[0x1 % 8] << 0x1)
-      | (comp[0x0 % 8] << 0x0);
+      | (cf_clip[0xF % 8] << 0xF)
+      | (cf_clip[0xE % 8] << 0xE)
+      | (cf_clip[0xD % 8] << 0xD)
+      | (cf_clip[0xC % 8] << 0xC)
+      | (cf_clip[0xB % 8] << 0xB)
+      | (cf_clip[0xA % 8] << 0xA)
+      | (cf_clip[0x9 % 8] << 0x9)
+      | (cf_clip[0x8 % 8] << 0x8)
+      | (cf_comp[0x7 % 8] << 0x7)
+      | (cf_comp[0x6 % 8] << 0x6)
+      | (cf_comp[0x5 % 8] << 0x5)
+      | (cf_comp[0x4 % 8] << 0x4)
+      | (cf_comp[0x3 % 8] << 0x3)
+      | (cf_comp[0x2 % 8] << 0x2)
+      | (cf_comp[0x1 % 8] << 0x1)
+      | (cf_comp[0x0 % 8] << 0x0);
     return (VCC); /* Big endian becomes little. */
 }
 u8 get_VCE(void)
@@ -135,14 +135,14 @@ u8 get_VCE(void)
     register u8 VCE;
 
     result = 0x00
-      | (vce[07] << 0x7)
-      | (vce[06] << 0x6)
-      | (vce[05] << 0x5)
-      | (vce[04] << 0x4)
-      | (vce[03] << 0x3)
-      | (vce[02] << 0x2)
-      | (vce[01] << 0x1)
-      | (vce[00] << 0x0);
+      | (cf_vce[07] << 0x7)
+      | (cf_vce[06] << 0x6)
+      | (cf_vce[05] << 0x5)
+      | (cf_vce[04] << 0x4)
+      | (cf_vce[03] << 0x3)
+      | (cf_vce[02] << 0x2)
+      | (cf_vce[01] << 0x1)
+      | (cf_vce[00] << 0x0);
     VCE = result & 0xFF;
     return (VCE); /* Big endian becomes little. */
 }
@@ -152,8 +152,8 @@ u16 get_VCO(void)
     v16 xmm, hi, lo;
     register u16 VCO;
 
-    hi = _mm_load_si128((v16 *)ne);
-    lo = _mm_load_si128((v16 *)co);
+    hi = _mm_load_si128((v16 *)cf_ne);
+    lo = _mm_load_si128((v16 *)cf_co);
 
 /*
  * Rotate Boolean storage from LSB to MSB.
@@ -170,8 +170,8 @@ u16 get_VCC(void)
     v16 xmm, hi, lo;
     register u16 VCC;
 
-    hi = _mm_load_si128((v16 *)clip);
-    lo = _mm_load_si128((v16 *)comp);
+    hi = _mm_load_si128((v16 *)cf_clip);
+    lo = _mm_load_si128((v16 *)cf_comp);
 
 /*
  * Rotate Boolean storage from LSB to MSB.
@@ -189,7 +189,7 @@ u8 get_VCE(void)
     register u8 VCE;
 
     hi = _mm_setzero_si128();
-    lo = _mm_load_si128((v16 *)vce);
+    lo = _mm_load_si128((v16 *)cf_vce);
 
     lo = _mm_slli_epi16(lo, 15); /* Rotate Boolean storage from LSB to MSB. */
 
@@ -207,28 +207,28 @@ void set_VCO(u16 VCO)
 {
     register int i;
 
-    for (i = 0; i < 8; i++)
-        co[i] = (VCO >> (i + 0x0)) & 1;
-    for (i = 0; i < 8; i++)
-        ne[i] = (VCO >> (i + 0x8)) & 1;
+    for (i = 0; i < N; i++)
+        cf_co[i] = (VCO >> (i + 0x0)) & 1;
+    for (i = 0; i < N; i++)
+        cf_ne[i] = (VCO >> (i + 0x8)) & 1;
     return; /* Little endian becomes big. */
 }
 void set_VCC(u16 VCC)
 {
     register int i;
 
-    for (i = 0; i < 8; i++)
-        comp[i] = (VCC >> (i + 0x0)) & 1;
-    for (i = 0; i < 8; i++)
-        clip[i] = (VCC >> (i + 0x8)) & 1;
+    for (i = 0; i < N; i++)
+        cf_comp[i] = (VCC >> (i + 0x0)) & 1;
+    for (i = 0; i < N; i++)
+        cf_clip[i] = (VCC >> (i + 0x8)) & 1;
     return; /* Little endian becomes big. */
 }
 void set_VCE(u8 VCE)
 {
     register int i;
 
-    for (i = 0; i < 8; i++)
-        vce[i] = (VCE >> i) & 1;
+    for (i = 0; i < N; i++)
+        cf_vce[i] = (VCE >> i) & 1;
     return; /* Little endian becomes big. */
 }
 
@@ -237,7 +237,7 @@ void set_VCE(u8 VCE)
  * vector-scalar element decoding
  * Obsolete.  Consider using at least the SSE2 algorithms instead.
  */
-static const int ei[1 << 4][8] = {
+static const int ei[1 << 4][N] = {
     { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none (vector-only operand) */
     { 00, 01, 02, 03, 04, 05, 06, 07 },
     { 00, 00, 02, 02, 04, 04, 06, 06 }, /* 0Q */

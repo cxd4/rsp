@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.29                                                         *
+* Release:  2015.01.30                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -311,7 +311,7 @@ void rwW_VCE(u16 VCE)
 
     VCE = 0x00 | (VCE & 0xFF);
     for (i = 0; i < 8; i++)
-        vce[i] = (VCE >> i) & 1;
+        cf_vce[i] = (VCE >> i) & 1;
     return;
 }
 

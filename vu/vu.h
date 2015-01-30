@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.29                                                         *
+* Release:  2015.01.30                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -250,11 +250,11 @@ extern u16 VCO;
 extern u16 VCC;
 extern u8 VCE;
 
-ALIGNED extern i16 ne[8];
-ALIGNED extern i16 co[8];
-ALIGNED extern i16 clip[8];
-ALIGNED extern i16 comp[8];
-ALIGNED extern i16 vce[8];
+ALIGNED extern i16 cf_ne[N];
+ALIGNED extern i16 cf_co[N];
+ALIGNED extern i16 cf_clip[N];
+ALIGNED extern i16 cf_comp[N];
+ALIGNED extern i16 cf_vce[N];
 
 extern u16 get_VCO(void);
 extern u16 get_VCC(void);
