@@ -25,6 +25,7 @@ FLAGS_ANSI="\
 FLAGS_x86="\
     -O3 \
     -masm=intel \
+    -fPIC \
     -DPLUGIN_API_VERSION=0x0101 \
     -DARCH_MIN_SSE2 \
     -march=native \
