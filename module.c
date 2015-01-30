@@ -200,7 +200,7 @@ NOINLINE void message(const char* body)
     my_free(argv);
 #else
     fputs(body, stdout);
-    putc('\n');
+    putchar('\n');
 #endif
     return;
 }
