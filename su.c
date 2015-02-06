@@ -1434,7 +1434,7 @@ void LTV(unsigned vt, unsigned element, signed offset, unsigned base)
         return;
     }
     for (i = 0; i < 8; i++) /* SGI screwed LTV up on N64.  See STV instead. */
-        VR[vt+i][(e/-2 + i) & 07] = *(pi16)(DMEM + addr + HES(2*i));
+        VR[vt+i][(i - e/2) & 07] = *(pi16)(DMEM + addr + HES(2*i));
     return;
 }
 void SWV(unsigned vt, unsigned element, signed offset, unsigned base)
