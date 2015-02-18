@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.30                                                         *
+* Release:  2015.02.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -40,16 +40,10 @@ extern pu8 IMEM;
 extern u8 conf[32];
 
 /*
- * RSP virtual registers (of scalar unit)
- * The most important are the 32 general-purpose scalar registers.
- * We have the convenience of using a 32-bit machine (Win32) to emulate
- * another 32-bit machine (MIPS/N64), so the most natural way to accurately
- * emulate the scalar GPRs is to use the standard `int` type.  Situations
- * specifically requiring sign-extension or lack thereof are forcibly
- * applied as defined in the MIPS quick reference card and user manuals.
- * Remember that these are not the same "GPRs" as in the MIPS ISA and totally
- * abandon their designated purposes on the master CPU host (the VR4300),
- * hence most of the MIPS names "k0, k1, t0, t1, v0, v1 ..." no longer apply.
+ * general-purpose scalar registers
+ *
+ * based on the MIPS instruction set architecture but without most of the
+ * original register names (for example, no kernel-reserved registers)
  */
 extern i32 SR[32];
 
