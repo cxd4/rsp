@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.30                                                         *
+* Release:  2015.02.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -14,15 +14,6 @@
 \******************************************************************************/
 
 #define EMULATE_STATIC_PC
-
-/*
- * The number of times to tolerate executing `MFC0    $at, $c4`.
- * Replace $at with any register--the timeout limit is per each.
- *
- * Set to a higher value to avoid prematurely quitting the interpreter.
- * Set to a lower value for speed...you could get away with 10 sometimes.
- */
-#define MF_SP_STATUS_TIMEOUT    8192
 
 #include "su.h"
 

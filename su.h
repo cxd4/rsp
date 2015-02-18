@@ -73,6 +73,15 @@ extern short MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
+/*
+ * The number of times to tolerate executing `MFC0    $at, $c4`.
+ * Replace $at with any register--the timeout limit is per each.
+ *
+ * Set to a higher value to avoid prematurely quitting the interpreter.
+ * Set to a lower value for speed...you could get away with 10 sometimes.
+ */
+#define MF_SP_STATUS_TIMEOUT    8192
+
 #define SLOT_OFF    (BASE_OFF + 0x000)
 #define LINK_OFF    (BASE_OFF + 0x004)
 extern void set_PC(unsigned int address);
