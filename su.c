@@ -228,7 +228,9 @@ void SP_DMA_READ(void)
     length = (GET_RCP_REG(SP_RD_LEN_REG) & 0x00000FFFul) >>  0;
     count  = (GET_RCP_REG(SP_RD_LEN_REG) & 0x000FF000ul) >> 12;
     skip   = (GET_RCP_REG(SP_RD_LEN_REG) & 0xFFF00000ul) >> 20;
-    /* length |= 07; // already corrected by mtc0 */
+#ifdef _DEBUG
+    length |= 07; /* already corrected by mtc0 */
+#endif
     ++length;
     ++count;
     skip += length;
@@ -259,7 +261,10 @@ void SP_DMA_WRITE(void)
     length = (GET_RCP_REG(SP_WR_LEN_REG) & 0x00000FFFul) >>  0;
     count  = (GET_RCP_REG(SP_WR_LEN_REG) & 0x000FF000ul) >> 12;
     skip   = (GET_RCP_REG(SP_WR_LEN_REG) & 0xFFF00000ul) >> 20;
-    /* length |= 07; // already corrected by mtc0 */
+
+#ifdef _DEBUG
+    length |= 07; /* already corrected by mtc0 */
+#endif
     ++length;
     ++count;
     skip += length;
