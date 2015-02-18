@@ -72,14 +72,14 @@ void SP_CP0_MF(unsigned int rt, unsigned int rd)
         CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
         return;
     }
+#ifdef WAIT_FOR_CPU_HOST
     if (rd == 0x4)
     {
-        if (CFG_WAIT_FOR_CPU_HOST == 0)
-            return;
         ++MFC0_count[rt];
         GET_RCP_REG(SP_STATUS_REG) |= (MFC0_count[rt] >= MF_SP_STATUS_TIMEOUT);
         CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & 1;
     }
+#endif
     return;
 }
 
