@@ -30,6 +30,13 @@
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ
 #endif
 
+/*
+ * Currently, the plugin system this module is written for doesn't notify us
+ * of how much RDRAM is installed to the system, so we have to presume 8 MiB.
+ */
+#define MAX_DRAM_ADDR           0x007FFFFFul
+#define MAX_DRAM_DMA_ADDR       (MAX_DRAM_ADDR & ~7)
+
 extern int CPU_running;
 
 extern RSP_INFO RSP_INFO_NAME;

@@ -244,7 +244,10 @@ void SP_DMA_READ(void)
         {
             offC = (count*length + *CR[0x0] + i) & 0x00001FF8ul;
             offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8ul;
-            *(pi64)(DMEM + offC) = *(pi64)(DRAM + offD);
+            *(pi64)(DMEM + offC) =
+                *(pi64)(DRAM + offD)
+              & (offD & ~MAX_DRAM_DMA_ADDR ? 0 : ~0) /* 0 if (addr > limit) */
+            ;
             i += 0x008;
         } while (i < length);
     } while (count);
