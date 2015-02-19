@@ -87,7 +87,7 @@ extern short MFC0_count[32];
  * Set to a higher value to avoid prematurely quitting the interpreter.
  * Set to a lower value for speed...you could get away with 10 sometimes.
  */
-#define MF_SP_STATUS_TIMEOUT    8192
+#define MF_SP_STATUS_TIMEOUT    1024
 
 #define SLOT_OFF    (BASE_OFF + 0x000)
 #define LINK_OFF    (BASE_OFF + 0x004)

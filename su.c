@@ -1530,18 +1530,20 @@ mwc2_func SWC2[2 * 8*2] = {
 NOINLINE void run_task(void)
 {
     register unsigned int PC;
+    register unsigned int i;
 
-    if (CFG_WAIT_FOR_CPU_HOST != 0)
-    {
-        register unsigned int i;
-
-        for (i = 0; i < 32; i++)
-            MFC0_count[i] = 0;
-    }
+#ifdef WAIT_FOR_CPU_HOST
+    for (i = 0; i < 32; i++)
+        MFC0_count[i] = 0;
+#endif
     PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));
     CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
 
+#ifdef _DEBUG
+    while ((GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT) == 0)
+#else
     while (CPU_running != 0)
+#endif
     {
         p_vector_func vector_op;
 #ifdef ARCH_MIN_SSE2
@@ -1956,15 +1958,15 @@ BRANCH:
         return;
     else if (GET_RCP_REG(MI_INTR_REG) & 1) /* interrupt set by MTC0 to break */
         GET_RSP_INFO(CheckInterrupts)();
-    else if (CFG_WAIT_FOR_CPU_HOST != 0) /* plugin system hack to re-sync */
-        {}
     else if (*CR[0x7] != 0x00000000) /* semaphore lock fixes */
         {}
+#ifndef WAIT_FOR_CPU_HOST
     else /* ??? unknown, possibly external intervention from CPU memory map */
     {
         message("SP_SET_HALT");
         return;
     }
+#endif
     *CR[0x4] &= ~SP_STATUS_HALT; /* CPU restarts with the correct SIGs. */
     CPU_running = 1;
     return;
