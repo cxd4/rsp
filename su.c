@@ -289,13 +289,6 @@ void SP_DMA_WRITE(void)
 
 /*** Scalar, Coprocessor Operations (vector unit) ***/
 
-/*
- * Since RSP vectors are stored 100% accurately as big-endian arrays for the
- * proper vector operation math to be done, LWC2 and SWC2 emulation code will
- * have to look a little different.  zilmar's method is to distort the endian
- * using an array of unions, permitting hacked byte- and halfword-precision.
- */
-
 u16 rwR_VCE(void)
 { /* never saw a game try to read VCE out to a scalar GPR yet */
     register u16 ret_slot;
