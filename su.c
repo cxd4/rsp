@@ -1574,7 +1574,7 @@ EX:
 #endif
         switch (op)
         {
-            signed int offset;
+            s16 offset;
             register u32 addr;
 
         case 000: /* SPECIAL */
@@ -1906,14 +1906,24 @@ EX:
             CONTINUE;
         case 062: /* LWC2 */
             element = (inst & 0x000007FF) >> 7;
-            offset = (signed)(inst);
-            offset = SE(offset, 6);
+            offset = (s16)(inst);
+#ifdef ARCH_MIN_SSE2
+            offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
+            offset >>= 5 + 4;
+#else
+            offset = SE(offset, 6); /* sign-extended seven-bit offset */
+#endif
             LWC2[rd](rt, element, offset, base);
             CONTINUE;
         case 072: /* SWC2 */
             element = (inst & 0x000007FF) >> 7;
-            offset = (signed)(inst);
-            offset = SE(offset, 6);
+            offset = (s16)(inst);
+#ifdef ARCH_MIN_SSE2
+            offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
+            offset >>= 5 + 4;
+#else
+            offset = SE(offset, 6); /* sign-extended seven-bit offset */
+#endif
             SWC2[rd](rt, element, offset, base);
             CONTINUE;
         default:

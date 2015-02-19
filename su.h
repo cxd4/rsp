@@ -103,6 +103,8 @@ extern void set_PC(unsigned int address);
 
 #define SR_B(s, i)      (*(pi8)(((pi8)(SR + s)) + BES(i)))
 #define SR_S(s, i)      (*(pi16)(((pi8)(SR + s)) + HES(i)))
+
+                     /* (-(x & (1 << b)) | (x)) */
 #define SE(x, b)        (-(x & (1 << b)) | (x & ~(~0 << b)))
 #define ZE(x, b)        (+(x & (1 << b)) | (x & ~(~0 << b)))
 
