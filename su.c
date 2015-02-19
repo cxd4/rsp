@@ -340,6 +340,7 @@ void CTC2(unsigned int rt, unsigned int rd)
 }
 
 /*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
+
 void LBV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
