@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.02.18                                                         *
+* Release:  2015.02.24                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -387,8 +387,14 @@ void LLV(unsigned vt, unsigned element, signed offset, unsigned base)
     } /* Illegal (but still even) elements are used by Boss Game Studios. */
     addr = (SR[base] + 4*offset) & 0x00000FFF;
     if (addr & 0x00000001)
-    {
-        message("LLV\nOdd addr.");
+    { /* branch very unlikely:  "Star Wars:  Battle for Naboo" unaligned addr */
+        VR_A(vt, e+0x0) = DMEM[BES(addr)];
+        addr = (addr + 0x00000001) & 0x00000FFF;
+        VR_U(vt, e+0x1) = DMEM[BES(addr)];
+        addr = (addr + 0x00000001) & 0x00000FFF;
+        VR_A(vt, e+0x2) = DMEM[BES(addr)];
+        addr = (addr + 0x00000001) & 0x00000FFF;
+        VR_U(vt, e+0x3) = DMEM[BES(addr)];
         return;
     }
     correction = HES(0x000)*(addr%0x004 - 1);
