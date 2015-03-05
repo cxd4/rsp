@@ -1668,6 +1668,7 @@ EX:
             {
             case 020: /* BLTZAL */
                 SR[31] = (PC + LINK_OFF) & 0x00000FFC;
+                /* fall through */
             case 000: /* BLTZ */
                 if (!((s32)SR[base] < 0))
                     CONTINUE;
@@ -1675,6 +1676,7 @@ EX:
                 JUMP;
             case 021: /* BGEZAL */
                 SR[31] = (PC + LINK_OFF) & 0x00000FFC;
+                /* fall through */
             case 001: /* BGEZ */
                 if (!((s32)SR[base] >= 0))
                     CONTINUE;
