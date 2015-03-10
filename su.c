@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.30                                                         *
+* Release:  2015.02.24                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -14,15 +14,6 @@
 \******************************************************************************/
 
 #define EMULATE_STATIC_PC
-
-/*
- * The number of times to tolerate executing `MFC0    $at, $c4`.
- * Replace $at with any register--the timeout limit is per each.
- *
- * Set to a higher value to avoid prematurely quitting the interpreter.
- * Set to a lower value for speed...you could get away with 10 sometimes.
- */
-#define MF_SP_STATUS_TIMEOUT    8192
 
 #include "su.h"
 
@@ -76,19 +67,21 @@ void SP_CP0_MF(unsigned int rt, unsigned int rd)
     {
         if (CFG_MEND_SEMAPHORE_LOCK == 0)
             return;
+        if (CFG_HLE_GFX | CFG_HLE_AUD)
+            return;
         GET_RCP_REG(SP_SEMAPHORE_REG) = 0x00000001;
         GET_RCP_REG(SP_STATUS_REG) |= SP_STATUS_HALT; /* temporary hack */
         CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
         return;
     }
+#ifdef WAIT_FOR_CPU_HOST
     if (rd == 0x4)
     {
-        if (CFG_WAIT_FOR_CPU_HOST == 0)
-            return;
         ++MFC0_count[rt];
         GET_RCP_REG(SP_STATUS_REG) |= (MFC0_count[rt] >= MF_SP_STATUS_TIMEOUT);
         CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & 1;
     }
+#endif
     return;
 }
 
@@ -235,7 +228,9 @@ void SP_DMA_READ(void)
     length = (GET_RCP_REG(SP_RD_LEN_REG) & 0x00000FFFul) >>  0;
     count  = (GET_RCP_REG(SP_RD_LEN_REG) & 0x000FF000ul) >> 12;
     skip   = (GET_RCP_REG(SP_RD_LEN_REG) & 0xFFF00000ul) >> 20;
-    /* length |= 07; // already corrected by mtc0 */
+#ifdef _DEBUG
+    length |= 07; /* already corrected by mtc0 */
+#endif
     ++length;
     ++count;
     skip += length;
@@ -249,7 +244,10 @@ void SP_DMA_READ(void)
         {
             offC = (count*length + *CR[0x0] + i) & 0x00001FF8ul;
             offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8ul;
-            *(pi64)(DMEM + offC) = *(pi64)(DRAM + offD);
+            *(pi64)(DMEM + offC) =
+                *(pi64)(DRAM + offD)
+              & (offD & ~MAX_DRAM_DMA_ADDR ? 0 : ~0) /* 0 if (addr > limit) */
+            ;
             i += 0x008;
         } while (i < length);
     } while (count);
@@ -266,7 +264,10 @@ void SP_DMA_WRITE(void)
     length = (GET_RCP_REG(SP_WR_LEN_REG) & 0x00000FFFul) >>  0;
     count  = (GET_RCP_REG(SP_WR_LEN_REG) & 0x000FF000ul) >> 12;
     skip   = (GET_RCP_REG(SP_WR_LEN_REG) & 0xFFF00000ul) >> 20;
-    /* length |= 07; // already corrected by mtc0 */
+
+#ifdef _DEBUG
+    length |= 07; /* already corrected by mtc0 */
+#endif
     ++length;
     ++count;
     skip += length;
@@ -290,13 +291,6 @@ void SP_DMA_WRITE(void)
 }
 
 /*** Scalar, Coprocessor Operations (vector unit) ***/
-
-/*
- * Since RSP vectors are stored 100% accurately as big-endian arrays for the
- * proper vector operation math to be done, LWC2 and SWC2 emulation code will
- * have to look a little different.  zilmar's method is to distort the endian
- * using an array of unions, permitting hacked byte- and halfword-precision.
- */
 
 u16 rwR_VCE(void)
 { /* never saw a game try to read VCE out to a scalar GPR yet */
@@ -349,6 +343,7 @@ void CTC2(unsigned int rt, unsigned int rd)
 }
 
 /*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
+
 void LBV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
     register u32 addr;
@@ -392,8 +387,14 @@ void LLV(unsigned vt, unsigned element, signed offset, unsigned base)
     } /* Illegal (but still even) elements are used by Boss Game Studios. */
     addr = (SR[base] + 4*offset) & 0x00000FFF;
     if (addr & 0x00000001)
-    {
-        message("LLV\nOdd addr.");
+    { /* branch very unlikely:  "Star Wars:  Battle for Naboo" unaligned addr */
+        VR_A(vt, e+0x0) = DMEM[BES(addr)];
+        addr = (addr + 0x00000001) & 0x00000FFF;
+        VR_U(vt, e+0x1) = DMEM[BES(addr)];
+        addr = (addr + 0x00000001) & 0x00000FFF;
+        VR_A(vt, e+0x2) = DMEM[BES(addr)];
+        addr = (addr + 0x00000001) & 0x00000FFF;
+        VR_U(vt, e+0x3) = DMEM[BES(addr)];
         return;
     }
     correction = HES(0x000)*(addr%0x004 - 1);
@@ -1434,7 +1435,7 @@ void LTV(unsigned vt, unsigned element, signed offset, unsigned base)
         return;
     }
     for (i = 0; i < 8; i++) /* SGI screwed LTV up on N64.  See STV instead. */
-        VR[vt+i][(e/-2 + i) & 07] = *(pi16)(DMEM + addr + HES(2*i));
+        VR[vt+i][(i - e/2) & 07] = *(pi16)(DMEM + addr + HES(2*i));
     return;
 }
 void SWV(unsigned vt, unsigned element, signed offset, unsigned base)
@@ -1535,18 +1536,20 @@ mwc2_func SWC2[2 * 8*2] = {
 NOINLINE void run_task(void)
 {
     register unsigned int PC;
+    register unsigned int i;
 
-    if (CFG_WAIT_FOR_CPU_HOST != 0)
-    {
-        register unsigned int i;
-
-        for (i = 0; i < 32; i++)
-            MFC0_count[i] = 0;
-    }
+#ifdef WAIT_FOR_CPU_HOST
+    for (i = 0; i < 32; i++)
+        MFC0_count[i] = 0;
+#endif
     PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));
     CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
 
+#ifdef _DEBUG
+    while ((GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT) == 0)
+#else
     while (CPU_running != 0)
+#endif
     {
         p_vector_func vector_op;
 #ifdef ARCH_MIN_SSE2
@@ -1577,7 +1580,7 @@ EX:
 #endif
         switch (op)
         {
-            signed int offset;
+            s16 offset;
             register u32 addr;
 
         case 000: /* SPECIAL */
@@ -1665,6 +1668,7 @@ EX:
             {
             case 020: /* BLTZAL */
                 SR[31] = (PC + LINK_OFF) & 0x00000FFC;
+                /* fall through */
             case 000: /* BLTZ */
                 if (!((s32)SR[base] < 0))
                     CONTINUE;
@@ -1672,6 +1676,7 @@ EX:
                 JUMP;
             case 021: /* BGEZAL */
                 SR[31] = (PC + LINK_OFF) & 0x00000FFC;
+                /* fall through */
             case 001: /* BGEZ */
                 if (!((s32)SR[base] >= 0))
                     CONTINUE;
@@ -1909,14 +1914,24 @@ EX:
             CONTINUE;
         case 062: /* LWC2 */
             element = (inst & 0x000007FF) >> 7;
-            offset = (signed)(inst);
-            offset = SE(offset, 6);
+            offset = (s16)(inst);
+#ifdef ARCH_MIN_SSE2
+            offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
+            offset >>= 5 + 4;
+#else
+            offset = SE(offset, 6); /* sign-extended seven-bit offset */
+#endif
             LWC2[rd](rt, element, offset, base);
             CONTINUE;
         case 072: /* SWC2 */
             element = (inst & 0x000007FF) >> 7;
-            offset = (signed)(inst);
-            offset = SE(offset, 6);
+            offset = (s16)(inst);
+#ifdef ARCH_MIN_SSE2
+            offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
+            offset >>= 5 + 4;
+#else
+            offset = SE(offset, 6); /* sign-extended seven-bit offset */
+#endif
             SWC2[rd](rt, element, offset, base);
             CONTINUE;
         default:
@@ -1961,15 +1976,15 @@ BRANCH:
         return;
     else if (GET_RCP_REG(MI_INTR_REG) & 1) /* interrupt set by MTC0 to break */
         GET_RSP_INFO(CheckInterrupts)();
-    else if (CFG_WAIT_FOR_CPU_HOST != 0) /* plugin system hack to re-sync */
-        {}
     else if (*CR[0x7] != 0x00000000) /* semaphore lock fixes */
         {}
+#ifndef WAIT_FOR_CPU_HOST
     else /* ??? unknown, possibly external intervention from CPU memory map */
     {
         message("SP_SET_HALT");
         return;
     }
+#endif
     *CR[0x4] &= ~SP_STATUS_HALT; /* CPU restarts with the correct SIGs. */
     CPU_running = 1;
     return;

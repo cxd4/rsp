@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.30                                                         *
+* Release:  2015.02.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -30,6 +30,13 @@
 #define VU_EMULATE_SCALAR_ACCUMULATOR_READ
 #endif
 
+/*
+ * Currently, the plugin system this module is written for doesn't notify us
+ * of how much RDRAM is installed to the system, so we have to presume 8 MiB.
+ */
+#define MAX_DRAM_ADDR           0x007FFFFFul
+#define MAX_DRAM_DMA_ADDR       (MAX_DRAM_ADDR & ~7)
+
 extern int CPU_running;
 
 extern RSP_INFO RSP_INFO_NAME;
@@ -40,16 +47,10 @@ extern pu8 IMEM;
 extern u8 conf[32];
 
 /*
- * RSP virtual registers (of scalar unit)
- * The most important are the 32 general-purpose scalar registers.
- * We have the convenience of using a 32-bit machine (Win32) to emulate
- * another 32-bit machine (MIPS/N64), so the most natural way to accurately
- * emulate the scalar GPRs is to use the standard `int` type.  Situations
- * specifically requiring sign-extension or lack thereof are forcibly
- * applied as defined in the MIPS quick reference card and user manuals.
- * Remember that these are not the same "GPRs" as in the MIPS ISA and totally
- * abandon their designated purposes on the master CPU host (the VR4300),
- * hence most of the MIPS names "k0, k1, t0, t1, v0, v1 ..." no longer apply.
+ * general-purpose scalar registers
+ *
+ * based on the MIPS instruction set architecture but without most of the
+ * original register names (for example, no kernel-reserved registers)
  */
 extern i32 SR[32];
 
@@ -79,6 +80,15 @@ extern short MFC0_count[32];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
+/*
+ * The number of times to tolerate executing `MFC0    $at, $c4`.
+ * Replace $at with any register--the timeout limit is per each.
+ *
+ * Set to a higher value to avoid prematurely quitting the interpreter.
+ * Set to a lower value for speed...you could get away with 10 sometimes.
+ */
+#define MF_SP_STATUS_TIMEOUT    1024
+
 #define SLOT_OFF    (BASE_OFF + 0x000)
 #define LINK_OFF    (BASE_OFF + 0x004)
 extern void set_PC(unsigned int address);
@@ -93,6 +103,8 @@ extern void set_PC(unsigned int address);
 
 #define SR_B(s, i)      (*(pi8)(((pi8)(SR + s)) + BES(i)))
 #define SR_S(s, i)      (*(pi16)(((pi8)(SR + s)) + HES(i)))
+
+                     /* (-(x & (1 << b)) | (x)) */
 #define SE(x, b)        (-(x & (1 << b)) | (x & ~(~0 << b)))
 #define ZE(x, b)        (+(x & (1 << b)) | (x & ~(~0 << b)))
 
