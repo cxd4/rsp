@@ -59,6 +59,8 @@ static word_32 SR_temp;
 pu32 CR[16];
 u8 conf[32];
 
+int MF_SP_STATUS_TIMEOUT;
+
 void SP_CP0_MF(unsigned int rt, unsigned int rd)
 {
     SR[rt] = *(CR[rd]);
@@ -1978,7 +1980,10 @@ BRANCH:
         GET_RSP_INFO(CheckInterrupts)();
     else if (*CR[0x7] != 0x00000000) /* semaphore lock fixes */
         {}
-#ifndef WAIT_FOR_CPU_HOST
+#ifdef WAIT_FOR_CPU_HOST
+    else
+        MF_SP_STATUS_TIMEOUT = 16; /* From now on, wait 16 times, not 32767. */
+#else
     else /* ??? unknown, possibly external intervention from CPU memory map */
     {
         message("SP_SET_HALT");

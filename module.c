@@ -155,6 +155,8 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
     CR[0xD] = &GET_RCP_REG(DPC_BUFBUSY_REG);
     CR[0xE] = &GET_RCP_REG(DPC_PIPEBUSY_REG);
     CR[0xF] = &GET_RCP_REG(DPC_TMEM_REG);
+
+    MF_SP_STATUS_TIMEOUT = 32767;
     return;
 }
 
