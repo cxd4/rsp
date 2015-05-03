@@ -62,6 +62,6 @@ as -o %obj%\vu\divide.o   %obj%\vu\divide.asm
 ECHO.
 
 ECHO Linking assembled object files...
-ld --shared -e _DllMain@12 -o %obj%\rspdebug.dll %OBJ_LIST% -lkernel32
+ld --shared -e _DllMain@12 -o %obj%\rspdebug.dll %OBJ_LIST% %MinGW%\lib\libkernel32.a
 strip -o %obj%/rsp.dll %obj%/rspdebug.dll
 PAUSE
