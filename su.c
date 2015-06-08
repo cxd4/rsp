@@ -1560,8 +1560,8 @@ NOINLINE void run_task(void)
         ALIGNED i16 source[N], target[N];
 #endif
         unsigned int op, base, element;
-        unsigned int rd, rs, rt;
-        unsigned int vd, vs, vt;
+        unsigned int rs, rt;
+        unsigned int vs, vt;
 
         inst = *(pi32)(IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
@@ -1575,7 +1575,6 @@ EX:
         op = inst >> 26;
         rs = inst >> 21; /* &= 31 */
         rt = (inst >> 16) & 31;
-        rd = (u16)(inst) >> 11;
         base = rs & 31;
 #ifdef _DEBUG
         SR[0] = 0x00000000; /* already handled on per-instruction basis */
@@ -1583,9 +1582,11 @@ EX:
         switch (op)
         {
             s16 offset;
+            unsigned int rd, vd;
             register u32 addr;
 
         case 000: /* SPECIAL */
+            rd = (inst & 0x0000FFFF) >> 11;
             switch (inst % 64)
             {
             case 000: /* SLL */
@@ -1743,6 +1744,7 @@ EX:
             SR[0] = 0x00000000;
             CONTINUE;
         case 020: /* COP0 */
+            rd = (inst & 0x0000FFFF) >> 11;
             switch (base)
             {
             case 000: /* MFC0 */
@@ -1758,7 +1760,7 @@ EX:
         case 022: /* COP2 */
             op = inst & 0x0000003F;
             vd = (inst & 0x000007FF) >> 6; /* inst.R.sa */
-            vs = rd;
+            vs = (inst & 0x0000FFFF) >> 11;
             vt = rt;
 
             vector_op = COP2_C2[op];
@@ -1923,6 +1925,7 @@ EX:
 #else
             offset = SE(offset, 6); /* sign-extended seven-bit offset */
 #endif
+            rd = (inst & 0x0000FFFF) >> 11;
             LWC2[rd](rt, element, offset, base);
             CONTINUE;
         case 072: /* SWC2 */
@@ -1934,6 +1937,7 @@ EX:
 #else
             offset = SE(offset, 6); /* sign-extended seven-bit offset */
 #endif
+            rd = (inst & 0x0000FFFF) >> 11;
             SWC2[rd](rt, element, offset, base);
             CONTINUE;
         default:
