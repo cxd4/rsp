@@ -1559,9 +1559,9 @@ NOINLINE void run_task(void)
 #else
         ALIGNED i16 source[N], target[N];
 #endif
-        unsigned int op, base, element;
-        unsigned int rs, rt;
-        unsigned int vs, vt;
+        unsigned int op, element;
+        unsigned int rt;
+        unsigned int vt;
 
         inst = *(pi32)(IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
@@ -1573,9 +1573,7 @@ EX:
 #endif
 
         op = inst >> 26;
-        rs = inst >> 21; /* &= 31 */
         rt = (inst >> 16) & 31;
-        base = rs & 31;
 #ifdef _DEBUG
         SR[0] = 0x00000000; /* already handled on per-instruction basis */
 #endif
@@ -1583,6 +1581,8 @@ EX:
         {
             s16 offset;
             unsigned int rd, vd;
+            unsigned int rs, vs;
+            unsigned int base; /* a synonym of `rs' for memory load/store ops */
             register u32 addr;
 
         case 000: /* SPECIAL */
@@ -1602,14 +1602,17 @@ EX:
                 SR[0] = 0x00000000;
                 CONTINUE;
             case 004: /* SLLV */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rt] << MASK_SA(SR[rs]);
                 SR[0] = 0x00000000;
                 CONTINUE;
             case 006: /* SRLV */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = (u32)(SR[rt]) >> MASK_SA(SR[rs]);
                 SR[0] = 0x00000000;
                 CONTINUE;
             case 007: /* SRAV */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = (s32)(SR[rt]) >> MASK_SA(SR[rs]);
                 SR[0] = 0x00000000;
                 CONTINUE;
@@ -1617,6 +1620,7 @@ EX:
                 SR[rd] = (PC + LINK_OFF) & 0x00000FFC;
                 SR[0] = 0x00000000;
             case 010: /* JR */
+                rs = SPECIAL_DECODE_RS(inst);
                 set_PC(SR[rs]);
                 JUMP;
             case 015: /* BREAK */
@@ -1630,35 +1634,43 @@ EX:
                 CONTINUE;
             case 040: /* ADD */
             case 041: /* ADDU */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] + SR[rt];
                 SR[0] = 0x00000000; /* needed for Rareware ucodes */
                 CONTINUE;
             case 042: /* SUB */
             case 043: /* SUBU */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] - SR[rt];
                 SR[0] = 0x00000000;
                 CONTINUE;
             case 044: /* AND */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] & SR[rt];
                 SR[0] = 0x00000000; /* needed for Rareware ucodes */
                 CONTINUE;
             case 045: /* OR */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] | SR[rt];
                 SR[0] = 0x00000000;
                 CONTINUE;
             case 046: /* XOR */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] ^ SR[rt];
                 SR[0] = 0x00000000;
                 CONTINUE;
             case 047: /* NOR */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = ~(SR[rs] | SR[rt]);
                 SR[0] = 0x00000000;
                 CONTINUE;
             case 052: /* SLT */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = ((s32)(SR[rs]) < (s32)(SR[rt]));
                 SR[0] = 0x00000000;
                 CONTINUE;
             case 053: /* SLTU */
+                rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = ((u32)(SR[rs]) < (u32)(SR[rt]));
                 SR[0] = 0x00000000;
                 CONTINUE;
@@ -1667,13 +1679,14 @@ EX:
                 CONTINUE;
             }
         case 001: /* REGIMM */
+            rs = (inst >> 21) & 31;
             switch (rt)
             {
             case 020: /* BLTZAL */
                 SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                 /* fall through */
             case 000: /* BLTZ */
-                if (!((s32)SR[base] < 0))
+                if (!((s32)SR[rs] < 0))
                     CONTINUE;
                 set_PC(PC + 4*inst + SLOT_OFF);
                 JUMP;
@@ -1681,7 +1694,7 @@ EX:
                 SR[31] = (PC + LINK_OFF) & 0x00000FFC;
                 /* fall through */
             case 001: /* BGEZ */
-                if (!((s32)SR[base] >= 0))
+                if (!((s32)SR[rs] >= 0))
                     CONTINUE;
                 set_PC(PC + 4*inst + SLOT_OFF);
                 JUMP;
@@ -1695,48 +1708,58 @@ EX:
             set_PC(4*inst);
             JUMP;
         case 004: /* BEQ */
-            if (!(SR[base] == SR[rt]))
+            rs = (inst >> 21) & 31;
+            if (!(SR[rs] == SR[rt]))
                 CONTINUE;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 005: /* BNE */
-            if (!(SR[base] != SR[rt]))
+            rs = (inst >> 21) & 31;
+            if (!(SR[rs] != SR[rt]))
                 CONTINUE;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 006: /* BLEZ */
-            if (!((s32)SR[base] <= 0x00000000))
+            rs = (inst >> 21) & 31;
+            if (!((s32)SR[rs] <= 0x00000000))
                 CONTINUE;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 007: /* BGTZ */
-            if (!((s32)SR[base] >  0x00000000))
+            rs = (inst >> 21) & 31;
+            if (!((s32)SR[rs] >  0x00000000))
                 CONTINUE;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 010: /* ADDI */
         case 011: /* ADDIU */
-            SR[rt] = SR[base] + (s16)(inst);
+            rs = (inst >> 21) & 31;
+            SR[rt] = SR[rs] + (s16)(inst);
             SR[0] = 0x00000000;
             CONTINUE;
         case 012: /* SLTI */
-            SR[rt] = ((s32)(SR[base]) < (s16)(inst));
+            rs = (inst >> 21) & 31;
+            SR[rt] = ((s32)(SR[rs]) < (s16)(inst));
             SR[0] = 0x00000000;
             CONTINUE;
         case 013: /* SLTIU */
-            SR[rt] = ((u32)(SR[base]) < (u16)(inst));
+            rs = (inst >> 21) & 31;
+            SR[rt] = ((u32)(SR[rs]) < (u16)(inst));
             SR[0] = 0x00000000;
             CONTINUE;
         case 014: /* ANDI */
-            SR[rt] = SR[base] & (inst & 0x0000FFFF);
+            rs = (inst >> 21) & 31;
+            SR[rt] = SR[rs] & (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
             CONTINUE;
         case 015: /* ORI */
-            SR[rt] = SR[base] | (inst & 0x0000FFFF);
+            rs = (inst >> 21) & 31;
+            SR[rt] = SR[rs] | (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
             CONTINUE;
         case 016: /* XORI */
-            SR[rt] = SR[base] ^ (inst & 0x0000FFFF);
+            rs = (inst >> 21) & 31;
+            SR[rt] = SR[rs] ^ (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
             CONTINUE;
         case 017: /* LUI */
@@ -1745,7 +1768,7 @@ EX:
             CONTINUE;
         case 020: /* COP0 */
             rd = (inst & 0x0000FFFF) >> 11;
-            switch (base)
+            switch (rs = (inst >> 21) & 31)
             {
             case 000: /* MFC0 */
                 SP_CP0_MF(rt, rd & 0xF);
@@ -1759,8 +1782,8 @@ EX:
             }
         case 022: /* COP2 */
             op = inst & 0x0000003F;
-            vd = (inst & 0x000007FF) >> 6; /* inst.R.sa */
-            vs = (inst & 0x0000FFFF) >> 11;
+            vd = (inst & 0x000007FF) >>  6; /* inst.R.sa */
+            vs = (inst & 0x0000FFFF) >> 11; /* inst.R.rd */
             vt = rt;
 
             vector_op = COP2_C2[op];
@@ -1769,7 +1792,7 @@ EX:
 #else
             vector_copy(source, VR[vs]);
 #endif
-            switch (base)
+            switch (rs = (inst >> 21) & 31)
             {
             case 000:
                 MFC2(vt, vs, vd >>= 1);
@@ -1835,6 +1858,8 @@ EX:
             }
         case 040: /* LB */
             offset = (s16)(inst);
+            base = (inst >> 21) & 31;
+
             addr = (SR[base] + offset) & 0x00000FFF;
             SR[rt] = DMEM[BES(addr)];
             SR[rt] = (s8)(SR[rt]);
@@ -1842,6 +1867,8 @@ EX:
             CONTINUE;
         case 041: /* LH */
             offset = (s16)(inst);
+            base = (inst >> 21) & 31;
+
             addr = (SR[base] + offset) & 0x00000FFF;
             if (addr%0x004 == 0x003)
             {
@@ -1859,6 +1886,8 @@ EX:
             CONTINUE;
         case 043: /* LW */
             offset = (s16)(inst);
+            base = (inst >> 21) & 31;
+
             addr = (SR[base] + offset) & 0x00000FFF;
             if (addr%0x004 != 0x000)
                 ULW(rt, addr);
@@ -1868,6 +1897,8 @@ EX:
             CONTINUE;
         case 044: /* LBU */
             offset = (s16)(inst);
+            base = (inst >> 21) & 31;
+
             addr = (SR[base] + offset) & 0x00000FFF;
             SR[rt] = DMEM[BES(addr)];
             SR[rt] = (u8)(SR[rt]);
@@ -1875,6 +1906,8 @@ EX:
             CONTINUE;
         case 045: /* LHU */
             offset = (s16)(inst);
+            base = (inst >> 21) & 31;
+
             addr = (SR[base] + offset) & 0x00000FFF;
             if (addr%0x004 == 0x003)
             {
@@ -1892,11 +1925,15 @@ EX:
             CONTINUE;
         case 050: /* SB */
             offset = (s16)(inst);
+            base = (inst >> 21) & 31;
+
             addr = (SR[base] + offset) & 0x00000FFF;
             DMEM[BES(addr)] = (u8)(SR[rt]);
             CONTINUE;
         case 051: /* SH */
             offset = (s16)(inst);
+            base = (inst >> 21) & 31;
+
             addr = (SR[base] + offset) & 0x00000FFF;
             if (addr%0x004 == 0x003)
             {
@@ -1910,6 +1947,8 @@ EX:
             CONTINUE;
         case 053: /* SW */
             offset = (s16)(inst);
+            base = (inst >> 21) & 31;
+
             addr = (SR[base] + offset) & 0x00000FFF;
             if (addr%0x004 != 0x000)
                 USW(rt, addr);
@@ -1925,6 +1964,8 @@ EX:
 #else
             offset = SE(offset, 6); /* sign-extended seven-bit offset */
 #endif
+            base = (inst >> 21) & 31;
+
             rd = (inst & 0x0000FFFF) >> 11;
             LWC2[rd](rt, element, offset, base);
             CONTINUE;
@@ -1937,6 +1978,8 @@ EX:
 #else
             offset = SE(offset, 6); /* sign-extended seven-bit offset */
 #endif
+            base = (inst >> 21) & 31;
+
             rd = (inst & 0x0000FFFF) >> 11;
             SWC2[rd](rt, element, offset, base);
             CONTINUE;

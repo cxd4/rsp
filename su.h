@@ -101,6 +101,13 @@ extern void set_PC(unsigned int address);
 /* Let hardware architecture do the mask for us. */
 #endif
 
+/* If primary op-code is SPECIAL (000000), we could skip ANDing the rs shift. */
+#if (~0U >> 1 == ~0U) || defined(_DEBUG)
+#define SPECIAL_DECODE_RS(inst)     (((inst) & 0x03E00000UL) >> 21)
+#else
+#define SPECIAL_DECODE_RS(inst)     ((inst) >> 21)
+#endif
+
 #define SR_B(s, i)      (*(pi8)(((pi8)(SR + s)) + BES(i)))
 #define SR_S(s, i)      (*(pi16)(((pi8)(SR + s)) + HES(i)))
 
