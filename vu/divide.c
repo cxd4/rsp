@@ -1070,10 +1070,17 @@ INLINE static void do_div(i32 data, int sqrt, int precision)
     int fetch;
     int shift;
 
+#if (~0 >> 1 == -1)
+    data ^= (s32)(data + 32768) >> 31; /* DP only:  (data < -32768) */
+    fetch = (s32)(data +     0) >> 31;
+    data ^= fetch;
+    data -= fetch; /* two's complement:  -x == ~x - (~0) on wrap-around */
+#else
     if (precision == SP_DIV_PRECISION_SINGLE)
         data = (data < 0) ? -data : +data;
     if (precision == SP_DIV_PRECISION_DOUBLE && data < 0)
         data = (data >= -32768) ? -data : ~data;
+#endif
 
 /*
  * Note, from the code just above, that data cannot be negative.
