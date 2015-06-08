@@ -1560,8 +1560,6 @@ NOINLINE void run_task(void)
         ALIGNED i16 source[N], target[N];
 #endif
         unsigned int op, element;
-        unsigned int rt;
-        unsigned int vt;
 
         inst = *(pi32)(IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
@@ -1573,7 +1571,6 @@ EX:
 #endif
 
         op = inst >> 26;
-        rt = (inst >> 16) & 31;
 #ifdef _DEBUG
         SR[0] = 0x00000000; /* already handled on per-instruction basis */
 #endif
@@ -1582,11 +1579,13 @@ EX:
             s16 offset;
             unsigned int rd, vd;
             unsigned int rs, vs;
+            unsigned int rt, vt;
             unsigned int base; /* a synonym of `rs' for memory load/store ops */
             register u32 addr;
 
         case 000: /* SPECIAL */
             rd = (inst & 0x0000FFFF) >> 11;
+            rt = (inst >> 16) & 31;
             switch (inst % 64)
             {
             case 000: /* SLL */
@@ -1680,7 +1679,7 @@ EX:
             }
         case 001: /* REGIMM */
             rs = (inst >> 21) & 31;
-            switch (rt)
+            switch (rt = (inst >> 16) & 31)
             {
             case 020: /* BLTZAL */
                 SR[31] = (PC + LINK_OFF) & 0x00000FFC;
@@ -1709,12 +1708,14 @@ EX:
             JUMP;
         case 004: /* BEQ */
             rs = (inst >> 21) & 31;
+            rt = (inst >> 16) & 31;
             if (!(SR[rs] == SR[rt]))
                 CONTINUE;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 005: /* BNE */
             rs = (inst >> 21) & 31;
+            rt = (inst >> 16) & 31;
             if (!(SR[rs] != SR[rt]))
                 CONTINUE;
             set_PC(PC + 4*inst + SLOT_OFF);
@@ -1734,40 +1735,48 @@ EX:
         case 010: /* ADDI */
         case 011: /* ADDIU */
             rs = (inst >> 21) & 31;
+            rt = (inst >> 16) & 31;
             SR[rt] = SR[rs] + (s16)(inst);
             SR[0] = 0x00000000;
             CONTINUE;
         case 012: /* SLTI */
             rs = (inst >> 21) & 31;
+            rt = (inst >> 16) & 31;
             SR[rt] = ((s32)(SR[rs]) < (s16)(inst));
             SR[0] = 0x00000000;
             CONTINUE;
         case 013: /* SLTIU */
             rs = (inst >> 21) & 31;
+            rt = (inst >> 16) & 31;
             SR[rt] = ((u32)(SR[rs]) < (u16)(inst));
             SR[0] = 0x00000000;
             CONTINUE;
         case 014: /* ANDI */
             rs = (inst >> 21) & 31;
+            rt = (inst >> 16) & 31;
             SR[rt] = SR[rs] & (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
             CONTINUE;
         case 015: /* ORI */
             rs = (inst >> 21) & 31;
+            rt = (inst >> 16) & 31;
             SR[rt] = SR[rs] | (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
             CONTINUE;
         case 016: /* XORI */
             rs = (inst >> 21) & 31;
+            rt = (inst >> 16) & 31;
             SR[rt] = SR[rs] ^ (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
             CONTINUE;
         case 017: /* LUI */
+            rt = (inst >> 16) & 31;
             SR[rt] = inst << 16;
             SR[0] = 0x00000000;
             CONTINUE;
         case 020: /* COP0 */
             rd = (inst & 0x0000FFFF) >> 11;
+            rt = (inst >> 16) & 31;
             switch (rs = (inst >> 21) & 31)
             {
             case 000: /* MFC0 */
@@ -1784,7 +1793,7 @@ EX:
             op = inst & 0x0000003F;
             vd = (inst & 0x000007FF) >>  6; /* inst.R.sa */
             vs = (inst & 0x0000FFFF) >> 11; /* inst.R.rd */
-            vt = rt;
+            vt = (inst >> 16) & 31;
 
             vector_op = COP2_C2[op];
 #ifdef ARCH_MIN_SSE2
@@ -1861,6 +1870,7 @@ EX:
             base = (inst >> 21) & 31;
 
             addr = (SR[base] + offset) & 0x00000FFF;
+            rt = (inst >> 16) & 31;
             SR[rt] = DMEM[BES(addr)];
             SR[rt] = (s8)(SR[rt]);
             SR[0] = 0x00000000;
@@ -1870,6 +1880,7 @@ EX:
             base = (inst >> 21) & 31;
 
             addr = (SR[base] + offset) & 0x00000FFF;
+            rt = (inst >> 16) & 31;
             if (addr%0x004 == 0x003)
             {
                 SR_B(rt, 2) = DMEM[addr - BES(0x000)];
@@ -1889,6 +1900,7 @@ EX:
             base = (inst >> 21) & 31;
 
             addr = (SR[base] + offset) & 0x00000FFF;
+            rt = (inst >> 16) & 31;
             if (addr%0x004 != 0x000)
                 ULW(rt, addr);
             else
@@ -1900,6 +1912,7 @@ EX:
             base = (inst >> 21) & 31;
 
             addr = (SR[base] + offset) & 0x00000FFF;
+            rt = (inst >> 16) & 31;
             SR[rt] = DMEM[BES(addr)];
             SR[rt] = (u8)(SR[rt]);
             SR[0] = 0x00000000;
@@ -1909,6 +1922,7 @@ EX:
             base = (inst >> 21) & 31;
 
             addr = (SR[base] + offset) & 0x00000FFF;
+            rt = (inst >> 16) & 31;
             if (addr%0x004 == 0x003)
             {
                 SR_B(rt, 2) = DMEM[addr - BES(0x000)];
@@ -1928,6 +1942,7 @@ EX:
             base = (inst >> 21) & 31;
 
             addr = (SR[base] + offset) & 0x00000FFF;
+            rt = (inst >> 16) & 31;
             DMEM[BES(addr)] = (u8)(SR[rt]);
             CONTINUE;
         case 051: /* SH */
@@ -1935,6 +1950,7 @@ EX:
             base = (inst >> 21) & 31;
 
             addr = (SR[base] + offset) & 0x00000FFF;
+            rt = (inst >> 16) & 31;
             if (addr%0x004 == 0x003)
             {
                 DMEM[addr - BES(0x000)] = SR_B(rt, 2);
@@ -1950,12 +1966,14 @@ EX:
             base = (inst >> 21) & 31;
 
             addr = (SR[base] + offset) & 0x00000FFF;
+            rt = (inst >> 16) & 31;
             if (addr%0x004 != 0x000)
                 USW(rt, addr);
             else
                 *(pi32)(DMEM + addr) = SR[rt];
             CONTINUE;
         case 062: /* LWC2 */
+            vt = (inst >> 16) & 31;
             element = (inst & 0x000007FF) >> 7;
             offset = (s16)(inst);
 #ifdef ARCH_MIN_SSE2
@@ -1967,9 +1985,10 @@ EX:
             base = (inst >> 21) & 31;
 
             rd = (inst & 0x0000FFFF) >> 11;
-            LWC2[rd](rt, element, offset, base);
+            LWC2[rd](vt, element, offset, base);
             CONTINUE;
         case 072: /* SWC2 */
+            vt = (inst >> 16) & 31;
             element = (inst & 0x000007FF) >> 7;
             offset = (s16)(inst);
 #ifdef ARCH_MIN_SSE2
@@ -1981,7 +2000,7 @@ EX:
             base = (inst >> 21) & 31;
 
             rd = (inst & 0x0000FFFF) >> 11;
-            SWC2[rd](rt, element, offset, base);
+            SWC2[rd](vt, element, offset, base);
             CONTINUE;
         default:
             res_S();
