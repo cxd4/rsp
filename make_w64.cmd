@@ -18,19 +18,17 @@ set OBJ_LIST=^
 %obj%\vu\divide.o ^
 %MinGW%\x86_64-w64-mingw32\lib\libkernel32.a
 
-set FLAGS_ANSI=-O3^
+set FLAGS_ANSI=-Wall^
  -DPLUGIN_API_VERSION=0x0101^
  -march=native^
  -mstackrealign^
- -Wall^
  -pedantic
-set FLAGS_x86=-O3^
+set FLAGS_x86=-Wall^
  -masm=intel^
  -DPLUGIN_API_VERSION=0x0101^
  -DARCH_MIN_SSE2^
  -march=native^
  -mstackrealign^
- -Wall^
  -pedantic
 set C_FLAGS=%FLAGS_X86%
 
@@ -42,14 +40,14 @@ mkdir vu
 cd %MinGW%\bin
 
 ECHO Compiling C source code...
-gcc -S %C_FLAGS% -o %obj%\module.asm      %rsp%\module.c
-gcc -S %C_FLAGS% -o %obj%\su.asm          %rsp%\su.c
-gcc -S %C_FLAGS% -o %obj%\vu\vu.asm       %rsp%\vu\vu.c
-gcc -S %C_FLAGS% -o %obj%\vu\multiply.asm %rsp%\vu\multiply.c
-gcc -S %C_FLAGS% -o %obj%\vu\add.asm      %rsp%\vu\add.c
-gcc -S %C_FLAGS% -o %obj%\vu\select.asm   %rsp%\vu\select.c
-gcc -S %C_FLAGS% -o %obj%\vu\logical.asm  %rsp%\vu\logical.c
-gcc -S %C_FLAGS% -o %obj%\vu\divide.asm   %rsp%\vu\divide.c
+gcc -S -Os %C_FLAGS% -o %obj%\module.asm      %rsp%\module.c
+gcc -S -O3 %C_FLAGS% -o %obj%\su.asm          %rsp%\su.c
+gcc -S -O3 %C_FLAGS% -o %obj%\vu\vu.asm       %rsp%\vu\vu.c
+gcc -S -O3 %C_FLAGS% -o %obj%\vu\multiply.asm %rsp%\vu\multiply.c
+gcc -S -O3 %C_FLAGS% -o %obj%\vu\add.asm      %rsp%\vu\add.c
+gcc -S -O3 %C_FLAGS% -o %obj%\vu\select.asm   %rsp%\vu\select.c
+gcc -S -O3 %C_FLAGS% -o %obj%\vu\logical.asm  %rsp%\vu\logical.c
+gcc -S -O3 %C_FLAGS% -o %obj%\vu\divide.asm   %rsp%\vu\divide.c
 ECHO.
 
 ECHO Assembling compiled sources...
