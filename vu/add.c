@@ -14,7 +14,6 @@
 \******************************************************************************/
 
 #include "add.h"
-#include "select.h"
 
 #ifdef ARCH_MIN_SSE2
 static INLINE void SIGNED_CLAMP_ADD(pi16 VD, pi16 VS, pi16 VT)

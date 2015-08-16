@@ -35,6 +35,4 @@ VECTOR_EXTERN
 VECTOR_EXTERN
     VMRG   (v16 vs, v16 vt);
 
-extern INLINE void merge(pi16 VD, pi16 cmp, pi16 pass, pi16 fail);
-
 #endif

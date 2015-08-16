@@ -27,7 +27,7 @@
  *     else
  *         dest = element_b;
  */
-INLINE void merge(pi16 VD, pi16 cmp, pi16 pass, pi16 fail)
+static void merge(pi16 VD, pi16 cmp, pi16 pass, pi16 fail)
 {
     register int i;
 #if (0 != 0)
