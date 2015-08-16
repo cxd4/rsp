@@ -30,7 +30,7 @@ set FLAGS_x86=-Wall^
  -march=native^
  -mstackrealign^
  -pedantic
-set C_FLAGS=%FLAGS_X86%
+set C_FLAGS=%FLAGS_x86%
 
 if not exist obj (
 mkdir obj
