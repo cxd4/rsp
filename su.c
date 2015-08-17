@@ -1535,6 +1535,26 @@ mwc2_func SWC2[2 * 8*2] = {
     res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,
 };
 
+static ALIGNED i16 shuffle_temporary[N];
+static const unsigned char ei[1 << 4][N] = {
+    { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none (vector-only operand) */
+    { 00, 01, 02, 03, 04, 05, 06, 07 },
+    { 00, 00, 02, 02, 04, 04, 06, 06 }, /* 0Q */
+    { 01, 01, 03, 03, 05, 05, 07, 07 }, /* 1Q */
+    { 00, 00, 00, 00, 04, 04, 04, 04 }, /* 0H */
+    { 01, 01, 01, 01, 05, 05, 05, 05 }, /* 1H */
+    { 02, 02, 02, 02, 06, 06, 06, 06 }, /* 2H */
+    { 03, 03, 03, 03, 07, 07, 07, 07 }, /* 3H */
+    { 00, 00, 00, 00, 00, 00, 00, 00 }, /* 0W */
+    { 01, 01, 01, 01, 01, 01, 01, 01 }, /* 1W */
+    { 02, 02, 02, 02, 02, 02, 02, 02 }, /* 2W */
+    { 03, 03, 03, 03, 03, 03, 03, 03 }, /* 3W */
+    { 04, 04, 04, 04, 04, 04, 04, 04 }, /* 4W */
+    { 05, 05, 05, 05, 05, 05, 05, 05 }, /* 5W */
+    { 06, 06, 06, 06, 06, 06, 06, 06 }, /* 6W */
+    { 07, 07, 07, 07, 07, 07, 07, 07 }, /* 7W */
+};
+
 NOINLINE void run_task(void)
 {
     register unsigned int PC;
@@ -1795,76 +1815,44 @@ EX:
             vs = (inst & 0x0000FFFF) >> 11; /* inst.R.rd */
             vt = (inst >> 16) & 31;
 
+            rs = (inst >> 21) & 31;
+            if (rs < 16)
+                switch (rs)
+                {
+                case 000:
+                    MFC2(vt, vs, vd >>= 1);
+                    CONTINUE;
+                case 002:
+                    CFC2(vt, vs);
+                    CONTINUE;
+                case 004:
+                    MTC2(vt, vs, vd >>= 1);
+                    CONTINUE;
+                case 006:
+                    CTC2(vt, vs);
+                    CONTINUE;
+                default:
+                    res_S();
+                    CONTINUE;
+                }
             vector_op = COP2_C2[op];
+            element = rs & 0xFu;
+
+            for (i = 0; i < N; i++)
+                shuffle_temporary[i] = VR[vt][ei[element][i]];
 #ifdef ARCH_MIN_SSE2
             source = *(v16 *)VR[vs];
+            target = *(v16 *)shuffle_temporary;
+
+            *(v16 *)(VR[vd]) = vector_op(source, target);
 #else
             vector_copy(source, VR[vs]);
+            vector_copy(target, shuffle_temporary);
+
+            vector_op(source, target);
+            vector_copy(VR[vd], V_result);
 #endif
-            switch (rs = (inst >> 21) & 31)
-            {
-            case 000:
-                MFC2(vt, vs, vd >>= 1);
-                CONTINUE;
-            case 002:
-                CFC2(vt, vs);
-                CONTINUE;
-            case 004:
-                MTC2(vt, vs, vd >>= 1);
-                CONTINUE;
-            case 006:
-                CTC2(vt, vs);
-                CONTINUE;
-            case 020:
-            case 021:
-                EXECUTE_VU();
-                CONTINUE;
-            case 022:
-                EXECUTE_VU_0Q();
-                CONTINUE;
-            case 023:
-                EXECUTE_VU_1Q();
-                CONTINUE;
-            case 024:
-                EXECUTE_VU_0H();
-                CONTINUE;
-            case 025:
-                EXECUTE_VU_1H();
-                CONTINUE;
-            case 026:
-                EXECUTE_VU_2H();
-                CONTINUE;
-            case 027:
-                EXECUTE_VU_3H();
-                CONTINUE;
-            case 030:
-                EXECUTE_VU_0W();
-                CONTINUE;
-            case 031:
-                EXECUTE_VU_1W();
-                CONTINUE;
-            case 032:
-                EXECUTE_VU_2W();
-                CONTINUE;
-            case 033:
-                EXECUTE_VU_3W();
-                CONTINUE;
-            case 034:
-                EXECUTE_VU_4W();
-                CONTINUE;
-            case 035:
-                EXECUTE_VU_5W();
-                CONTINUE;
-            case 036:
-                EXECUTE_VU_6W();
-                CONTINUE;
-            case 037:
-                EXECUTE_VU_7W();
-                CONTINUE;
-            default:
-                res_S();
-                CONTINUE;
-            }
+            CONTINUE;
         case 040: /* LB */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
