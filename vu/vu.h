@@ -229,14 +229,6 @@ VECTOR_EXTERN (*COP2_C2[8*7 + 8])(v16, v16);
 #endif
 
 /*
- * Considering that almost all of the computational vector unit operations
- * concern a shuffled, halfword-swapped target vector, a centralized method
- * for shuffling said vector into a new vector temporary register,
- * ST = VR[vt], should be pretty convenient.
- */
-INLINE VECTOR_EXTERN SHUFFLE_VECTOR(v16 vd, const unsigned int e);
-
-/*
  * Many vector units have pairs of "vector condition flags" registers.
  * In SGI's vector unit implementation, these are denoted as the
  * "vector control registers" under coprocessor 2.
