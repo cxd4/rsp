@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.02.18                                                         *
+* Release:  2015.11.23                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -36,6 +36,18 @@
  */
 #define MAX_DRAM_ADDR           0x007FFFFFul
 #define MAX_DRAM_DMA_ADDR       (MAX_DRAM_ADDR & ~7)
+
+/*
+ * Interact with memory using server-side byte order (MIPS big-endian) or
+ * client-side (VM host's) native byte order on a 32-bit boundary.
+ *
+ * Unfortunately, most op-codes are optimized to require this to be TRUE.
+ */
+#if (ENDIAN_M == 0)
+#define USE_CLIENT_ENDIAN       FALSE
+#else
+#define USE_CLIENT_ENDIAN       TRUE
+#endif
 
 extern int CPU_running;
 

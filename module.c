@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.30                                                         *
+* Release:  2015.11.14                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -58,55 +58,76 @@ EXPORT void CALL DllConfig(p_void hParent)
 
 EXPORT u32 CALL DoRspCycles(u32 cycles)
 {
+    OSTask_type task_type;
+
     if (GET_RCP_REG(SP_STATUS_REG) & 0x00000003)
     {
         message("SP_STATUS_HALT");
         return 0x00000000;
     }
 
-    switch (*(pi32)(DMEM + 0xFC0))
-    { /* Simulation barrier to redirect processing externally. */
+    task_type = 0x00000000
+#ifdef USE_CLIENT_ENDIAN
+      | *((pi32)(DMEM + 0x000FC0U))
+#else
+      | (u32)DMEM[0xFC0] << 24
+      | (u32)DMEM[0xFC1] << 16
+      | (u32)DMEM[0xFC2] <<  8
+      | (u32)DMEM[0xFC3] <<  0
+#endif
+    ;
+    switch (task_type) {
 #ifdef EXTERN_COMMAND_LIST_GBI
-        case 0x00000001:
-            if (CFG_HLE_GFX == 0)
-                break;
+    case M_GFXTASK:
+        if (CFG_HLE_GFX == 0)
+            break;
 
-            if (*(pi32)(DMEM + 0xFF0) == 0x00000000)
-                break; /* Resident Evil 2, null task pointers */
-            if (GET_RSP_INFO(ProcessDList) == NULL)
-                { /* branch */ }
-            else
-                GET_RSP_INFO(ProcessDList)();
-            GET_RCP_REG(SP_STATUS_REG) |= 0x00000203;
-            if (GET_RCP_REG(SP_STATUS_REG) & 0x00000040)
-            { /* SP_STATUS_INTR_BREAK */
-                GET_RCP_REG(MI_INTR_REG) |= 0x00000001; /* R4300 SP interrupt */
-                GET_RSP_INFO(CheckInterrupts)();
-            }
-            if (GET_RCP_REG(DPC_STATUS_REG) & 0x00000002)
-            { /* DPC_STATUS_FREEZE */
-                message("DPC_CLR_FREEZE");
-                GET_RCP_REG(DPC_STATUS_REG) &= ~0x00000002;
-            }
-            return 0;
+        if (*(pi32)(DMEM + 0xFF0) == 0x00000000)
+            break; /* Resident Evil 2, null task pointers */
+        if (GET_RSP_INFO(ProcessDList) == NULL)
+            { /* branch */ }
+        else
+            GET_RSP_INFO(ProcessDList)();
+        GET_RCP_REG(SP_STATUS_REG) |= 0x00000203;
+        if (GET_RCP_REG(SP_STATUS_REG) & 0x00000040) {
+            GET_RCP_REG(MI_INTR_REG) |= 0x00000001; /* R4300 SP interrupt */
+            GET_RSP_INFO(CheckInterrupts)();
+        } /* SP_STATUS_INTR_BREAK */
+        if (GET_RCP_REG(DPC_STATUS_REG) & 0x00000002) {
+            message("DPC_CLR_FREEZE");
+            GET_RCP_REG(DPC_STATUS_REG) &= ~0x00000002;
+        } /* DPC_STATUS_FREEZE */
+        return 0;
 #endif
 #ifdef EXTERN_COMMAND_LIST_ABI
-        case 0x00000002: /* OSTask.type == M_AUDTASK */
-            if (CFG_HLE_AUD == 0)
-                break;
+    case M_AUDTASK:
+        if (CFG_HLE_AUD == 0)
+            break;
 
-            if (GET_RSP_INFO(ProcessAList) == NULL)
-                { /* branch */ }
-            else
-                GET_RSP_INFO(ProcessAList)();
-            GET_RCP_REG(SP_STATUS_REG) |= 0x00000203;
-            if (GET_RCP_REG(SP_STATUS_REG) & 0x00000040)
-            { /* SP_STATUS_INTR_BREAK */
-                GET_RCP_REG(MI_INTR_REG) |= 0x00000001; /* R4300 SP interrupt */
-                GET_RSP_INFO(CheckInterrupts)();
-            }
-            return 0;
+        if (GET_RSP_INFO(ProcessAList) == NULL)
+            { /* branch */ }
+        else
+            GET_RSP_INFO(ProcessAList)();
+        GET_RCP_REG(SP_STATUS_REG) |= 0x00000203;
+        if (GET_RCP_REG(SP_STATUS_REG) & 0x00000040) {
+            GET_RCP_REG(MI_INTR_REG) |= 0x00000001; /* R4300 SP interrupt */
+            GET_RSP_INFO(CheckInterrupts)();
+        } /* SP_STATUS_INTR_BREAK */
+        return 0;
 #endif
+    case M_VIDTASK:
+        message("M_VIDTASK");
+        break;
+    case M_NJPEGTASK:
+        break; /* Zelda, Pokemon, others */
+    case M_NULTASK:
+        message("M_NULTASK");
+        break;
+    case M_HVQTASK:
+        message("M_HVQTASK");
+        break;
+    case M_HVQMTASK:
+        break;
     }
     run_task();
     return (cycles);
@@ -118,7 +139,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
     PluginInfo -> Type = PLUGIN_TYPE_RSP;
     my_strcpy(PluginInfo -> Name, "Static Interpreter");
     PluginInfo -> NormalMemory = 0;
-    PluginInfo -> MemoryBswaped = 1;
+    PluginInfo -> MemoryBswaped = USE_CLIENT_ENDIAN;
     return;
 }
 
