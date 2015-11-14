@@ -127,6 +127,9 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
         message("M_HVQTASK");
         break;
     case M_HVQMTASK:
+        if (GET_RSP_INFO(ShowCFB) == NULL) /* Gfx #1.2 or older specs */
+            break;
+        GET_RSP_INFO(ShowCFB)(); /* forced FB refresh in case gfx plugin skip */
         break;
     }
     run_task();
