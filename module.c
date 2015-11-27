@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.14                                                         *
+* Release:  2015.11.27                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -244,8 +244,7 @@ NOINLINE void update_conf(const char* source)
         conf[i] = 0x00;
 
     stream = my_fopen(source, "rb");
-    if (stream == NULL)
-    { /* try GetModulePath or whatever to correct the path? */
+    if (stream == NULL) {
         message("Failed to read config.");
         return;
     }
