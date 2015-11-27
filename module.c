@@ -256,38 +256,26 @@ NOINLINE void update_conf(const char* source)
 #ifdef SP_EXECUTE_LOG
 void step_SP_commands(uint32_t inst)
 {
-    if (output_log)
-    {
-        const char digits[16] = {
-            '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-        };
-        char text[256];
-        char offset[4] = "";
-        char code[9] = "";
-        unsigned char endian_swap[4];
+    unsigned char endian_swap[4];
+    char text[256];
+    char offset[4] = "";
+    char code[9] = "";
 
-        endian_swap[00] = (unsigned char)(inst >> 24);
-        endian_swap[01] = (unsigned char)(inst >> 16);
-        endian_swap[02] = (unsigned char)(inst >>  8);
-        endian_swap[03] = (unsigned char)inst;
-        offset[00] = digits[(*RSP.SP_PC_REG & 0xF00) >> 8];
-        offset[01] = digits[(*RSP.SP_PC_REG & 0x0F0) >> 4];
-        offset[02] = digits[(*RSP.SP_PC_REG & 0x00F) >> 0];
-        code[00] = digits[(inst & 0xF0000000) >> 28];
-        code[01] = digits[(inst & 0x0F000000) >> 24];
-        code[02] = digits[(inst & 0x00F00000) >> 20];
-        code[03] = digits[(inst & 0x000F0000) >> 16];
-        code[04] = digits[(inst & 0x0000F000) >> 12];
-        code[05] = digits[(inst & 0x00000F00) >>  8];
-        code[06] = digits[(inst & 0x000000F0) >>  4];
-        code[07] = digits[(inst & 0x0000000F) >>  0];
-        strcpy(text, offset);
-        my_strcat(text, "\n");
-        my_strcat(text, code);
-        message(text); /* PC offset, MIPS hex. */
-        if (output_log == NULL) {} else /* Global pointer not updated?? */
-            my_fwrite(endian_swap, 4, 1, output_log);
-    }
+    if (output_log == NULL)
+        return;
+
+    endian_swap[00] = (u8)((inst >> 24) & 0xFF);
+    endian_swap[01] = (u8)((inst >> 16) & 0xFF);
+    endian_swap[02] = (u8)((inst >>  8) & 0xFF);
+    endian_swap[03] = (u8)((inst >>  0) & 0xFF);
+    sprintf(&offset[0], "%03X", GET_RCP_REG(SP_PC_REG) & 0xFFF);
+    sprintf(&code[0], "%08X", inst);
+    strcpy(text, offset);
+    my_strcat(text, "\n");
+    my_strcat(text, code);
+    message(text); /* PC offset, MIPS hex. */
+    if (output_log != NULL)
+        my_fwrite(endian_swap, 4, 1, output_log);
 }
 #endif
 
