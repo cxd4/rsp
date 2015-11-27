@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.23                                                         *
+* Release:  2015.11.27                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -66,7 +66,7 @@ extern u8 conf[32];
  */
 extern i32 SR[32];
 
-#define FIT_IMEM(PC)    (PC & 0xFFF & 0xFFC)
+#define FIT_IMEM(PC)    ((PC) & 0xFFFu & 0xFFCu)
 
 #ifdef EMULATE_STATIC_PC
 #define CONTINUE    continue

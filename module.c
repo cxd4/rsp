@@ -149,7 +149,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
 EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
 {
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
-        *CycleCount = 0x00000000;
+        *CycleCount = 0;
     update_conf(CFG_FILE);
 
     if (Rsp_Info.DMEM == Rsp_Info.IMEM) /* usually dummy RSP data for testing */
@@ -170,7 +170,7 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
     CR[0x5] = &GET_RCP_REG(SP_DMA_FULL_REG);
     CR[0x6] = &GET_RCP_REG(SP_DMA_BUSY_REG);
     CR[0x7] = &GET_RCP_REG(SP_SEMAPHORE_REG);
-    GET_RCP_REG(SP_PC_REG) = 0x04001000 & 0xFFF; /* task init bug on Mupen64 */
+    GET_RCP_REG(SP_PC_REG) = 0x04001000;
     CR[0x8] = &GET_RCP_REG(DPC_START_REG);
     CR[0x9] = &GET_RCP_REG(DPC_END_REG);
     CR[0xA] = &GET_RCP_REG(DPC_CURRENT_REG);
@@ -181,6 +181,9 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
     CR[0xF] = &GET_RCP_REG(DPC_TMEM_REG);
 
     MF_SP_STATUS_TIMEOUT = 32767;
+#if 1
+    GET_RCP_REG(SP_PC_REG) &= 0x00000FFFu; /* hack to fix Mupen64 */
+#endif
     return;
 }
 
