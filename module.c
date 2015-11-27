@@ -380,11 +380,8 @@ NOINLINE p_void my_calloc(size_t count, size_t size)
 NOINLINE void my_free(p_void ptr)
 {
 #ifdef WIN32
-    HANDLE this_should_be_null;
-
-    do {
-        this_should_be_null = GlobalFree(ptr);
-    } while (this_should_be_null != NULL);
+    while (GlobalFree(ptr) != NULL)
+        message("GlobalFree() failure");
 #else
     free(ptr);
 #endif
