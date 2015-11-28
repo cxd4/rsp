@@ -1514,7 +1514,7 @@ static const unsigned char ei[1 << 4][N] = {
     { 07, 07, 07, 07, 07, 07, 07, 07 }, /* 7W */
 };
 
-INLINE static u32 R4000_fetch_decode_execute(u32 PC);
+PROFILE_MODE u32 R4000_fetch_decode_execute(u32 PC);
 NOINLINE void run_task(void)
 {
     register u32 PC;

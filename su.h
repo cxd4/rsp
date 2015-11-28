@@ -69,6 +69,12 @@
 #define EMULATE_STATIC_PC
 #endif
 
+#if (0 != 0)
+#define PROFILE_MODE    static NOINLINE
+#else
+#define PROFILE_MODE    static INLINE
+#endif
+
 extern int CPU_running;
 
 extern RSP_INFO RSP_INFO_NAME;
