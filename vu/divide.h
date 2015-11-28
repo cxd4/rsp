@@ -42,11 +42,11 @@ extern s32 DivOut;
  * Boolean flag:  Double-precision high was the last vector divide op?
  *
  * if (lastDivideOp == VRCP, VRCPL, VRSQ, VRSQL)
- *     DPH = false; // single-precision or double-precision low, not high
+ *     DPH = false; # single-precision or double-precision low, not high
  * else if (lastDivideOp == VRCPH, VRSQH)
- *     DPH = true; // double-precision high
+ *     DPH = true; # double-precision high
  * else if (lastDivideOp == VMOV, VNOP)
- *     DPH = DPH; // no change, divide-group ops but not real divides
+ *     DPH = DPH; # no change--divide-group ops but not real divides
  */
 extern int DPH;
 
