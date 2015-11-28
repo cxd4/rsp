@@ -55,7 +55,7 @@ int MF_SP_STATUS_TIMEOUT;
 void SP_CP0_MF(unsigned int rt, unsigned int rd)
 {
     SR[rt] = *(CR[rd]);
-    SR[0] = 0x00000000;
+    SR[zero] = 0x00000000;
     if (rd == 0x7) {
         if (CFG_MEND_SEMAPHORE_LOCK == 0)
             return;
@@ -289,7 +289,7 @@ PROFILE_MODE void LB(u32 inst)
     addr = SR[base] + offset;
     SR[rt] = DMEM[BES(addr) & 0x00000FFFul];
     SR[rt] = (s8)SR[rt];
-    SR[0] = 0x00000000;
+    SR[zero] = 0x00000000;
 }
 PROFILE_MODE void LH(u32 inst)
 {
@@ -304,7 +304,7 @@ PROFILE_MODE void LH(u32 inst)
       | DMEM[BES(addr + 1) & 0x00000FFFul] <<  0
     ;
     SR[rt] = (s16)SR[rt];
-    SR[0] = 0x00000000;
+    SR[zero] = 0x00000000;
 }
 PROFILE_MODE void LW(u32 inst)
 {
@@ -320,7 +320,7 @@ PROFILE_MODE void LW(u32 inst)
       | DMEM[BES(addr + 2) & 0x00000FFFul] <<  8
       | DMEM[BES(addr + 3) & 0x00000FFFul] <<  0
     ;
-    SR[0] = 0x00000000;
+    SR[zero] = 0x00000000;
 }
 PROFILE_MODE void LBU(u32 inst)
 {
@@ -331,7 +331,7 @@ PROFILE_MODE void LBU(u32 inst)
 
     addr = SR[base] + offset;
     SR[rt] = DMEM[BES(addr) & 0x00000FFFul];
-    SR[0] = 0x00000000;
+    SR[zero] = 0x00000000;
 }
 PROFILE_MODE void LHU(u32 inst)
 {
@@ -345,7 +345,7 @@ PROFILE_MODE void LHU(u32 inst)
       | DMEM[BES(addr + 0) & 0x00000FFFul] <<  8
       | DMEM[BES(addr + 1) & 0x00000FFFul] <<  0
     ;
-    SR[0] = 0x00000000;
+    SR[zero] = 0x00000000;
 }
 
 PROFILE_MODE void SB(u32 inst)
@@ -414,7 +414,7 @@ void MFC2(unsigned int rt, unsigned int vs, unsigned int e)
     e = (e + 0x1) & 0xF;
     SR_B(rt, 3) = VR_B(vs, e);
     SR[rt] = (s16)(SR[rt]);
-    SR[0] = 0x00000000;
+    SR[zero] = 0x00000000;
     return;
 }
 void MTC2(unsigned int rt, unsigned int vd, unsigned int e)
@@ -426,7 +426,7 @@ void MTC2(unsigned int rt, unsigned int vd, unsigned int e)
 void CFC2(unsigned int rt, unsigned int rd)
 {
     SR[rt] = (s16)R_VCF[rd & 3]();
-    SR[0] = 0x00000000;
+    SR[zero] = 0x00000000;
     return;
 }
 void CTC2(unsigned int rt, unsigned int rd)
@@ -1645,7 +1645,7 @@ EX:
 
     op = inst >> 26;
 #if (0 != 0)
-    SR[0] = 0x00000000; /* already handled on per-instruction basis */
+    SR[zero] = 0x00000000; /* already handled on per-instruction basis */
 #endif
     switch (op) {
         s16 offset;
@@ -1660,34 +1660,34 @@ EX:
         switch (inst % 64) {
         case 000: /* SLL */
             SR[rd] = SR[rt] << MASK_SA(inst >> 6);
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 002: /* SRL */
             SR[rd] = (u32)(SR[rt]) >> MASK_SA(inst >> 6);
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 003: /* SRA */
             SR[rd] = (s32)(SR[rt]) >> MASK_SA(inst >> 6);
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 004: /* SLLV */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = SR[rt] << MASK_SA(SR[rs]);
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 006: /* SRLV */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = (u32)(SR[rt]) >> MASK_SA(SR[rs]);
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 007: /* SRAV */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = (s32)(SR[rt]) >> MASK_SA(SR[rs]);
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 011: /* JALR */
             SR[rd] = (PC + LINK_OFF) & 0x00000FFC;
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
         case 010: /* JR */
             rs = SPECIAL_DECODE_RS(inst);
             set_PC(SR[rs]);
@@ -1704,43 +1704,43 @@ EX:
         case 041: /* ADDU */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = SR[rs] + SR[rt];
-            SR[0] = 0x00000000; /* needed for Rareware ucodes */
+            SR[zero] = 0x00000000; /* needed for Rareware micro-codes */
             break;
         case 042: /* SUB */
         case 043: /* SUBU */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = SR[rs] - SR[rt];
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 044: /* AND */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = SR[rs] & SR[rt];
-            SR[0] = 0x00000000; /* needed for Rareware ucodes */
+            SR[zero] = 0x00000000; /* needed for Rareware micro-codes */
             break;
         case 045: /* OR */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = SR[rs] | SR[rt];
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 046: /* XOR */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = SR[rs] ^ SR[rt];
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 047: /* NOR */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = ~(SR[rs] | SR[rt]);
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 052: /* SLT */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = ((s32)(SR[rs]) < (s32)(SR[rt]));
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         case 053: /* SLTU */
             rs = SPECIAL_DECODE_RS(inst);
             SR[rd] = ((u32)(SR[rs]) < (u32)(SR[rt]));
-            SR[0] = 0x00000000;
+            SR[zero] = 0x00000000;
             break;
         default:
             res_S();
@@ -1750,7 +1750,7 @@ EX:
         rs = (inst >> 21) & 31;
         switch (rt = (inst >> 16) & 31) {
         case 020: /* BLTZAL */
-            SR[31] = (PC + LINK_OFF) & 0x00000FFC;
+            SR[ra] = (PC + LINK_OFF) & 0x00000FFC;
             /* fall through */
         case 000: /* BLTZ */
             if (!((s32)SR[rs] < 0))
@@ -1758,7 +1758,7 @@ EX:
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 021: /* BGEZAL */
-            SR[31] = (PC + LINK_OFF) & 0x00000FFC;
+            SR[ra] = (PC + LINK_OFF) & 0x00000FFC;
             /* fall through */
         case 001: /* BGEZ */
             if (!((s32)SR[rs] >= 0))
@@ -1770,7 +1770,7 @@ EX:
         }
         break;
     case 003: /* JAL */
-        SR[31] = (PC + LINK_OFF) & 0x00000FFC;
+        SR[ra] = (PC + LINK_OFF) & 0x00000FFC;
     case 002: /* J */
         set_PC(4*inst);
         JUMP;
@@ -1805,42 +1805,42 @@ EX:
         rs = (inst >> 21) & 31;
         rt = (inst >> 16) & 31;
         SR[rt] = SR[rs] + (s16)(inst);
-        SR[0] = 0x00000000;
+        SR[zero] = 0x00000000;
         break;
     case 012: /* SLTI */
         rs = (inst >> 21) & 31;
         rt = (inst >> 16) & 31;
         SR[rt] = ((s32)(SR[rs]) < (s16)(inst));
-        SR[0] = 0x00000000;
+        SR[zero] = 0x00000000;
         break;
     case 013: /* SLTIU */
         rs = (inst >> 21) & 31;
         rt = (inst >> 16) & 31;
         SR[rt] = ((u32)(SR[rs]) < (u16)(inst));
-        SR[0] = 0x00000000;
+        SR[zero] = 0x00000000;
         break;
     case 014: /* ANDI */
         rs = (inst >> 21) & 31;
         rt = (inst >> 16) & 31;
         SR[rt] = SR[rs] & (inst & 0x0000FFFF);
-        SR[0] = 0x00000000;
+        SR[zero] = 0x00000000;
         break;
     case 015: /* ORI */
         rs = (inst >> 21) & 31;
         rt = (inst >> 16) & 31;
         SR[rt] = SR[rs] | (inst & 0x0000FFFF);
-        SR[0] = 0x00000000;
+        SR[zero] = 0x00000000;
         break;
     case 016: /* XORI */
         rs = (inst >> 21) & 31;
         rt = (inst >> 16) & 31;
         SR[rt] = SR[rs] ^ (inst & 0x0000FFFF);
-        SR[0] = 0x00000000;
+        SR[zero] = 0x00000000;
         break;
     case 017: /* LUI */
         rt = (inst >> 16) & 31;
         SR[rt] = inst << 16;
-        SR[0] = 0x00000000;
+        SR[zero] = 0x00000000;
         break;
     case 020: /* COP0 */
         rd = (inst & 0x0000FFFF) >> 11;
