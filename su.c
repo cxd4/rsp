@@ -13,8 +13,6 @@
 * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.             *
 \******************************************************************************/
 
-#define EMULATE_STATIC_PC
-
 #include "su.h"
 
 /*

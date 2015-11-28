@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.27                                                         *
+* Release:  2015.11.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -47,6 +47,26 @@
 #define USE_CLIENT_ENDIAN       FALSE
 #else
 #define USE_CLIENT_ENDIAN       TRUE
+#endif
+
+/*
+ * Always keep this enabled for faster interpreter CPU.
+ *
+ * If you disable this, the branch delay slot algorithm will match the
+ * documentation found in the MIPS manuals (which is not entirely accurate).
+ *
+ * Enabled:
+ *     while (CPU_running) {
+ *         PC = static_delay_slot_adjustments();
+ *         switch (opcode) { ... continue; }
+ * Disabled:
+ *     while (CPU_running) {
+ *         switch (opcode) { ... break; }
+ *         PC = documented_branch_delay_slot();
+ *         continue;
+ */
+#if 1
+#define EMULATE_STATIC_PC
 #endif
 
 extern int CPU_running;
@@ -101,8 +121,8 @@ extern short MFC0_count[32];
  */
 extern int MF_SP_STATUS_TIMEOUT;
 
-#define SLOT_OFF    (BASE_OFF + 0x000)
-#define LINK_OFF    (BASE_OFF + 0x004)
+#define SLOT_OFF    ((BASE_OFF) + 0x000)
+#define LINK_OFF    ((BASE_OFF) + 0x004)
 extern void set_PC(unsigned int address);
 
 #if (0x7FFFFFFFul >> 037 != 0x7FFFFFFFul >> ~0U)
