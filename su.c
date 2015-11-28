@@ -315,6 +315,36 @@ PROFILE_MODE void LUI(u32 inst)
     SR[zero] = 0x00000000;
 }
 
+/*** scalar, R4000 arithmetic operations ***/
+
+PROFILE_MODE void ADDIU(u32 inst)
+{
+    const u16 immediate = (u16)(inst & 0x0000FFFFu);
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    SR[rt] = SR[rs] + (s16)(immediate);
+    SR[zero] = 0x00000000;
+}
+PROFILE_MODE void SLTI(u32 inst)
+{
+    const u16 immediate = (u16)(inst & 0x0000FFFFu);
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    SR[rt] = ((s32)(SR[rs]) < (s16)(immediate)) ? 1 : 0;
+    SR[zero] = 0x00000000;
+}
+PROFILE_MODE void SLTIU(u32 inst)
+{
+    const u16 immediate = (u16)(inst & 0x0000FFFFu);
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    SR[rt] = ((u32)(SR[rs]) < (u16)(immediate)) ? 1 : 0;
+    SR[zero] = 0x00000000;
+}
+
 /*** scalar, R4000 memory loads and stores ***/
 
 PROFILE_MODE void LB(u32 inst)
@@ -1838,24 +1868,15 @@ EX:
             break;
         set_PC(PC + 4*inst + SLOT_OFF);
         JUMP;
-    case 010: /* ADDI */
-    case 011: /* ADDIU */
-        rs = (inst >> 21) & 31;
-        rt = (inst >> 16) & 31;
-        SR[rt] = SR[rs] + (s16)(inst);
-        SR[zero] = 0x00000000;
+    case 010: /* ADDI:  Traps don't exist on the RCP. */
+    case 011:
+        ADDIU(inst);
         break;
-    case 012: /* SLTI */
-        rs = (inst >> 21) & 31;
-        rt = (inst >> 16) & 31;
-        SR[rt] = ((s32)(SR[rs]) < (s16)(inst));
-        SR[zero] = 0x00000000;
+    case 012:
+        SLTI(inst);
         break;
-    case 013: /* SLTIU */
-        rs = (inst >> 21) & 31;
-        rt = (inst >> 16) & 31;
-        SR[rt] = ((u32)(SR[rs]) < (u16)(inst));
-        SR[zero] = 0x00000000;
+    case 013:
+        SLTIU(inst);
         break;
     case 014:
         ANDI(inst);
