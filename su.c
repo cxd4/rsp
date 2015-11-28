@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.27                                                         *
+* Release:  2015.11.28                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1567,30 +1567,30 @@ EX:
             case 000: /* SLL */
                 SR[rd] = SR[rt] << MASK_SA(inst >> 6);
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 002: /* SRL */
                 SR[rd] = (u32)(SR[rt]) >> MASK_SA(inst >> 6);
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 003: /* SRA */
                 SR[rd] = (s32)(SR[rt]) >> MASK_SA(inst >> 6);
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 004: /* SLLV */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rt] << MASK_SA(SR[rs]);
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 006: /* SRLV */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = (u32)(SR[rt]) >> MASK_SA(SR[rs]);
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 007: /* SRAV */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = (s32)(SR[rt]) >> MASK_SA(SR[rs]);
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 011: /* JALR */
                 SR[rd] = (PC + LINK_OFF) & 0x00000FFC;
                 SR[0] = 0x00000000;
@@ -1606,53 +1606,53 @@ EX:
                     GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
                     GET_RSP_INFO(CheckInterrupts)();
                 }
-                CONTINUE;
+                break;
             case 040: /* ADD */
             case 041: /* ADDU */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] + SR[rt];
                 SR[0] = 0x00000000; /* needed for Rareware ucodes */
-                CONTINUE;
+                break;
             case 042: /* SUB */
             case 043: /* SUBU */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] - SR[rt];
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 044: /* AND */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] & SR[rt];
                 SR[0] = 0x00000000; /* needed for Rareware ucodes */
-                CONTINUE;
+                break;
             case 045: /* OR */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] | SR[rt];
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 046: /* XOR */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = SR[rs] ^ SR[rt];
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 047: /* NOR */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = ~(SR[rs] | SR[rt]);
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 052: /* SLT */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = ((s32)(SR[rs]) < (s32)(SR[rt]));
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             case 053: /* SLTU */
                 rs = SPECIAL_DECODE_RS(inst);
                 SR[rd] = ((u32)(SR[rs]) < (u32)(SR[rt]));
                 SR[0] = 0x00000000;
-                CONTINUE;
+                break;
             default:
                 res_S();
-                CONTINUE;
             }
+            break;
         case 001: /* REGIMM */
             rs = (inst >> 21) & 31;
             switch (rt = (inst >> 16) & 31) {
@@ -1661,7 +1661,7 @@ EX:
                 /* fall through */
             case 000: /* BLTZ */
                 if (!((s32)SR[rs] < 0))
-                    CONTINUE;
+                    break;
                 set_PC(PC + 4*inst + SLOT_OFF);
                 JUMP;
             case 021: /* BGEZAL */
@@ -1669,13 +1669,13 @@ EX:
                 /* fall through */
             case 001: /* BGEZ */
                 if (!((s32)SR[rs] >= 0))
-                    CONTINUE;
+                    break;
                 set_PC(PC + 4*inst + SLOT_OFF);
                 JUMP;
             default:
                 res_S();
-                CONTINUE;
             }
+            break;
         case 003: /* JAL */
             SR[31] = (PC + LINK_OFF) & 0x00000FFC;
         case 002: /* J */
@@ -1685,26 +1685,26 @@ EX:
             rs = (inst >> 21) & 31;
             rt = (inst >> 16) & 31;
             if (!(SR[rs] == SR[rt]))
-                CONTINUE;
+                break;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 005: /* BNE */
             rs = (inst >> 21) & 31;
             rt = (inst >> 16) & 31;
             if (!(SR[rs] != SR[rt]))
-                CONTINUE;
+                break;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 006: /* BLEZ */
             rs = (inst >> 21) & 31;
             if (!((s32)SR[rs] <= 0x00000000))
-                CONTINUE;
+                break;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 007: /* BGTZ */
             rs = (inst >> 21) & 31;
             if (!((s32)SR[rs] >  0x00000000))
-                CONTINUE;
+                break;
             set_PC(PC + 4*inst + SLOT_OFF);
             JUMP;
         case 010: /* ADDI */
@@ -1713,99 +1713,115 @@ EX:
             rt = (inst >> 16) & 31;
             SR[rt] = SR[rs] + (s16)(inst);
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 012: /* SLTI */
             rs = (inst >> 21) & 31;
             rt = (inst >> 16) & 31;
             SR[rt] = ((s32)(SR[rs]) < (s16)(inst));
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 013: /* SLTIU */
             rs = (inst >> 21) & 31;
             rt = (inst >> 16) & 31;
             SR[rt] = ((u32)(SR[rs]) < (u16)(inst));
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 014: /* ANDI */
             rs = (inst >> 21) & 31;
             rt = (inst >> 16) & 31;
             SR[rt] = SR[rs] & (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 015: /* ORI */
             rs = (inst >> 21) & 31;
             rt = (inst >> 16) & 31;
             SR[rt] = SR[rs] | (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 016: /* XORI */
             rs = (inst >> 21) & 31;
             rt = (inst >> 16) & 31;
             SR[rt] = SR[rs] ^ (inst & 0x0000FFFF);
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 017: /* LUI */
             rt = (inst >> 16) & 31;
             SR[rt] = inst << 16;
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 020: /* COP0 */
             rd = (inst & 0x0000FFFF) >> 11;
             rt = (inst >> 16) & 31;
             switch (rs = (inst >> 21) & 31) {
             case 000: /* MFC0 */
                 SP_CP0_MF(rt, rd & 0xF);
-                CONTINUE;
+                break;
             case 004: /* MTC0 */
                 SP_CP0_MT[rd & 0xF](rt);
-                CONTINUE;
+                break;
             default:
                 res_S();
-                CONTINUE;
             }
+            break;
         case 022: /* COP2 */
             op = inst & 0x0000003F;
             vd = (inst & 0x000007FF) >>  6; /* inst.R.sa */
             vs = (inst & 0x0000FFFF) >> 11; /* inst.R.rd */
             vt = (inst >> 16) & 31;
 
-            rs = (inst >> 21) & 31;
-            if (rs < 16)
-                switch (rs) {
-                case 000:
-                    MFC2(vt, vs, vd >>= 1);
-                    CONTINUE;
-                case 002:
-                    CFC2(vt, vs);
-                    CONTINUE;
-                case 004:
-                    MTC2(vt, vs, vd >>= 1);
-                    CONTINUE;
-                case 006:
-                    CTC2(vt, vs);
-                    CONTINUE;
-                default:
-                    res_S();
-                    CONTINUE;
-                }
-            vector_op = COP2_C2[op];
-            element = rs & 0xFu;
+            rs = (inst >> 21);
+            switch (rs %= 32) {
+            case 000:
+                MFC2(vt, vs, vd >>= 1);
+                break;
+            case 002:
+                CFC2(vt, vs);
+                break;
+            case 004:
+                MTC2(vt, vs, vd >>= 1);
+                break;
+            case 006:
+                CTC2(vt, vs);
+                break;
+            case 020:
+            case 021:
+            case 022:
+            case 023:
+            case 024:
+            case 025:
+            case 026:
+            case 027:
+            case 030:
+            case 031:
+            case 032:
+            case 033:
+            case 034:
+            case 035:
+            case 036:
+            case 037:
+                goto VU_execute;
+            default:
+                res_S();
+            VU_execute:
+                vector_op = COP2_C2[op];
+                element = rs & 0xFu;
+                for (i = 0; i < N; i++)
+                    shuffle_temporary[i] = VR[vt][ei[element][i]];
 
-            for (i = 0; i < N; i++)
-                shuffle_temporary[i] = VR[vt][ei[element][i]];
 #ifdef ARCH_MIN_SSE2
-            source = *(v16 *)VR[vs];
-            target = *(v16 *)shuffle_temporary;
+                source = *(v16 *)VR[vs];
+                target = *(v16 *)shuffle_temporary;
 
-            *(v16 *)(VR[vd]) = vector_op(source, target);
+                *(v16 *)(VR[vd]) = vector_op(source, target);
 #else
-            vector_copy(source, VR[vs]);
-            vector_copy(target, shuffle_temporary);
+                vector_copy(source, VR[vs]);
+                vector_copy(target, shuffle_temporary);
 
-            vector_op(source, target);
-            vector_copy(VR[vd], V_result);
+                vector_op(source, target);
+                vector_copy(VR[vd], V_result);
 #endif
-            CONTINUE;
+            }
+            break;
         case 040: /* LB */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
@@ -1815,7 +1831,7 @@ EX:
             SR[rt] = DMEM[BES(addr)];
             SR[rt] = (s8)(SR[rt]);
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 041: /* LH */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
@@ -1832,7 +1848,7 @@ EX:
                 SR[rt] = *(ps16)(DMEM + addr);
             }
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 043: /* LW */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
@@ -1844,7 +1860,7 @@ EX:
             else
                 SR[rt] = *(pi32)(DMEM + addr);
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 044: /* LBU */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
@@ -1854,7 +1870,7 @@ EX:
             SR[rt] = DMEM[BES(addr)];
             SR[rt] = (u8)(SR[rt]);
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 045: /* LHU */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
@@ -1871,7 +1887,7 @@ EX:
                 SR[rt] = *(pu16)(DMEM + addr);
             }
             SR[0] = 0x00000000;
-            CONTINUE;
+            break;
         case 050: /* SB */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
@@ -1879,7 +1895,7 @@ EX:
             addr = (SR[base] + offset) & 0x00000FFF;
             rt = (inst >> 16) & 31;
             DMEM[BES(addr)] = (u8)(SR[rt]);
-            CONTINUE;
+            break;
         case 051: /* SH */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
@@ -1890,11 +1906,11 @@ EX:
                 DMEM[addr - BES(0x000)] = SR_B(rt, 2);
                 addr = (addr + 0x00000001) & 0x00000FFF;
                 DMEM[addr + BES(0x000)] = SR_B(rt, 3);
-                CONTINUE;
+                break;
             }
             addr -= HES(0x000)*(addr%0x004 - 1);
             *(pi16)(DMEM + addr) = (i16)(SR[rt]);
-            CONTINUE;
+            break;
         case 053: /* SW */
             offset = (s16)(inst);
             base = (inst >> 21) & 31;
@@ -1905,7 +1921,7 @@ EX:
                 USW(rt, addr);
             else
                 *(pi32)(DMEM + addr) = SR[rt];
-            CONTINUE;
+            break;
         case 062: /* LWC2 */
             vt = (inst >> 16) & 31;
             element = (inst & 0x000007FF) >> 7;
@@ -1920,7 +1936,7 @@ EX:
 
             rd = (inst & 0x0000FFFF) >> 11;
             LWC2[rd](vt, element, offset, base);
-            CONTINUE;
+            break;
         case 072: /* SWC2 */
             vt = (inst >> 16) & 31;
             element = (inst & 0x000007FF) >> 7;
@@ -1935,11 +1951,11 @@ EX:
 
             rd = (inst & 0x0000FFFF) >> 11;
             SWC2[rd](vt, element, offset, base);
-            CONTINUE;
+            break;
         default:
             res_S();
-            CONTINUE;
         }
+
 #ifndef EMULATE_STATIC_PC
         if (stage == 2) { /* branch phase of scheduler */
             stage = 0*stage;

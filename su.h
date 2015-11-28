@@ -89,10 +89,8 @@ extern i32 SR[32];
 #define FIT_IMEM(PC)    ((PC) & 0xFFFu & 0xFFCu)
 
 #ifdef EMULATE_STATIC_PC
-#define CONTINUE    continue
 #define JUMP        goto BRANCH
 #else
-#define CONTINUE    break
 #define JUMP        break
 #endif
 
