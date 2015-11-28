@@ -47,13 +47,6 @@ void set_PC(unsigned int address)
     return;
 }
 
-static word_32 SR_temp;
-
-/*
- * All other behaviors defined below this point in the file are specific to
- * the SGI N64 extension to the MIPS R4000 and are not entirely implemented.
- */
-
 pu32 CR[16];
 u8 conf[32];
 
@@ -284,7 +277,113 @@ void SP_DMA_WRITE(void)
     return;
 }
 
-/*** Scalar, Coprocessor Operations (vector unit) ***/
+/*** scalar, R4000 memory loads and stores ***/
+
+PROFILE_MODE void LB(u32 inst)
+{
+    u32 addr;
+    const s16 offset = (s16)(inst & 0x0000FFFFul);
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    addr = SR[base] + offset;
+    SR[rt] = DMEM[BES(addr) & 0x00000FFFul];
+    SR[rt] = (s8)SR[rt];
+    SR[0] = 0x00000000;
+}
+PROFILE_MODE void LH(u32 inst)
+{
+    u32 addr;
+    const s16 offset = (s16)(inst & 0x0000FFFFul);
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    addr = SR[base] + offset;
+    SR[rt] = 0x00000000
+      | DMEM[BES(addr + 0) & 0x00000FFFul] <<  8
+      | DMEM[BES(addr + 1) & 0x00000FFFul] <<  0
+    ;
+    SR[rt] = (s16)SR[rt];
+    SR[0] = 0x00000000;
+}
+PROFILE_MODE void LW(u32 inst)
+{
+    u32 addr;
+    const s16 offset = (s16)(inst & 0x0000FFFFul);
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    addr = SR[base] + offset;
+    SR[rt] = 0x00000000
+      | DMEM[BES(addr + 0) & 0x00000FFFul] << 24
+      | DMEM[BES(addr + 1) & 0x00000FFFul] << 16
+      | DMEM[BES(addr + 2) & 0x00000FFFul] <<  8
+      | DMEM[BES(addr + 3) & 0x00000FFFul] <<  0
+    ;
+    SR[0] = 0x00000000;
+}
+PROFILE_MODE void LBU(u32 inst)
+{
+    u32 addr;
+    const s16 offset = (s16)(inst & 0x0000FFFFul);
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    addr = SR[base] + offset;
+    SR[rt] = DMEM[BES(addr) & 0x00000FFFul];
+    SR[0] = 0x00000000;
+}
+PROFILE_MODE void LHU(u32 inst)
+{
+    u32 addr;
+    const s16 offset = (s16)(inst & 0x0000FFFFul);
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    addr = SR[base] + offset;
+    SR[rt] = 0x00000000
+      | DMEM[BES(addr + 0) & 0x00000FFFul] <<  8
+      | DMEM[BES(addr + 1) & 0x00000FFFul] <<  0
+    ;
+    SR[0] = 0x00000000;
+}
+
+PROFILE_MODE void SB(u32 inst)
+{
+    u32 addr;
+    const s16 offset = (s16)(inst & 0x0000FFFFul);
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    addr = SR[base] + offset;
+    DMEM[BES(addr) & 0x00000FFFul] = (u8)(SR[rt] & 0xFFu);
+}
+PROFILE_MODE void SH(u32 inst)
+{
+    u32 addr;
+    const s16 offset = (s16)(inst & 0x0000FFFFul);
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    addr = SR[base] + offset;
+    DMEM[BES(addr + 0) & 0x00000FFFul] = (u8)((SR[rt] >>  8) & 0xFFu);
+    DMEM[BES(addr + 1) & 0x00000FFFul] = (u8)((SR[rt] >>  0) & 0xFFu);
+}
+PROFILE_MODE void SW(u32 inst)
+{
+    u32 addr;
+    const s16 offset = (s16)(inst & 0x0000FFFFul);
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    addr = SR[base] + offset;
+    DMEM[BES(addr + 0) & 0x00000FFFul] = (u8)((SR[rt] >> 24) & 0xFFu);
+    DMEM[BES(addr + 1) & 0x00000FFFul] = (u8)((SR[rt] >> 16) & 0xFFu);
+    DMEM[BES(addr + 2) & 0x00000FFFul] = (u8)((SR[rt] >>  8) & 0xFFu);
+    DMEM[BES(addr + 3) & 0x00000FFFul] = (u8)((SR[rt] >>  0) & 0xFFu);
+}
+
+/*** scalar, coprocessor operations (vector unit) ***/
 
 u16 rwR_VCE(void)
 { /* never saw a game try to read VCE out to a scalar GPR yet */
@@ -1437,45 +1536,6 @@ void STV(unsigned vt, unsigned element, signed offset, unsigned base)
     return;
 }
 
-/*** Modern pseudo-operations (not real instructions, but nice shortcuts) ***/
-void ULW(unsigned int rd, u32 addr)
-{ /* "Unaligned Load Word" */
-    if (addr & 0x00000001) {
-        SR_temp.B[03] = DMEM[BES(addr)];
-        addr = (addr + 0x001) & 0xFFF;
-        SR_temp.B[02] = DMEM[BES(addr)];
-        addr = (addr + 0x001) & 0xFFF;
-        SR_temp.B[01] = DMEM[BES(addr)];
-        addr = (addr + 0x001) & 0xFFF;
-        SR_temp.B[00] = DMEM[BES(addr)];
-    } else { /* addr & 0x00000002 */
-        SR_temp.H[01] = *(pi16)(DMEM + addr - HES(0x000));
-        addr = (addr + 0x002) & 0xFFF;
-        SR_temp.H[00] = *(pi16)(DMEM + addr + HES(0x000));
-    }
-    SR[rd] = SR_temp.W;
- /* SR[0] = 0x00000000; */
-    return;
-}
-void USW(unsigned int rs, u32 addr)
-{ /* "Unaligned Store Word" */
-    SR_temp.W = SR[rs];
-    if (addr & 0x00000001) {
-        DMEM[BES(addr)] = SR_temp.B[03];
-        addr = (addr + 0x001) & 0xFFF;
-        DMEM[BES(addr)] = SR_temp.B[02];
-        addr = (addr + 0x001) & 0xFFF;
-        DMEM[BES(addr)] = SR_temp.B[01];
-        addr = (addr + 0x001) & 0xFFF;
-        DMEM[BES(addr)] = SR_temp.B[00];
-    } else { /* addr & 0x00000002 */
-        *(pi16)(DMEM + addr - HES(0x000)) = SR_temp.H[01];
-        addr = (addr + 0x002) & 0xFFF;
-        *(pi16)(DMEM + addr + HES(0x000)) = SR_temp.H[00];
-    }
-    return;
-}
-
 int temp_PC;
 #ifdef WAIT_FOR_CPU_HOST
 short MFC0_count[32];
@@ -1593,7 +1653,6 @@ EX:
         unsigned int rs, vs;
         unsigned int rt, vt;
         unsigned int base; /* a synonym of `rs' for memory load/store ops */
-        register u32 addr;
 
     case 000: /* SPECIAL */
         rd = (inst & 0x0000FFFF) >> 11;
@@ -1858,105 +1917,29 @@ EX:
 #endif
         }
         break;
-    case 040: /* LB */
-        offset = (s16)(inst);
-        base = (inst >> 21) & 31;
-
-        addr = (SR[base] + offset) & 0x00000FFF;
-        rt = (inst >> 16) & 31;
-        SR[rt] = DMEM[BES(addr)];
-        SR[rt] = (s8)(SR[rt]);
-        SR[0] = 0x00000000;
+    case 040:
+        LB(inst);
         break;
-    case 041: /* LH */
-        offset = (s16)(inst);
-        base = (inst >> 21) & 31;
-
-        addr = (SR[base] + offset) & 0x00000FFF;
-        rt = (inst >> 16) & 31;
-        if (addr % 0x004 == 0x003) {
-            SR_B(rt, 2) = DMEM[addr - BES(0x000)];
-            addr = (addr + 0x00000001) & 0x00000FFF;
-            SR_B(rt, 3) = DMEM[addr + BES(0x000)];
-            SR[rt] = (s16)(SR[rt]);
-        } else {
-            addr -= HES(0x000)*(addr%0x004 - 1);
-            SR[rt] = *(ps16)(DMEM + addr);
-        }
-        SR[0] = 0x00000000;
+    case 041:
+        LH(inst);
         break;
-    case 043: /* LW */
-        offset = (s16)(inst);
-        base = (inst >> 21) & 31;
-
-        addr = (SR[base] + offset) & 0x00000FFF;
-        rt = (inst >> 16) & 31;
-        if (addr % 0x004 != 0x000)
-            ULW(rt, addr);
-        else
-            SR[rt] = *(pi32)(DMEM + addr);
-        SR[0] = 0x00000000;
+    case 043:
+        LW(inst);
         break;
-    case 044: /* LBU */
-        offset = (s16)(inst);
-        base = (inst >> 21) & 31;
-
-        addr = (SR[base] + offset) & 0x00000FFF;
-        rt = (inst >> 16) & 31;
-        SR[rt] = DMEM[BES(addr)];
-        SR[rt] = (u8)(SR[rt]);
-        SR[0] = 0x00000000;
+    case 044:
+        LBU(inst);
         break;
-    case 045: /* LHU */
-        offset = (s16)(inst);
-        base = (inst >> 21) & 31;
-
-        addr = (SR[base] + offset) & 0x00000FFF;
-        rt = (inst >> 16) & 31;
-        if (addr % 0x004 == 0x003) {
-            SR_B(rt, 2) = DMEM[addr - BES(0x000)];
-            addr = (addr + 0x00000001) & 0x00000FFF;
-            SR_B(rt, 3) = DMEM[addr + BES(0x000)];
-            SR[rt] = (u16)(SR[rt]);
-        } else {
-            addr -= HES(0x000)*(addr%0x004 - 1);
-            SR[rt] = *(pu16)(DMEM + addr);
-        }
-        SR[0] = 0x00000000;
+    case 045:
+        LHU(inst);
         break;
-    case 050: /* SB */
-        offset = (s16)(inst);
-        base = (inst >> 21) & 31;
-
-        addr = (SR[base] + offset) & 0x00000FFF;
-        rt = (inst >> 16) & 31;
-        DMEM[BES(addr)] = (u8)(SR[rt]);
+    case 050:
+        SB(inst);
         break;
-    case 051: /* SH */
-        offset = (s16)(inst);
-        base = (inst >> 21) & 31;
-
-        addr = (SR[base] + offset) & 0x00000FFF;
-        rt = (inst >> 16) & 31;
-        if (addr % 0x004 == 0x003) {
-            DMEM[addr - BES(0x000)] = SR_B(rt, 2);
-            addr = (addr + 0x00000001) & 0x00000FFF;
-            DMEM[addr + BES(0x000)] = SR_B(rt, 3);
-            break;
-        }
-        addr -= HES(0x000)*(addr%0x004 - 1);
-        *(pi16)(DMEM + addr) = (i16)(SR[rt]);
+    case 051:
+        SH(inst);
         break;
-    case 053: /* SW */
-        offset = (s16)(inst);
-        base = (inst >> 21) & 31;
-
-        addr = (SR[base] + offset) & 0x00000FFF;
-        rt = (inst >> 16) & 31;
-        if (addr%0x004 != 0x000)
-            USW(rt, addr);
-        else
-            *(pi32)(DMEM + addr) = SR[rt];
+    case 053:
+        SW(inst);
         break;
     case 062: /* LWC2 */
         vt = (inst >> 16) & 31;
