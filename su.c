@@ -277,6 +277,44 @@ void SP_DMA_WRITE(void)
     return;
 }
 
+/*** scalar, R4000 bit-wise logical operations ***/
+
+PROFILE_MODE void ANDI(u32 inst)
+{
+    const u16 immediate = (u16)(inst & 0x0000FFFFu);
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    SR[rt] = SR[rs] & immediate;
+    SR[zero] = 0x00000000;
+}
+PROFILE_MODE void ORI(u32 inst)
+{
+    const u16 immediate = (u16)(inst & 0x0000FFFFu);
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    SR[rt] = SR[rs] | immediate;
+    SR[zero] = 0x00000000;
+}
+PROFILE_MODE void XORI(u32 inst)
+{
+    const u16 immediate = (u16)(inst & 0x0000FFFFu);
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    SR[rt] = SR[rs] ^ immediate;
+    SR[zero] = 0x00000000;
+}
+PROFILE_MODE void LUI(u32 inst)
+{
+    const u16 immediate = (u16)(inst & 0x0000FFFFu);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    SR[rt] = (u32)immediate << 16; /* or:  SR[rt] = 0; SR[rt]31..16 = imm; */
+    SR[zero] = 0x00000000;
+}
+
 /*** scalar, R4000 memory loads and stores ***/
 
 PROFILE_MODE void LB(u32 inst)
@@ -1819,28 +1857,17 @@ EX:
         SR[rt] = ((u32)(SR[rs]) < (u16)(inst));
         SR[zero] = 0x00000000;
         break;
-    case 014: /* ANDI */
-        rs = (inst >> 21) & 31;
-        rt = (inst >> 16) & 31;
-        SR[rt] = SR[rs] & (inst & 0x0000FFFF);
-        SR[zero] = 0x00000000;
+    case 014:
+        ANDI(inst);
         break;
-    case 015: /* ORI */
-        rs = (inst >> 21) & 31;
-        rt = (inst >> 16) & 31;
-        SR[rt] = SR[rs] | (inst & 0x0000FFFF);
-        SR[zero] = 0x00000000;
+    case 015:
+        ORI(inst);
         break;
-    case 016: /* XORI */
-        rs = (inst >> 21) & 31;
-        rt = (inst >> 16) & 31;
-        SR[rt] = SR[rs] ^ (inst & 0x0000FFFF);
-        SR[zero] = 0x00000000;
+    case 016:
+        XORI(inst);
         break;
-    case 017: /* LUI */
-        rt = (inst >> 16) & 31;
-        SR[rt] = inst << 16;
-        SR[zero] = 0x00000000;
+    case 017:
+        LUI(inst);
         break;
     case 020: /* COP0 */
         rd = (inst & 0x0000FFFF) >> 11;
