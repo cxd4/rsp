@@ -383,7 +383,8 @@ NOINLINE size_t my_strlen(const char* str)
 {
     size_t ret_slot;
 
-    for (ret_slot = 0; *str != '\0'; ret_slot++, str++);
+    for (ret_slot = 0; *str != '\0'; ret_slot++, str++)
+        ;
     return (ret_slot);
 }
 

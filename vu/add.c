@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Adds            *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.30                                                         *
+* Release:  2015.11.27                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -336,17 +336,14 @@ VECTOR_OPERATION VSAW(v16 vs, v16 vt)
     const unsigned int element = (inst >> 21) & 0x7;
 
     vt = vs; /* unused */
-    if (element > 0x2)
-    { /* branch very unlikely...never seen a game do VSAW illegally */
+    if (element > 0x2) {
         message("VSAW\nIllegal mask.");
 #ifdef ARCH_MIN_SSE2
         vector_wipe(vs);
 #else
         vector_wipe(V_result);
 #endif
-    }
-    else
-    {
+    } else {
 #ifdef ARCH_MIN_SSE2
         vs = *(v16 *)VACC[element];
 #else
