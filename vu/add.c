@@ -333,9 +333,12 @@ VECTOR_OPERATION VSUBC(v16 vs, v16 vt)
 
 VECTOR_OPERATION VSAW(v16 vs, v16 vt)
 {
-    const unsigned int element = (inst >> 21) & 0x7;
+    unsigned int element;
 
     vt = vs; /* unused */
+    element  = 0xF & (inst >> 21);
+    element ^= 0x8; /* Convert scalar whole elements 8:F to 0:7. */
+
     if (element > 0x2) {
         message("VSAW\nIllegal mask.");
 #ifdef ARCH_MIN_SSE2
