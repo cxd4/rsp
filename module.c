@@ -213,10 +213,8 @@ NOINLINE void message(const char* body)
     my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
     i = 0;
     j = my_strlen(argv);
-    while (body[i] != '\0')
-    {
-        if (body[i] == '\n')
-        {
+    while (body[i] != '\0') {
+        if (body[i] == '\n') {
             my_strcat(argv, "&&ECHO ");
             ++i;
             j += 7;
