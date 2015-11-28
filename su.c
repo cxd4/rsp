@@ -277,6 +277,48 @@ void SP_DMA_WRITE(void)
     return;
 }
 
+/*** scalar, R4000 control flow manipulation ***/
+
+PROFILE_MODE int BEQ(u32 inst, u32 PC)
+{
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    if (!(SR[rs] == SR[rt]))
+        return 0;
+    set_PC(PC + 4*inst + SLOT_OFF);
+    return 1;
+}
+PROFILE_MODE int BNE(u32 inst, u32 PC)
+{
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
+
+    if (!(SR[rs] != SR[rt]))
+        return 0;
+    set_PC(PC + 4*inst + SLOT_OFF);
+    return 1;
+}
+PROFILE_MODE int BLEZ(u32 inst, u32 PC)
+{
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+
+    if (!((s32)SR[rs] <= 0))
+        return 0;
+    set_PC(PC + 4*inst + SLOT_OFF);
+    return 1;
+}
+PROFILE_MODE int BGTZ(u32 inst, u32 PC)
+{
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+
+    if (!((s32)SR[rs] >  0))
+        return 0;
+    set_PC(PC + 4*inst + SLOT_OFF);
+    return 1;
+}
+
+
 /*** scalar, R4000 bit-wise logical operations ***/
 
 PROFILE_MODE void ANDI(u32 inst)
@@ -1842,32 +1884,22 @@ EX:
     case 002: /* J */
         set_PC(4*inst);
         JUMP;
-    case 004: /* BEQ */
-        rs = (inst >> 21) & 31;
-        rt = (inst >> 16) & 31;
-        if (!(SR[rs] == SR[rt]))
-            break;
-        set_PC(PC + 4*inst + SLOT_OFF);
-        JUMP;
-    case 005: /* BNE */
-        rs = (inst >> 21) & 31;
-        rt = (inst >> 16) & 31;
-        if (!(SR[rs] != SR[rt]))
-            break;
-        set_PC(PC + 4*inst + SLOT_OFF);
-        JUMP;
-    case 006: /* BLEZ */
-        rs = (inst >> 21) & 31;
-        if (!((s32)SR[rs] <= 0x00000000))
-            break;
-        set_PC(PC + 4*inst + SLOT_OFF);
-        JUMP;
-    case 007: /* BGTZ */
-        rs = (inst >> 21) & 31;
-        if (!((s32)SR[rs] >  0x00000000))
-            break;
-        set_PC(PC + 4*inst + SLOT_OFF);
-        JUMP;
+    case 004:
+        if (BEQ(inst, PC) != 0)
+            JUMP;
+        break;
+    case 005:
+        if (BNE(inst, PC) != 0)
+            JUMP;
+        break;
+    case 006:
+        if (BLEZ(inst, PC) != 0)
+            JUMP;
+        break;
+    case 007:
+        if (BGTZ(inst, PC) != 0)
+            JUMP;
+        break;
     case 010: /* ADDI:  Traps don't exist on the RCP. */
     case 011:
         ADDIU(inst);
