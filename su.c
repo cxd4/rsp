@@ -25,7 +25,7 @@ int CPU_running;
 
 u32 inst;
 
-i32 SR[32];
+u32 SR[32];
 typedef VECTOR_OPERATION(*p_vector_func)(v16, v16);
 
 pu8 DRAM;

@@ -133,7 +133,7 @@ extern u8 conf[32];
  * based on the MIPS instruction set architecture but without most of the
  * original register names (for example, no kernel-reserved registers)
  */
-extern i32 SR[32];
+extern u32 SR[32];
 
 #define FIT_IMEM(PC)    ((PC) & 0xFFFu & 0xFFCu)
 
