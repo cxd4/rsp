@@ -209,7 +209,7 @@ NOINLINE void message(const char* body)
     char* argv;
     int i, j;
 
-    argv = my_calloc(4096, 1);
+    argv = my_calloc(my_strlen(body) + 64, 1);
     my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
     i = 0;
     j = my_strlen(argv);
