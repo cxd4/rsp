@@ -318,7 +318,6 @@ PROFILE_MODE int BGTZ(u32 inst, u32 PC)
     return 1;
 }
 
-
 /*** scalar, R4000 bit-wise logical operations ***/
 
 PROFILE_MODE void ANDI(u32 inst)
@@ -545,7 +544,7 @@ void CTC2(unsigned int rt, unsigned int rd)
     return;
 }
 
-/*** Scalar, Coprocessor Operations (vector unit, scalar cache transfers) ***/
+/*** scalar, coprocessor operations (vector unit, scalar cache transfers) ***/
 
 void LBV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
@@ -976,7 +975,6 @@ void LUV(unsigned vt, unsigned element, signed offset, unsigned base)
         }
         return;
     } /* "Mia Hamm Soccer 64" SP exception override (zilmar) */
-
     b = addr & 07;
     addr &= ~07;
     switch (b) {
@@ -1088,7 +1086,6 @@ void SPV(unsigned vt, unsigned element, signed offset, unsigned base)
         return;
     }
     addr = (SR[base] + 8*offset) & 0x00000FFF;
-
     b = addr & 07;
     addr &= ~07;
     switch (b) {
@@ -1200,7 +1197,6 @@ void SUV(unsigned vt, unsigned element, signed offset, unsigned base)
         return;
     }
     addr = (SR[base] + 8*offset) & 0x00000FFF;
-
     b = addr & 07;
     addr &= ~07;
     switch (b) {

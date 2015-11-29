@@ -88,11 +88,14 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
             { /* branch */ }
         else
             GET_RSP_INFO(ProcessDList)();
-        GET_RCP_REG(SP_STATUS_REG) |= 0x00000203;
-        if (GET_RCP_REG(SP_STATUS_REG) & 0x00000040) {
-            GET_RCP_REG(MI_INTR_REG) |= 0x00000001; /* R4300 SP interrupt */
+
+        GET_RCP_REG(SP_STATUS_REG) |=
+            SP_STATUS_SIG2 | SP_STATUS_BROKE | SP_STATUS_HALT
+        ;
+        if (GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_INTR_BREAK) {
+            GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
             GET_RSP_INFO(CheckInterrupts)();
-        } /* SP_STATUS_INTR_BREAK */
+        }
         if (GET_RCP_REG(DPC_STATUS_REG) & 0x00000002) {
             message("DPC_CLR_FREEZE");
             GET_RCP_REG(DPC_STATUS_REG) &= ~0x00000002;
@@ -108,11 +111,14 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
             { /* branch */ }
         else
             GET_RSP_INFO(ProcessAList)();
-        GET_RCP_REG(SP_STATUS_REG) |= 0x00000203;
-        if (GET_RCP_REG(SP_STATUS_REG) & 0x00000040) {
-            GET_RCP_REG(MI_INTR_REG) |= 0x00000001; /* R4300 SP interrupt */
+
+        GET_RCP_REG(SP_STATUS_REG) |=
+            SP_STATUS_SIG2 | SP_STATUS_BROKE | SP_STATUS_HALT
+        ;
+        if (GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_INTR_BREAK) {
+            GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
             GET_RSP_INFO(CheckInterrupts)();
-        } /* SP_STATUS_INTR_BREAK */
+        }
         return 0;
 #endif
     case M_VIDTASK:
