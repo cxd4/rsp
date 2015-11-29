@@ -1867,6 +1867,83 @@ PROFILE_MODE void COP0(u32 inst)
     }
 }
 
+PROFILE_MODE void COP2(u32 inst)
+{
+    const unsigned int op = (inst & 0x03E00000ul) >> 21; /* inst.R.rs */
+    const unsigned int vt = (inst & 0x001F0000ul) >> 16; /* inst.R.rt */
+    const unsigned int vs = (inst & 0x0000F800ul) >> 11; /* inst.R.rd */
+    const unsigned int vd = (inst & 0x000007C0ul) >>  6; /* inst.R.sa */
+    const unsigned int e  = op & 0xF;
+
+    switch (op) {
+#ifdef ARCH_MIN_SSE2
+        v16 source, target;
+#else
+        ALIGNED i16 source[N], target[N];
+#endif
+        p_vector_func vector_op;
+        register unsigned int i;
+
+    case 000:
+        MFC2(vt, vs, vd >> 1);
+        break;
+    case 002:
+        CFC2(vt, vs);
+        break;
+    case 004:
+        MTC2(vt, vs, vd >> 1);
+        break;
+    case 006:
+        CTC2(vt, vs);
+        break;
+    case 020:
+    case 021:
+        for (i = 0; i < N; i++)
+            shuffle_temporary[i] = VR[vt][i];
+        goto VU_execute; /* no scalar element decoding needed */
+    case 022:
+    case 023:
+        for (i = 0; i < N; i++)
+            shuffle_temporary[i] = VR[vt][ei[e][i]];
+        goto VU_execute;
+    case 024:
+    case 025:
+    case 026:
+    case 027:
+        for (i = 0; i < N; i++)
+            shuffle_temporary[i] = VR[vt][ei[e][i]];
+        goto VU_execute;
+    case 030:
+    case 031:
+    case 032:
+    case 033:
+    case 034:
+    case 035:
+    case 036:
+    case 037:
+        for (i = 0; i < N; i++)
+            shuffle_temporary[i] = VR[vt][e % N];
+        goto VU_execute;
+    default:
+        res_S();
+    VU_execute:
+        vector_op = COP2_C2[inst % 64];
+
+#ifdef ARCH_MIN_SSE2
+        source = *(v16 *)VR[vs];
+        target = *(v16 *)shuffle_temporary;
+
+        *(v16 *)(VR[vd]) = vector_op(source, target);
+#else
+        vector_copy(source, VR[vs]);
+        vector_copy(target, shuffle_temporary);
+
+        vector_op(source, target);
+        vector_copy(VR[vd], V_result);
+#endif
+    }
+}
+
 PROFILE_MODE u32 R4000_fetch_decode_execute(u32 PC);
 NOINLINE void run_task(void)
 {
@@ -1919,14 +1996,6 @@ NOINLINE void run_task(void)
 
 static u32 R4000_fetch_decode_execute(u32 PC)
 {
-#ifdef ARCH_MIN_SSE2
-    v16 source, target;
-#else
-    ALIGNED i16 source[N], target[N];
-#endif
-    p_vector_func vector_op;
-    unsigned int op, element;
-
     inst = *(pi32)(IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
     PC = (PC + 0x004);
@@ -1936,14 +2005,10 @@ EX:
     step_SP_commands(inst);
 #endif
 
-    op = inst >> 26;
 #if (0 != 0)
     SR[zero] = 0x00000000; /* already handled on per-instruction basis */
 #endif
-    switch (op) {
-        unsigned int rs, vs;
-        unsigned int vd, vt;
-
+    switch (inst >> 26) {
     case 000: /* SPECIAL */
         if (SPECIAL(inst, PC) != 0)
             JUMP; /* JR and JALR should return a non-zero value. */
@@ -1999,66 +2064,8 @@ EX:
     case 020:
         COP0(inst);
         break;
-    case 022: /* COP2 */
-        op = inst & 0x0000003F;
-        vd = (inst & 0x000007FF) >>  6; /* inst.R.sa */
-        vs = (inst & 0x0000FFFF) >> 11; /* inst.R.rd */
-        vt = (inst >> 16) & 31;
-
-        rs = (inst >> 21);
-        switch (rs %= 32) {
-        register unsigned int i;
-
-        case 000:
-            MFC2(vt, vs, vd >>= 1);
-            break;
-        case 002:
-            CFC2(vt, vs);
-            break;
-        case 004:
-            MTC2(vt, vs, vd >>= 1);
-            break;
-        case 006:
-            CTC2(vt, vs);
-            break;
-        case 020:
-        case 021:
-        case 022:
-        case 023:
-        case 024:
-        case 025:
-        case 026:
-        case 027:
-        case 030:
-        case 031:
-        case 032:
-        case 033:
-        case 034:
-        case 035:
-        case 036:
-        case 037:
-            goto VU_execute;
-        default:
-            res_S();
-        VU_execute:
-            vector_op = COP2_C2[op];
-            element = rs & 0xFu;
-            for (i = 0; i < N; i++)
-                shuffle_temporary[i] = VR[vt][ei[element][i]];
-
-#ifdef ARCH_MIN_SSE2
-            source = *(v16 *)VR[vs];
-            target = *(v16 *)shuffle_temporary;
-
-            *(v16 *)(VR[vd]) = vector_op(source, target);
-#else
-            vector_copy(source, VR[vs]);
-            vector_copy(target, shuffle_temporary);
-
-            vector_op(source, target);
-            vector_copy(VR[vd], V_result);
-#endif
-        }
+    case 022:
+        COP2(inst);
         break;
     case 040:
         LB(inst);
