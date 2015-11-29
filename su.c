@@ -279,6 +279,16 @@ void SP_DMA_WRITE(void)
 
 /*** scalar, R4000 control flow manipulation ***/
 
+PROFILE_MODE void J(u32 inst)
+{
+    set_PC(4 * inst);
+}
+PROFILE_MODE void JAL(u32 inst, u32 PC)
+{
+    SR[ra] = (PC + LINK_OFF) & 0x00000FFCul;
+    set_PC(4 * inst);
+}
+
 PROFILE_MODE int BEQ(u32 inst, u32 PC)
 {
     const unsigned int rs = (inst >> 21) % (1 << 5);
@@ -1875,10 +1885,11 @@ EX:
             res_S();
         }
         break;
-    case 003: /* JAL */
-        SR[ra] = (PC + LINK_OFF) & 0x00000FFC;
-    case 002: /* J */
-        set_PC(4*inst);
+    case 002:
+        J(inst);
+        JUMP;
+    case 003:
+        JAL(inst, PC);
         JUMP;
     case 004:
         if (BEQ(inst, PC) != 0)
