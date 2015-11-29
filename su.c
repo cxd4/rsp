@@ -1788,6 +1788,34 @@ PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
     return 0;
 }
 
+PROFILE_MODE int REGIMM(u32 inst, u32 PC)
+{
+    const unsigned int base = (inst >> 21) % (1 << 5);
+    const unsigned int rt   = (inst >> 16) % (1 << 5);
+
+    switch (rt) {
+    case 020: /* BLTZAL */
+        SR[ra] = FIT_IMEM(PC + LINK_OFF);
+     /* Fall through. */
+    case 000: /* BLTZ */
+        if (!((s32)SR[base] < 0))
+            return 0;
+        set_PC(PC + 4*inst + SLOT_OFF);
+        break;
+    case 021: /* BGEZAL */
+        SR[ra] = FIT_IMEM(PC + LINK_OFF);
+     /* Fall through. */
+    case 001: /* BGEZ */
+        if (!((s32)SR[base] >= 0))
+            return 0;
+        set_PC(PC + 4*inst + SLOT_OFF);
+        break;
+    default:
+        res_S();
+    }
+    return 1;
+}
+
 PROFILE_MODE void MWC2_load(u32 inst)
 {
     s16 offset;
@@ -1904,27 +1932,8 @@ EX:
             JUMP; /* JR and JALR should return a non-zero value. */
         break;
     case 001: /* REGIMM */
-        rs = (inst >> 21) & 31;
-        switch (rt = (inst >> 16) & 31) {
-        case 020: /* BLTZAL */
-            SR[ra] = (PC + LINK_OFF) & 0x00000FFC;
-            /* fall through */
-        case 000: /* BLTZ */
-            if (!((s32)SR[rs] < 0))
-                break;
-            set_PC(PC + 4*inst + SLOT_OFF);
+        if (REGIMM(inst, PC) != 0)
             JUMP;
-        case 021: /* BGEZAL */
-            SR[ra] = (PC + LINK_OFF) & 0x00000FFC;
-            /* fall through */
-        case 001: /* BGEZ */
-            if (!((s32)SR[rs] >= 0))
-                break;
-            set_PC(PC + 4*inst + SLOT_OFF);
-            JUMP;
-        default:
-            res_S();
-        }
         break;
     case 002:
         J(inst);
