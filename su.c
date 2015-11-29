@@ -1690,6 +1690,104 @@ static const unsigned char ei[1 << 4][N] = {
     { 07, 07, 07, 07, 07, 07, 07, 07 }, /* 7W */
 };
 
+PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
+{
+    unsigned int rd, rs, rt;
+
+    rd = (u32)(inst & 0x0000F800ul) >> 11;
+    rt = (u32)(inst & 0x001F0000ul) >> 16;
+    switch (inst % 64) {
+    case 000: /* SLL */
+        SR[rd] = SR[rt] << MASK_SA(inst >> 6);
+        SR[zero] = 0x00000000;
+        break;
+    case 002: /* SRL */
+        SR[rd] = (u32)(SR[rt]) >> MASK_SA(inst >> 6);
+        SR[zero] = 0x00000000;
+        break;
+    case 003: /* SRA */
+        SR[rd] = (s32)(SR[rt]) >> MASK_SA(inst >> 6);
+        SR[zero] = 0x00000000;
+        break;
+    case 004: /* SLLV */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = SR[rt] << MASK_SA(SR[rs]);
+        SR[zero] = 0x00000000;
+        break;
+    case 006: /* SRLV */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = (u32)(SR[rt]) >> MASK_SA(SR[rs]);
+        SR[zero] = 0x00000000;
+        break;
+    case 007: /* SRAV */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = (s32)(SR[rt]) >> MASK_SA(SR[rs]);
+        SR[zero] = 0x00000000;
+        break;
+    case 011: /* JALR */
+        SR[rd] = (PC + LINK_OFF) & 0x00000FFC;
+        SR[zero] = 0x00000000;
+     /* Fall through. */
+    case 010: /* JR */
+        rs = SPECIAL_DECODE_RS(inst);
+        set_PC(SR[rs]);
+        return 1;
+    case 015: /* BREAK */
+        *CR[0x4] |= SP_STATUS_BROKE | SP_STATUS_HALT;
+        CPU_running = 0;
+        if (*CR[0x4] & SP_STATUS_INTR_BREAK) {
+            GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
+            GET_RSP_INFO(CheckInterrupts)();
+        }
+        break;
+    case 040: /* ADD */
+    case 041: /* ADDU */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = SR[rs] + SR[rt];
+        SR[zero] = 0x00000000; /* needed for Rareware micro-codes */
+        break;
+    case 042: /* SUB */
+    case 043: /* SUBU */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = SR[rs] - SR[rt];
+        SR[zero] = 0x00000000;
+        break;
+    case 044: /* AND */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = SR[rs] & SR[rt];
+        SR[zero] = 0x00000000; /* needed for Rareware micro-codes */
+        break;
+    case 045: /* OR */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = SR[rs] | SR[rt];
+        SR[zero] = 0x00000000;
+        break;
+    case 046: /* XOR */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = SR[rs] ^ SR[rt];
+        SR[zero] = 0x00000000;
+        break;
+    case 047: /* NOR */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = ~(SR[rs] | SR[rt]);
+        SR[zero] = 0x00000000;
+        break;
+    case 052: /* SLT */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = ((s32)(SR[rs]) < (s32)(SR[rt]));
+        SR[zero] = 0x00000000;
+        break;
+    case 053: /* SLTU */
+        rs = SPECIAL_DECODE_RS(inst);
+        SR[rd] = ((u32)(SR[rs]) < (u32)(SR[rt]));
+        SR[zero] = 0x00000000;
+        break;
+    default:
+        res_S();
+    }
+    return 0;
+}
+
 PROFILE_MODE u32 R4000_fetch_decode_execute(u32 PC);
 NOINLINE void run_task(void)
 {
@@ -1771,96 +1869,8 @@ EX:
         unsigned int base; /* a synonym of `rs' for memory load/store ops */
 
     case 000: /* SPECIAL */
-        rd = (inst & 0x0000FFFF) >> 11;
-        rt = (inst >> 16) & 31;
-        switch (inst % 64) {
-        case 000: /* SLL */
-            SR[rd] = SR[rt] << MASK_SA(inst >> 6);
-            SR[zero] = 0x00000000;
-            break;
-        case 002: /* SRL */
-            SR[rd] = (u32)(SR[rt]) >> MASK_SA(inst >> 6);
-            SR[zero] = 0x00000000;
-            break;
-        case 003: /* SRA */
-            SR[rd] = (s32)(SR[rt]) >> MASK_SA(inst >> 6);
-            SR[zero] = 0x00000000;
-            break;
-        case 004: /* SLLV */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = SR[rt] << MASK_SA(SR[rs]);
-            SR[zero] = 0x00000000;
-            break;
-        case 006: /* SRLV */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = (u32)(SR[rt]) >> MASK_SA(SR[rs]);
-            SR[zero] = 0x00000000;
-            break;
-        case 007: /* SRAV */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = (s32)(SR[rt]) >> MASK_SA(SR[rs]);
-            SR[zero] = 0x00000000;
-            break;
-        case 011: /* JALR */
-            SR[rd] = (PC + LINK_OFF) & 0x00000FFC;
-            SR[zero] = 0x00000000;
-        case 010: /* JR */
-            rs = SPECIAL_DECODE_RS(inst);
-            set_PC(SR[rs]);
-            JUMP;
-        case 015: /* BREAK */
-            *CR[0x4] |= SP_STATUS_BROKE | SP_STATUS_HALT;
-            CPU_running = 0;
-            if (*CR[0x4] & SP_STATUS_INTR_BREAK) {
-                GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
-                GET_RSP_INFO(CheckInterrupts)();
-            }
-            break;
-        case 040: /* ADD */
-        case 041: /* ADDU */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = SR[rs] + SR[rt];
-            SR[zero] = 0x00000000; /* needed for Rareware micro-codes */
-            break;
-        case 042: /* SUB */
-        case 043: /* SUBU */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = SR[rs] - SR[rt];
-            SR[zero] = 0x00000000;
-            break;
-        case 044: /* AND */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = SR[rs] & SR[rt];
-            SR[zero] = 0x00000000; /* needed for Rareware micro-codes */
-            break;
-        case 045: /* OR */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = SR[rs] | SR[rt];
-            SR[zero] = 0x00000000;
-            break;
-        case 046: /* XOR */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = SR[rs] ^ SR[rt];
-            SR[zero] = 0x00000000;
-            break;
-        case 047: /* NOR */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = ~(SR[rs] | SR[rt]);
-            SR[zero] = 0x00000000;
-            break;
-        case 052: /* SLT */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = ((s32)(SR[rs]) < (s32)(SR[rt]));
-            SR[zero] = 0x00000000;
-            break;
-        case 053: /* SLTU */
-            rs = SPECIAL_DECODE_RS(inst);
-            SR[rd] = ((u32)(SR[rs]) < (u32)(SR[rt]));
-            SR[zero] = 0x00000000;
-            break;
-        default:
-            res_S();
-        }
+        if (SPECIAL(inst, PC) != 0)
+            JUMP; /* JR and JALR should return a non-zero value. */
         break;
     case 001: /* REGIMM */
         rs = (inst >> 21) & 31;
