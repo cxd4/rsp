@@ -239,7 +239,8 @@ extern void set_PC(unsigned int address);
 #define SP_STATUS_SIG6          (0x00000001ul << 13)
 #define SP_STATUS_SIG7          (0x00000001ul << 14)
 
-extern pu32 CR[16];
+#define NUMBER_OF_CP0_REGISTERS         16
+extern pu32 CR[NUMBER_OF_CP0_REGISTERS];
 
 extern void SP_DMA_READ(void);
 extern void SP_DMA_WRITE(void);

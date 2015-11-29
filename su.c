@@ -47,14 +47,14 @@ void set_PC(unsigned int address)
     return;
 }
 
-pu32 CR[16];
+pu32 CR[NUMBER_OF_CP0_REGISTERS];
 u8 conf[32];
 
 int MF_SP_STATUS_TIMEOUT;
 
 void SP_CP0_MF(unsigned int rt, unsigned int rd)
 {
-    SR[rt] = *(CR[rd]);
+    SR[rt] = *(CR[rd %= NUMBER_OF_CP0_REGISTERS]);
     SR[zero] = 0x00000000;
     if (rd == 0x7) {
         if (CFG_MEND_SEMAPHORE_LOCK == 0)
@@ -203,7 +203,7 @@ static void MT_READ_ONLY(unsigned int rt)
     return;
 }
 
-static void (*SP_CP0_MT[16])(unsigned int) = {
+static void (*SP_CP0_MT[NUMBER_OF_CP0_REGISTERS])(unsigned int) = {
 MT_DMA_CACHE       ,MT_DMA_DRAM        ,MT_DMA_READ_LENGTH ,MT_DMA_WRITE_LENGTH,
 MT_SP_STATUS       ,MT_READ_ONLY       ,MT_READ_ONLY       ,MT_SP_RESERVED,
 MT_CMD_START       ,MT_CMD_END         ,MT_READ_ONLY       ,MT_CMD_STATUS,
@@ -1849,6 +1849,24 @@ PROFILE_MODE void MWC2_store(u32 inst)
     SWC2[(inst & 0x0000F800u) >> 11](vt, element, offset, base);
 }
 
+PROFILE_MODE void COP0(u32 inst)
+{
+    const unsigned int rd = (inst & 0x0000F800ul) >> 11;
+    const unsigned int rs = (inst & 0x03E00000ul) >> 21;
+    const unsigned int rt = (inst & 0x001F0000ul) >> 16;
+
+    switch (rs) {
+    case 000:
+        SP_CP0_MF(rt, rd);
+        break;
+    case 004:
+        SP_CP0_MT[rd % NUMBER_OF_CP0_REGISTERS](rt);
+        break;
+    default:
+        res_S();
+    }
+}
+
 PROFILE_MODE u32 R4000_fetch_decode_execute(u32 PC);
 NOINLINE void run_task(void)
 {
@@ -1923,9 +1941,8 @@ EX:
     SR[zero] = 0x00000000; /* already handled on per-instruction basis */
 #endif
     switch (op) {
-        unsigned int rd, vd;
         unsigned int rs, vs;
-        unsigned int rt, vt;
+        unsigned int vd, vt;
 
     case 000: /* SPECIAL */
         if (SPECIAL(inst, PC) != 0)
@@ -1979,19 +1996,8 @@ EX:
     case 017:
         LUI(inst);
         break;
-    case 020: /* COP0 */
-        rd = (inst & 0x0000FFFF) >> 11;
-        rt = (inst >> 16) & 31;
-        switch (rs = (inst >> 21) & 31) {
-        case 000: /* MFC0 */
-            SP_CP0_MF(rt, rd & 0xF);
-            break;
-        case 004: /* MTC0 */
-            SP_CP0_MT[rd & 0xF](rt);
-            break;
-        default:
-            res_S();
-        }
+    case 020:
+        COP0(inst);
         break;
     case 022: /* COP2 */
         op = inst & 0x0000003F;
