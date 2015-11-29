@@ -1788,6 +1788,39 @@ PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
     return 0;
 }
 
+PROFILE_MODE void MWC2_load(u32 inst)
+{
+    s16 offset;
+    const unsigned int base    = (inst >> 21) % (1 << 5);
+    const unsigned int vt      = (inst >> 16) % (1 << 5);
+    const unsigned int element = (inst >>  7) % (1 << 4);
+
+    offset = (s16)(inst & 0x0000FFFFul);
+#ifdef ARCH_MIN_SSE2
+    offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
+    offset >>= 5 + 4;
+#else
+    offset = SE(offset, 6); /* sign-extended seven-bit offset */
+#endif
+    LWC2[(inst & 0x0000F800u) >> 11](vt, element, offset, base);
+}
+PROFILE_MODE void MWC2_store(u32 inst)
+{
+    s16 offset;
+    const unsigned int base    = (inst >> 21) % (1 << 5);
+    const unsigned int vt      = (inst >> 16) % (1 << 5);
+    const unsigned int element = (inst >>  7) % (1 << 4);
+
+    offset = (s16)(inst & 0x0000FFFFul);
+#ifdef ARCH_MIN_SSE2
+    offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
+    offset >>= 5 + 4;
+#else
+    offset = SE(offset, 6); /* sign-extended seven-bit offset */
+#endif
+    SWC2[(inst & 0x0000F800u) >> 11](vt, element, offset, base);
+}
+
 PROFILE_MODE u32 R4000_fetch_decode_execute(u32 PC);
 NOINLINE void run_task(void)
 {
@@ -1862,11 +1895,9 @@ EX:
     SR[zero] = 0x00000000; /* already handled on per-instruction basis */
 #endif
     switch (op) {
-        s16 offset;
         unsigned int rd, vd;
         unsigned int rs, vs;
         unsigned int rt, vt;
-        unsigned int base; /* a synonym of `rs' for memory load/store ops */
 
     case 000: /* SPECIAL */
         if (SPECIAL(inst, PC) != 0)
@@ -2039,34 +2070,10 @@ EX:
         SW(inst);
         break;
     case 062: /* LWC2 */
-        vt = (inst >> 16) & 31;
-        element = (inst & 0x000007FF) >> 7;
-        offset = (s16)(inst);
-#ifdef ARCH_MIN_SSE2
-        offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
-        offset >>= 5 + 4;
-#else
-        offset = SE(offset, 6); /* sign-extended seven-bit offset */
-#endif
-        base = (inst >> 21) & 31;
-
-        rd = (inst & 0x0000FFFF) >> 11;
-        LWC2[rd](vt, element, offset, base);
+        MWC2_load(inst);
         break;
     case 072: /* SWC2 */
-        vt = (inst >> 16) & 31;
-        element = (inst & 0x000007FF) >> 7;
-        offset = (s16)(inst);
-#ifdef ARCH_MIN_SSE2
-        offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
-        offset >>= 5 + 4;
-#else
-        offset = SE(offset, 6); /* sign-extended seven-bit offset */
-#endif
-        base = (inst >> 21) & 31;
-
-        rd = (inst & 0x0000FFFF) >> 11;
-        SWC2[rd](vt, element, offset, base);
+        MWC2_store(inst);
         break;
     default:
         res_S();
