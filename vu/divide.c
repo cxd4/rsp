@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Divides         *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.27                                                         *
+* Release:  2015.11.29                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -15,13 +15,23 @@
 
 #include "divide.h"
 
-s32 DivIn = 0; /* buffered numerator of division read from vector file */
-s32 DivOut = 0; /* global division result set by VRCP/VRCPL/VRSQ/VRSQL */
-#if (0)
-s32 MovIn; /* We do not emulate this register (obsolete, for VMOV). */
+static s32 DivIn = 0; /* buffered numerator of division read from vector file */
+static s32 DivOut = 0; /* global division result set by VRCP/VRCPL/VRSQ/VRSQL */
+#if (0 != 0)
+static s32 MovIn; /* We do not emulate this register (obsolete, for VMOV). */
 #endif
 
-int DPH = 0;
+/*
+ * Boolean flag:  Double-precision high was the last vector divide op?
+ *
+ * if (lastDivideOp == VRCP, VRCPL, VRSQ, VRSQL)
+ *     DPH = false; // single-precision or double-precision low, not high
+ * else if (lastDivideOp == VRCPH, VRSQH)
+ *     DPH = true; // double-precision high
+ * else if (lastDivideOp == VMOV, VNOP)
+ *     DPH = DPH; // no change--divide-group ops but not real divides
+ */
+static int DPH = 0;
 
 /*
  * 11-bit vector divide result look-up table
@@ -1051,7 +1061,7 @@ static const u16 div_ROM[1 << 10] = {
     0x0080,
     0x6ABF,
     0x0040,
-    0x6A64
+    0x6A64,
 };
 
 enum {
