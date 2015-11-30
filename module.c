@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.27                                                         *
+* Release:  2015.11.30                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -139,6 +139,16 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
         break;
     }
     run_task();
+
+/*
+ * An optional EMMS when compiling with Intel SIMD or MMX support.
+ *
+ * Whether or not MMX has been executed in this emulator, here is a good time
+ * to finally empty the MM state, at the end of a long interpreter loop.
+ */
+#ifdef ARCH_MIN_SSE2
+    _mm_empty();
+#endif
     return (cycles);
 }
 

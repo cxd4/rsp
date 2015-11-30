@@ -1962,16 +1962,6 @@ NOINLINE void run_task(void)
     }
     GET_RCP_REG(SP_PC_REG) = 0x04001000 | FIT_IMEM(PC);
 
-/*
- * An optional EMMS when compiling with Intel SIMD or MMX support.
- *
- * Whether or not MMX has been executed in this emulator, here is a good time
- * to finally empty the MM state, at the end of a long interpreter loop.
- */
-#ifdef ARCH_MIN_SSE2
-    _mm_empty();
-#endif
-
     if (*CR[0x4] & SP_STATUS_BROKE) /* normal exit, from executing BREAK */
         return;
     else if (GET_RCP_REG(MI_INTR_REG) & 1) /* interrupt set by MTC0 to break */
