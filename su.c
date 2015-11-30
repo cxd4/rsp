@@ -485,8 +485,8 @@ PROFILE_MODE void SH(u32 inst)
     const unsigned int rt   = (inst >> 16) % (1 << 5);
 
     addr = SR[base] + offset;
-    DMEM[BES(addr + 0) & 0x00000FFFul] = (u8)((SR[rt] >>  8) & 0xFFu);
-    DMEM[BES(addr + 1) & 0x00000FFFul] = (u8)((SR[rt] >>  0) & 0xFFu);
+    DMEM[BES(addr + 0) & 0x00000FFFul] = SR_B(rt, 2);
+    DMEM[BES(addr + 1) & 0x00000FFFul] = SR_B(rt, 3);
 }
 PROFILE_MODE void SW(u32 inst)
 {
@@ -496,10 +496,10 @@ PROFILE_MODE void SW(u32 inst)
     const unsigned int rt   = (inst >> 16) % (1 << 5);
 
     addr = SR[base] + offset;
-    DMEM[BES(addr + 0) & 0x00000FFFul] = (u8)((SR[rt] >> 24) & 0xFFu);
-    DMEM[BES(addr + 1) & 0x00000FFFul] = (u8)((SR[rt] >> 16) & 0xFFu);
-    DMEM[BES(addr + 2) & 0x00000FFFul] = (u8)((SR[rt] >>  8) & 0xFFu);
-    DMEM[BES(addr + 3) & 0x00000FFFul] = (u8)((SR[rt] >>  0) & 0xFFu);
+    DMEM[BES(addr + 0) & 0x00000FFFul] = SR_B(rt, 0);
+    DMEM[BES(addr + 1) & 0x00000FFFul] = SR_B(rt, 1);
+    DMEM[BES(addr + 2) & 0x00000FFFul] = SR_B(rt, 2);
+    DMEM[BES(addr + 3) & 0x00000FFFul] = SR_B(rt, 3);
 }
 
 /*** scalar, coprocessor operations (vector unit) ***/
