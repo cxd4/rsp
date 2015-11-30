@@ -188,8 +188,11 @@ extern void set_PC(unsigned int address);
 #define MASK_SA(sa) ((sa) & 31)
 #endif
 
-/* If primary op-code is SPECIAL (000000), we could skip ANDing the rs shift. */
-#if (~0U >> 1 == ~0U) || defined(_DEBUG)
+/*
+ * If primary op-code is SPECIAL (000000), we could skip ANDing the rs shift.
+ * Shifts losing precision are undefined, so don't assume that (1 >> 1 == 0).
+ */
+#if (0xFFFFFFFFul >> 31 != 0x000000001ul) || defined(_DEBUG)
 #define SPECIAL_DECODE_RS(inst)     (((inst) & 0x03E00000UL) >> 21)
 #else
 #define SPECIAL_DECODE_RS(inst)     ((inst) >> 21)
