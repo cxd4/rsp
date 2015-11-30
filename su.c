@@ -40,7 +40,7 @@ NOINLINE void res_S(void)
 
 void set_PC(unsigned int address)
 {
-    temp_PC = 0x04001000 + (address & 0xFFC);
+    temp_PC = 0x04001000 + FIT_IMEM(address);
 #ifndef EMULATE_STATIC_PC
     stage = 1;
 #endif
@@ -285,7 +285,7 @@ PROFILE_MODE void J(u32 inst)
 }
 PROFILE_MODE void JAL(u32 inst, u32 PC)
 {
-    SR[ra] = (PC + LINK_OFF) & 0x00000FFCul;
+    SR[ra] = FIT_IMEM(PC + LINK_OFF);
     set_PC(4 * inst);
 }
 
@@ -1723,7 +1723,7 @@ PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
         SR[zero] = 0x00000000;
         break;
     case 011: /* JALR */
-        SR[rd] = (PC + LINK_OFF) & 0x00000FFC;
+        SR[rd] = FIT_IMEM(PC + LINK_OFF);
         SR[zero] = 0x00000000;
      /* Fall through. */
     case 010: /* JR */
@@ -2102,11 +2102,11 @@ EX:
 #ifndef EMULATE_STATIC_PC
     if (stage == 2) { /* branch phase of scheduler */
         stage = 0*stage;
-        PC = temp_PC & 0x00000FFC;
+        PC = FIT_IMEM(temp_PC);
         GET_RCP_REG(SP_PC_REG) = temp_PC;
     } else {
         stage = 2*stage; /* next IW in branch delay slot? */
-        PC = (PC + 0x004) & 0xFFC;
+        PC = FIT_IMEM(PC + 0x004);
         GET_RCP_REG(SP_PC_REG) = 0x04001000 + PC;
     }
     return (PC);
@@ -2114,7 +2114,7 @@ EX:
     return (PC);
 set_branch_delay:
     inst = *(pi32)(IMEM + FIT_IMEM(PC));
-    PC = temp_PC & 0x00000FFC;
+    PC = FIT_IMEM(temp_PC);
     goto EX;
 #endif
 }
