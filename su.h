@@ -194,10 +194,6 @@ extern void set_PC(unsigned int address);
 #endif
 #define SR_B(s, i)      *((unsigned char *)&(SR[s]) + BES(i))
 
-                     /* (-(x & (1 << b)) | (x)) */
-#define SE(x, b)        (-(x & (1 << b)) | (x & ~(~0 << b)))
-#define ZE(x, b)        (+(x & (1 << b)) | (x & ~(~0 << b)))
-
 /*
  * Since RSP vectors are stored 100% accurately as big-endian arrays for the
  * proper vector operation math to be done, LWC2 and SWC2 emulation code will

@@ -1821,12 +1821,12 @@ PROFILE_MODE void MWC2_load(u32 inst)
     const unsigned int vt      = (inst >> 16) % (1 << 5);
     const unsigned int element = (inst >>  7) % (1 << 4);
 
-    offset = (s16)(inst & 0x0000FFFFul);
 #ifdef ARCH_MIN_SSE2
+    offset   = (s16)inst;
     offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
     offset >>= 5 + 4;
 #else
-    offset = SE(offset, 6); /* sign-extended seven-bit offset */
+    offset = (inst & 64) ? -(s16)(~inst%64 + 1) : inst % 64;
 #endif
     LWC2[(inst & 0x0000F800u) >> 11](vt, element, offset, base);
 }
@@ -1837,12 +1837,12 @@ PROFILE_MODE void MWC2_store(u32 inst)
     const unsigned int vt      = (inst >> 16) % (1 << 5);
     const unsigned int element = (inst >>  7) % (1 << 4);
 
-    offset = (s16)(inst & 0x0000FFFFul);
 #ifdef ARCH_MIN_SSE2
+    offset = (s16)inst;
     offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
     offset >>= 5 + 4;
 #else
-    offset = SE(offset, 6); /* sign-extended seven-bit offset */
+    offset = (inst & 64) ? -(s16)(~inst%64 + 1) : inst % 64;
 #endif
     SWC2[(inst & 0x0000F800u) >> 11](vt, element, offset, base);
 }
