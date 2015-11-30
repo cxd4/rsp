@@ -174,12 +174,18 @@ extern int MF_SP_STATUS_TIMEOUT;
 #define LINK_OFF    ((BASE_OFF) + 0x004)
 extern void set_PC(unsigned int address);
 
-#if (0x7FFFFFFFul >> 037 != 0x7FFFFFFFul >> ~0U)
-#define MASK_SA(sa) (sa & 037)
-/* Force masking in software. */
-#else
+/*
+ * If the client CPU's shift amount is exactly 5 bits for a 32-bit source,
+ * then omit emulating (sa & 31) in the SLL/SRL/SRA interpreter steps.
+ * (Additionally, omit doing (GPR[rs] & 31) in SLLV/SRLV/SRAV.)
+ *
+ * As C pre-processor logic seems incapable of interpreting type storage,
+ * stuff like #if (1U << 31 == 1U << ~0U) will generally just fail.
+ */
+#if defined(ARCH_MIN_SSE2)
 #define MASK_SA(sa) (sa)
-/* Let hardware architecture do the mask for us. */
+#else
+#define MASK_SA(sa) ((sa) & 31)
 #endif
 
 /* If primary op-code is SPECIAL (000000), we could skip ANDing the rs shift. */
