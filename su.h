@@ -16,7 +16,9 @@
 #ifndef _SU_H_
 #define _SU_H_
 
+#include <limits.h>
 #include <stdio.h>
+
 #include "my_types.h"
 #include "rsp.h"
 
@@ -187,7 +189,10 @@ extern void set_PC(unsigned int address);
 #define SPECIAL_DECODE_RS(inst)     ((inst) >> 21)
 #endif
 
-#define SR_B(s, i)      *(pu8)((pu8)&(SR[s]) + BES(i))
+#if (CHAR_BIT != 8)
+#error Non-POSIX-compliant (char) storage width.
+#endif
+#define SR_B(s, i)      *((unsigned char *)&(SR[s]) + BES(i))
 
                      /* (-(x & (1 << b)) | (x)) */
 #define SE(x, b)        (-(x & (1 << b)) | (x & ~(~0 << b)))
