@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.28                                                         *
+* Release:  2015.11.30                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -433,12 +433,10 @@ PROFILE_MODE void LW(u32 inst)
     const unsigned int rt   = (inst >> 16) % (1 << 5);
 
     addr = SR[base] + offset;
-    SR[rt] = 0x00000000
-      | DMEM[BES(addr + 0) & 0x00000FFFul] << 24
-      | DMEM[BES(addr + 1) & 0x00000FFFul] << 16
-      | DMEM[BES(addr + 2) & 0x00000FFFul] <<  8
-      | DMEM[BES(addr + 3) & 0x00000FFFul] <<  0
-    ;
+    SR_B(rt, 0) = DMEM[BES(addr + 0) & 0x00000FFFul];
+    SR_B(rt, 1) = DMEM[BES(addr + 1) & 0x00000FFFul];
+    SR_B(rt, 2) = DMEM[BES(addr + 2) & 0x00000FFFul];
+    SR_B(rt, 3) = DMEM[BES(addr + 3) & 0x00000FFFul];
     SR[zero] = 0x00000000;
 }
 PROFILE_MODE void LBU(u32 inst)

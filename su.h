@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.28                                                         *
+* Release:  2015.11.30                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -187,8 +187,7 @@ extern void set_PC(unsigned int address);
 #define SPECIAL_DECODE_RS(inst)     ((inst) >> 21)
 #endif
 
-#define SR_B(s, i)      (*(pi8)(((pi8)(SR + s)) + BES(i)))
-#define SR_S(s, i)      (*(pi16)(((pi8)(SR + s)) + HES(i)))
+#define SR_B(s, i)      (*(pu8)(((pu8)(SR + (s))) + BES(i)))
 
                      /* (-(x & (1 << b)) | (x)) */
 #define SE(x, b)        (-(x & (1 << b)) | (x & ~(~0 << b)))
