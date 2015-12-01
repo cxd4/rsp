@@ -1902,14 +1902,14 @@ PROFILE_MODE void COP2(u32 inst)
     case 022:
     case 023:
         for (i = 0; i < N; i++)
-            shuffle_temporary[i] = VR[vt][ei[e][i]];
+            shuffle_temporary[i] = VR[vt][(i & 0xE) + (e & 0x1)];
         goto VU_execute;
     case 024:
     case 025:
     case 026:
     case 027:
         for (i = 0; i < N; i++)
-            shuffle_temporary[i] = VR[vt][ei[e][i]];
+            shuffle_temporary[i] = VR[vt][(i & 0xC) + (e & 0x3)];
         goto VU_execute;
     case 030:
     case 031:
