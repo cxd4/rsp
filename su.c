@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.30                                                         *
+* Release:  2015.12.01                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1692,8 +1692,9 @@ PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
 {
     unsigned int rd, rs, rt;
 
-    rd = (u32)(inst & 0x0000F800ul) >> 11;
-    rt = (u32)(inst & 0x001F0000ul) >> 16;
+    rd = IW_RD(inst);
+    rt = (inst >> 16) % (1 << 5);
+
     switch (inst % 64) {
     case 000: /* SLL */
         SR[rd] = SR[rt] << MASK_SA(inst >> 6);
@@ -1828,7 +1829,7 @@ PROFILE_MODE void MWC2_load(u32 inst)
 #else
     offset = (inst & 64) ? -(s16)(~inst%64 + 1) : inst % 64;
 #endif
-    LWC2[(inst & 0x0000F800u) >> 11](vt, element, offset, base);
+    LWC2[IW_RD(inst)](vt, element, offset, base);
 }
 PROFILE_MODE void MWC2_store(u32 inst)
 {
@@ -1844,14 +1845,14 @@ PROFILE_MODE void MWC2_store(u32 inst)
 #else
     offset = (inst & 64) ? -(s16)(~inst%64 + 1) : inst % 64;
 #endif
-    SWC2[(inst & 0x0000F800u) >> 11](vt, element, offset, base);
+    SWC2[IW_RD(inst)](vt, element, offset, base);
 }
 
 PROFILE_MODE void COP0(u32 inst)
 {
-    const unsigned int rd = (inst & 0x0000F800ul) >> 11;
-    const unsigned int rs = (inst & 0x03E00000ul) >> 21;
-    const unsigned int rt = (inst & 0x001F0000ul) >> 16;
+    const unsigned int rd = IW_RD(inst);
+    const unsigned int rs = (inst >> 21) % (1 << 5);
+    const unsigned int rt = (inst >> 16) % (1 << 5);
 
     switch (rs) {
     case 000:
@@ -1867,10 +1868,10 @@ PROFILE_MODE void COP0(u32 inst)
 
 PROFILE_MODE void COP2(u32 inst)
 {
-    const unsigned int op = (inst & 0x03E00000ul) >> 21; /* inst.R.rs */
-    const unsigned int vt = (inst & 0x001F0000ul) >> 16; /* inst.R.rt */
-    const unsigned int vs = (inst & 0x0000F800ul) >> 11; /* inst.R.rd */
-    const unsigned int vd = (inst & 0x000007C0ul) >>  6; /* inst.R.sa */
+    const unsigned int op = (inst >> 21) % (1 << 5); /* inst.R.rs */
+    const unsigned int vt = (inst >> 16) % (1 << 5); /* inst.R.rt */
+    const unsigned int vs = IW_RD(inst);
+    const unsigned int vd = (inst >>  6) % (1 << 5); /* inst.R.sa */
     const unsigned int e  = op & 0xF;
 
     switch (op) {

@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.30                                                         *
+* Release:  2015.12.01                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -184,8 +184,10 @@ extern void set_PC(unsigned int address);
  */
 #if defined(ARCH_MIN_SSE2)
 #define MASK_SA(sa) (sa)
+#define IW_RD(inst) ((u16)(inst) >> 11)
 #else
 #define MASK_SA(sa) ((sa) & 31)
+#define IW_RD(inst) (u8)(((inst) >> 11) % (1 << 5))
 #endif
 
 /*
