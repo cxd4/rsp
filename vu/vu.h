@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.01.30                                                         *
+* Release:  2015.11.30                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -271,6 +271,8 @@ extern void set_VCE(u8 VCE);
  * name "MFC0", which had to be renamed.)  Rather than uglify the function
  * names, we'll treat them as macros from now on, should the need arise.
  */
+#ifndef _WIN32
+
 #define VMULF       mulf_v_msp
 #define VMULU       mulu_v_msp
 #define VMULI       rndp_v_msp
@@ -347,5 +349,7 @@ extern void set_VCE(u8 VCE);
 #define VINSQ       insq_v_msp
 #define VINSN       insn_v_msp
 #define VNULLOP     nop_v_msp
+
+#endif
 
 #endif
