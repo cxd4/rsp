@@ -198,38 +198,52 @@ extern void set_PC(unsigned int address);
 #define SPECIAL_DECODE_RS(inst)     ((inst) >> 21)
 #endif
 
+/*
+ * Try to stick to (unsigned char) to conform to strict aliasing rules.
+ *
+ * Do not say `u8`.  My custom type definitions are minimum-size types.
+ * Do not say `uint8_t`.  Exact-width types are not portable/universal.
+ */
 #if (CHAR_BIT != 8)
 #error Non-POSIX-compliant (char) storage width.
 #endif
-#define SR_B(s, i)      *((unsigned char *)&(SR[s]) + BES(i))
 
 /*
- * Since RSP vectors are stored 100% accurately as big-endian arrays for the
- * proper vector operation math to be done, LWC2 and SWC2 emulation code will
- * have to look a little different.  zilmar's method is to distort the endian
- * using an array of unions, permitting hacked byte- and halfword-precision.
+ * RSP general-purpose registers (GPRs) are always 32-bit scalars (SRs).
+ * SR_B(gpr, 0) is SR[gpr]31..24, and SR_B(gpr, 3) is SR[gpr]7..0.
  */
+#define SR_B(scalar, i)         *((unsigned char *)&(SR[scalar]) + BES(i))
 
 /*
- * Universal byte-access macro for 16*8 halfword vectors.
+ * Universal byte-access macro for 8-element vectors of 16-bit halfwords.
  * Use this macro if you are not sure whether the element is odd or even.
+ *
+ * Maybe a typedef union{} can be better, but it's less readable for RSP
+ * vector registers.  Only 16-bit element computations exist, so the correct
+ * allocation of the register file is int16_t v[32][8], not a_union v[32].
+ *
+ * Either method--dynamic union reads or special aliasing--is undefined
+ * behavior and will not truly be portable code anyway, so it hardly matters.
  */
-#define VR_B(vt,element)    (*(pi8)((pi8)(VR[vt]) + MES(element)))
+#define VR_B(vt, element)       *((unsigned char *)&(VR[vt][0]) + MES(element))
 
 /*
  * Optimized byte-access macros for the vector registers.
- * Use these ONLY if you know the element is even (or odd in the second).
+ * Use these ONLY if you know the element is even (VR_A) or odd (VR_U).
+ *
+ * They are faster because LEA PTR [offset +/- 1] means fewer CPU
+ * instructions generated than (offset ^ 1) does, in most cases.
  */
-#define VR_A(vt,element)    (*(pi8)((pi8)(VR[vt]) + element + MES(0x0)))
-#define VR_U(vt,element)    (*(pi8)((pi8)(VR[vt]) + element - MES(0x0)))
+#define VR_A(vt, e)             *((unsigned char *)&(VR[vt][0]) + e + MES(0))
+#define VR_U(vt, e)             *((unsigned char *)&(VR[vt][0]) + e - MES(0))
 
 /*
- * Optimized halfword-access macro for indexing eight-element vectors.
  * Use this ONLY if you know the element is even, not odd.
  *
- * If the four-bit element is odd, then there is no solution in one hit.
+ * This is only provided for purposes of consistency with VR_B() and friends.
+ * Saying `VR[vt][1] = x;` instead of `VR_S(vt, 2) = x` works as well.
  */
-#define VR_S(vt,element)    (*(pi16)((pi8)(VR[vt]) + element))
+#define VR_S(vt, element)       *(pi16)((unsigned char *)&(VR[vt][0]) + element)
 
 /*** Scalar, Coprocessor Operations (system control) ***/
 #define SP_STATUS_HALT          (0x00000001ul <<  0)
