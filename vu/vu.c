@@ -73,7 +73,7 @@ VECTOR_OPERATION res_M(v16 vs, v16 vt)
  */
 VECTOR_OPERATION (*COP2_C2[8 * 8])(v16, v16) = {
     VMULF  ,VMULU  ,res_M  ,res_M  ,VMUDL  ,VMUDM  ,VMUDN  ,VMUDH  , /* 000 */
-    VMACF  ,VMACU  ,res_M  ,VMACQ  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
+    VMACF  ,VMACU  ,res_M  ,res_M  ,VMADL  ,VMADM  ,VMADN  ,VMADH  , /* 001 */
     VADD   ,VSUB   ,res_V  ,VABS   ,VADDC  ,VSUBC  ,res_V  ,res_V  , /* 010 */
     res_V  ,res_V  ,res_V  ,res_V  ,res_V  ,VSAW   ,res_V  ,res_V  , /* 011 */
     VLT    ,VEQ    ,VNE    ,VGE    ,VCL    ,VCH    ,VCR    ,VMRG   , /* 100 */
