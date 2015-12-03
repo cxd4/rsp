@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.01                                                         *
+* Release:  2015.12.03                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -46,9 +46,9 @@
  * Unfortunately, most op-codes are optimized to require this to be TRUE.
  */
 #if (ENDIAN_M == 0)
-#define USE_CLIENT_ENDIAN       FALSE
+#define USE_CLIENT_ENDIAN       0
 #else
-#define USE_CLIENT_ENDIAN       TRUE
+#define USE_CLIENT_ENDIAN       1
 #endif
 
 /*
