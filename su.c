@@ -1925,9 +1925,18 @@ PROFILE_MODE void COP2(u32 inst)
     case 035:
     case 036:
     case 037:
+#ifdef ARCH_MIN_SSE2
+        *(v16 *)(VR[vd]) = vector_op(
+            *(v16 *)VR[vs],
+            _mm_set1_epi16(VR[vt][op - 0x18])
+        );
+#else
         for (i = 0; i < N; i++)
             shuffle_temporary[i] = VR[vt][e % N];
-        goto VU_execute;
+        vector_op(&VR[vs][0], &shuffle_temporary[0]);
+        vector_copy(&VR[vd][0], &V_result[0]);
+#endif
+        break;
     default:
         res_S();
     VU_execute:
