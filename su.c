@@ -1868,19 +1868,20 @@ PROFILE_MODE void COP0(u32 inst)
 
 PROFILE_MODE void COP2(u32 inst)
 {
+    p_vector_func vector_op;
     const unsigned int op = (inst >> 21) % (1 << 5); /* inst.R.rs */
     const unsigned int vt = (inst >> 16) % (1 << 5); /* inst.R.rt */
     const unsigned int vs = IW_RD(inst);
     const unsigned int vd = (inst >>  6) % (1 << 5); /* inst.R.sa */
     const unsigned int e  = op & 0xF;
 
+    vector_op = COP2_C2[inst % 64];
     switch (op) {
 #ifdef ARCH_MIN_SSE2
         v16 source, target;
 #else
         ALIGNED i16 source[N], target[N];
 #endif
-        p_vector_func vector_op;
         register unsigned int i;
 
     case 000:
@@ -1897,9 +1898,13 @@ PROFILE_MODE void COP2(u32 inst)
         break;
     case 020:
     case 021:
-        for (i = 0; i < N; i++)
-            shuffle_temporary[i] = VR[vt][i];
-        goto VU_execute; /* no scalar element decoding needed */
+#ifdef ARCH_MIN_SSE2
+        *(v16 *)(VR[vd]) = vector_op(*(v16 *)VR[vs], *(v16 *)VR[vt]);
+#else
+        vector_op(&VR[vs][0], &VR[vt][0]);
+        vector_copy(&VR[vd][0], &V_result[0]);
+#endif
+        break;
     case 022:
     case 023:
         for (i = 0; i < N; i++)
@@ -1926,8 +1931,6 @@ PROFILE_MODE void COP2(u32 inst)
     default:
         res_S();
     VU_execute:
-        vector_op = COP2_C2[inst % 64];
-
 #ifdef ARCH_MIN_SSE2
         source = *(v16 *)VR[vs];
         target = *(v16 *)shuffle_temporary;
