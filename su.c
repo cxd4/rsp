@@ -1955,7 +1955,6 @@ PROFILE_MODE void COP2(u32 inst)
     }
 }
 
-PROFILE_MODE u32 R4000_fetch_decode_execute(u32 PC);
 NOINLINE void run_task(void)
 {
     register u32 PC;
@@ -1969,9 +1968,128 @@ NOINLINE void run_task(void)
     CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
 
     while (CPU_running != 0) {
-        PC = R4000_fetch_decode_execute(PC);
-     /* CPU_running &= !(SP_STATUS_REG & SP_STATUS_HALT) ? 1 : 0; */
+        inst = *(pi32)(IMEM + FIT_IMEM(PC));
+#ifdef EMULATE_STATIC_PC
+        PC = (PC + 0x004);
+EX:
+#endif
+#ifdef SP_EXECUTE_LOG
+        step_SP_commands(inst);
+#endif
+
+#if (0 != 0)
+        SR[zero] = 0x00000000; /* already handled on per-instruction basis */
+#endif
+        switch (inst >> 26) {
+        case 000: /* SPECIAL */
+            if (SPECIAL(inst, PC) != 0)
+                JUMP; /* JR and JALR should return a non-zero value. */
+            break;
+        case 001: /* REGIMM */
+            if (REGIMM(inst, PC) != 0)
+                JUMP;
+            break;
+        case 002:
+            J(inst);
+            JUMP;
+        case 003:
+            JAL(inst, PC);
+            JUMP;
+        case 004:
+            if (BEQ(inst, PC) != 0)
+                JUMP;
+            break;
+        case 005:
+            if (BNE(inst, PC) != 0)
+                JUMP;
+            break;
+        case 006:
+            if (BLEZ(inst, PC) != 0)
+                JUMP;
+            break;
+        case 007:
+            if (BGTZ(inst, PC) != 0)
+                JUMP;
+            break;
+        case 010: /* ADDI:  Traps don't exist on the RCP. */
+        case 011:
+            ADDIU(inst);
+            break;
+        case 012:
+            SLTI(inst);
+            break;
+        case 013:
+            SLTIU(inst);
+            break;
+        case 014:
+            ANDI(inst);
+            break;
+        case 015:
+            ORI(inst);
+            break;
+        case 016:
+            XORI(inst);
+            break;
+        case 017:
+            LUI(inst);
+            break;
+        case 020:
+            COP0(inst);
+            break;
+        case 022:
+            COP2(inst);
+            break;
+        case 040:
+            LB(inst);
+            break;
+        case 041:
+            LH(inst);
+            break;
+        case 043:
+            LW(inst);
+            break;
+        case 044:
+            LBU(inst);
+            break;
+        case 045:
+            LHU(inst);
+            break;
+        case 050:
+            SB(inst);
+            break;
+        case 051:
+            SH(inst);
+            break;
+        case 053:
+            SW(inst);
+            break;
+        case 062: /* LWC2 */
+            MWC2_load(inst);
+            break;
+        case 072: /* SWC2 */
+            MWC2_store(inst);
+            break;
+        default:
+            res_S();
+        }
+
+#ifndef EMULATE_STATIC_PC
+        if (stage == 2) { /* branch phase of scheduler */
+            stage = 0*stage;
+            PC = FIT_IMEM(temp_PC);
+            GET_RCP_REG(SP_PC_REG) = temp_PC;
+        } else {
+            stage = 2*stage; /* next IW in branch delay slot? */
+            PC = FIT_IMEM(PC + 0x004);
+            GET_RCP_REG(SP_PC_REG) = 0x04001000 + PC;
+        }
+#else
         continue;
+set_branch_delay:
+        inst = *(pi32)(IMEM + FIT_IMEM(PC));
+        PC = FIT_IMEM(temp_PC);
+        goto EX;
+#endif
     }
     GET_RCP_REG(SP_PC_REG) = 0x04001000 | FIT_IMEM(PC);
 
@@ -1993,131 +2111,4 @@ NOINLINE void run_task(void)
     *CR[0x4] &= ~SP_STATUS_HALT; /* CPU restarts with the correct SIGs. */
     CPU_running = 1;
     return;
-}
-
-static u32 R4000_fetch_decode_execute(u32 PC)
-{
-    inst = *(pi32)(IMEM + FIT_IMEM(PC));
-#ifdef EMULATE_STATIC_PC
-    PC = (PC + 0x004);
-EX:
-#endif
-#ifdef SP_EXECUTE_LOG
-    step_SP_commands(inst);
-#endif
-
-#if (0 != 0)
-    SR[zero] = 0x00000000; /* already handled on per-instruction basis */
-#endif
-    switch (inst >> 26) {
-    case 000: /* SPECIAL */
-        if (SPECIAL(inst, PC) != 0)
-            JUMP; /* JR and JALR should return a non-zero value. */
-        break;
-    case 001: /* REGIMM */
-        if (REGIMM(inst, PC) != 0)
-            JUMP;
-        break;
-    case 002:
-        J(inst);
-        JUMP;
-    case 003:
-        JAL(inst, PC);
-        JUMP;
-    case 004:
-        if (BEQ(inst, PC) != 0)
-            JUMP;
-        break;
-    case 005:
-        if (BNE(inst, PC) != 0)
-            JUMP;
-        break;
-    case 006:
-        if (BLEZ(inst, PC) != 0)
-            JUMP;
-        break;
-    case 007:
-        if (BGTZ(inst, PC) != 0)
-            JUMP;
-        break;
-    case 010: /* ADDI:  Traps don't exist on the RCP. */
-    case 011:
-        ADDIU(inst);
-        break;
-    case 012:
-        SLTI(inst);
-        break;
-    case 013:
-        SLTIU(inst);
-        break;
-    case 014:
-        ANDI(inst);
-        break;
-    case 015:
-        ORI(inst);
-        break;
-    case 016:
-        XORI(inst);
-        break;
-    case 017:
-        LUI(inst);
-        break;
-    case 020:
-        COP0(inst);
-        break;
-    case 022:
-        COP2(inst);
-        break;
-    case 040:
-        LB(inst);
-        break;
-    case 041:
-        LH(inst);
-        break;
-    case 043:
-        LW(inst);
-        break;
-    case 044:
-        LBU(inst);
-        break;
-    case 045:
-        LHU(inst);
-        break;
-    case 050:
-        SB(inst);
-        break;
-    case 051:
-        SH(inst);
-        break;
-    case 053:
-        SW(inst);
-        break;
-    case 062: /* LWC2 */
-        MWC2_load(inst);
-        break;
-    case 072: /* SWC2 */
-        MWC2_store(inst);
-        break;
-    default:
-        res_S();
-    }
-
-#ifndef EMULATE_STATIC_PC
-    if (stage == 2) { /* branch phase of scheduler */
-        stage = 0*stage;
-        PC = FIT_IMEM(temp_PC);
-        GET_RCP_REG(SP_PC_REG) = temp_PC;
-    } else {
-        stage = 2*stage; /* next IW in branch delay slot? */
-        PC = FIT_IMEM(PC + 0x004);
-        GET_RCP_REG(SP_PC_REG) = 0x04001000 + PC;
-    }
-    return (PC);
-#else
-    return (PC);
-set_branch_delay:
-    inst = *(pi32)(IMEM + FIT_IMEM(PC));
-    PC = FIT_IMEM(temp_PC);
-    goto EX;
-#endif
 }
