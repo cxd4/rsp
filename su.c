@@ -21,8 +21,6 @@
  */
 #include "module.h"
 
-int CPU_running;
-
 u32 inst;
 
 u32 SR[32];
@@ -63,14 +61,12 @@ void SP_CP0_MF(unsigned int rt, unsigned int rd)
             return;
         GET_RCP_REG(SP_SEMAPHORE_REG) = 0x00000001;
         GET_RCP_REG(SP_STATUS_REG) |= SP_STATUS_HALT; /* temporary hack */
-        CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
         return;
     }
 #ifdef WAIT_FOR_CPU_HOST
     if (rd == 0x4) {
         MFC0_count[rt] += 1;
         GET_RCP_REG(SP_STATUS_REG) |= (MFC0_count[rt] >= MF_SP_STATUS_TIMEOUT);
-        CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & 1;
     }
 #endif
     return;
@@ -134,7 +130,6 @@ static void MT_SP_STATUS(unsigned int rt)
     *SP_STATUS_REG |=  (!!(SR[rt] & 0x00400000) << 13);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00800000) << 14);
     *SP_STATUS_REG |=  (!!(SR[rt] & 0x01000000) << 14);
-    CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & 1;
     return;
 }
 static void MT_SP_RESERVED(unsigned int rt)
@@ -1733,7 +1728,6 @@ PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
         return 1;
     case 015: /* BREAK */
         *CR[0x4] |= SP_STATUS_BROKE | SP_STATUS_HALT;
-        CPU_running = 0;
         if (*CR[0x4] & SP_STATUS_INTR_BREAK) {
             GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
             GET_RSP_INFO(CheckInterrupts)();
@@ -1965,7 +1959,6 @@ NOINLINE void run_task(void)
         MFC0_count[i] = 0;
 #endif
     PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));
-    CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
 
     for (;;) {
         inst = *(pi32)(IMEM + FIT_IMEM(PC));
@@ -1978,6 +1971,8 @@ EX:
 #endif
 
 #if (0 != 0)
+        if (GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT)
+            goto RSP_halted_CPU_exit_point; /* Only BREAK and COP0 set this. */
         SR[zero] = 0x00000000; /* already handled on per-instruction basis */
 #endif
         switch (inst >> 26) {
@@ -2039,7 +2034,7 @@ EX:
             break;
         case 020:
             COP0(inst);
-            if (!CPU_running)
+            if (GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT)
                 goto RSP_halted_CPU_exit_point;
             break;
         case 022:
@@ -2116,6 +2111,5 @@ RSP_halted_CPU_exit_point:
     }
 #endif
     *CR[0x4] &= ~SP_STATUS_HALT; /* CPU restarts with the correct SIGs. */
-    CPU_running = 1;
     return;
 }

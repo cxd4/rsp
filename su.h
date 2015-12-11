@@ -120,8 +120,6 @@ typedef enum {
     S8 = fp
 } GPR_specifier;
 
-extern int CPU_running;
-
 extern RSP_INFO RSP_INFO_NAME;
 extern pu8 DRAM;
 extern pu8 DMEM;
