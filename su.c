@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.01                                                         *
+* Release:  2015.12.11                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1738,7 +1738,7 @@ PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
             GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
             GET_RSP_INFO(CheckInterrupts)();
         }
-        break;
+        return -1;
     case 040: /* ADD */
     case 041: /* ADDU */
         rs = SPECIAL_DECODE_RS(inst);
@@ -1967,7 +1967,7 @@ NOINLINE void run_task(void)
     PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));
     CPU_running = ~GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT;
 
-    while (CPU_running != 0) {
+    for (;;) {
         inst = *(pi32)(IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
         PC = (PC + 0x004);
@@ -1982,8 +1982,12 @@ EX:
 #endif
         switch (inst >> 26) {
         case 000: /* SPECIAL */
-            if (SPECIAL(inst, PC) != 0)
-                JUMP; /* JR and JALR should return a non-zero value. */
+            switch (SPECIAL(inst, PC)) {
+            case -1: /* BREAK */
+                goto RSP_halted_CPU_exit_point;
+            case +1: /* JR and JALR */
+                JUMP;
+            }
             break;
         case 001: /* REGIMM */
             if (REGIMM(inst, PC) != 0)
@@ -2035,6 +2039,8 @@ EX:
             break;
         case 020:
             COP0(inst);
+            if (!CPU_running)
+                goto RSP_halted_CPU_exit_point;
             break;
         case 022:
             COP2(inst);
@@ -2091,6 +2097,7 @@ set_branch_delay:
         goto EX;
 #endif
     }
+RSP_halted_CPU_exit_point:
     GET_RCP_REG(SP_PC_REG) = 0x04001000 | FIT_IMEM(PC);
 
     if (*CR[0x4] & SP_STATUS_BROKE) /* normal exit, from executing BREAK */
