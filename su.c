@@ -1663,6 +1663,7 @@ mwc2_func SWC2[2 * 8*2] = {
     res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,
 };
 
+#ifndef ARCH_MIN_SSE2
 static ALIGNED i16 shuffle_temporary[N];
 static const unsigned char ei[1 << 4][N] = {
     { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none (vector-only operand) */
@@ -1682,6 +1683,7 @@ static const unsigned char ei[1 << 4][N] = {
     { 06, 06, 06, 06, 06, 06, 06, 06 }, /* 6W */
     { 07, 07, 07, 07, 07, 07, 07, 07 }, /* 7W */
 };
+#endif
 
 PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
 {
@@ -1867,16 +1869,18 @@ PROFILE_MODE void COP2(u32 inst)
     const unsigned int vt = (inst >> 16) % (1 << 5); /* inst.R.rt */
     const unsigned int vs = IW_RD(inst);
     const unsigned int vd = (inst >>  6) % (1 << 5); /* inst.R.sa */
-    const unsigned int e  = op & 0xF;
+#ifndef ARCH_MIN_SSE2
+    const unsigned int e  = op & 0xF; /* With Intel, LEA offsets beat ANDing. */
+#endif
 
     vector_op = COP2_C2[inst % 64];
     switch (op) {
 #ifdef ARCH_MIN_SSE2
-        v16 source, target;
+        v16 target;
 #else
         ALIGNED i16 source[N], target[N];
-#endif
         register unsigned int i;
+#endif
 
     case 000:
         MFC2(vt, vs, vd >> 1);
@@ -1901,9 +1905,22 @@ PROFILE_MODE void COP2(u32 inst)
         break;
     case 022:
     case 023:
+#ifdef ARCH_MIN_SSE2
+        target = _mm_setzero_si128();
+        target = _mm_insert_epi16(target, VR[vt][0 + op - 0x12], 0);
+        target = _mm_insert_epi16(target, VR[vt][2 + op - 0x12], 2);
+        target = _mm_insert_epi16(target, VR[vt][4 + op - 0x12], 4);
+        target = _mm_insert_epi16(target, VR[vt][6 + op - 0x12], 6);
+        target = _mm_shufflehi_epi16(target, _MM_SHUFFLE(2, 2, 0, 0));
+        target = _mm_shufflelo_epi16(target, _MM_SHUFFLE(2, 2, 0, 0));
+        *(v16 *)(VR[vd]) = vector_op(*(v16 *)VR[vs], target);
+#else
         for (i = 0; i < N; i++)
             shuffle_temporary[i] = VR[vt][(i & 0xE) + (e & 0x1)];
-        goto VU_execute;
+        vector_op(&VR[vs][0], &shuffle_temporary[0]);
+        vector_copy(&VR[vd][0], &V_result[0]);
+#endif
+        break;
     case 024:
     case 025:
     case 026:
@@ -1944,19 +1961,6 @@ PROFILE_MODE void COP2(u32 inst)
         break;
     default:
         res_S();
-    VU_execute:
-#ifdef ARCH_MIN_SSE2
-        source = *(v16 *)VR[vs];
-        target = *(v16 *)shuffle_temporary;
-
-        *(v16 *)(VR[vd]) = vector_op(source, target);
-#else
-        vector_copy(source, VR[vs]);
-        vector_copy(target, shuffle_temporary);
-
-        vector_op(source, target);
-        vector_copy(VR[vd], V_result);
-#endif
     }
 }
 
