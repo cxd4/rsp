@@ -1909,7 +1909,7 @@ PROFILE_MODE void COP2(u32 inst)
     case 026:
     case 027:
 #ifdef ARCH_MIN_SSE2
-        target = *(v16 *)VR[vt];
+        target = _mm_setzero_si128();
         target = _mm_insert_epi16(target, VR[vt][0 + op - 0x14], 0);
         target = _mm_insert_epi16(target, VR[vt][4 + op - 0x14], 4);
         target = _mm_shufflehi_epi16(target, _MM_SHUFFLE(0, 0, 0, 0));
