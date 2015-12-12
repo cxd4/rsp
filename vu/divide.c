@@ -1074,7 +1074,7 @@ enum {
 /*, SP_DIV_PRECISION_CURRENT */
 };
 
-INLINE static void do_div(i32 data, int sqrt, int precision)
+NOINLINE static void do_div(i32 data, int sqrt, int precision)
 {
     i32 addr;
     int fetch;
