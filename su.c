@@ -1908,9 +1908,20 @@ PROFILE_MODE void COP2(u32 inst)
     case 025:
     case 026:
     case 027:
+#ifdef ARCH_MIN_SSE2
+        target = *(v16 *)VR[vt];
+        target = _mm_insert_epi16(target, VR[vt][0 + op - 0x14], 0);
+        target = _mm_insert_epi16(target, VR[vt][4 + op - 0x14], 4);
+        target = _mm_shufflehi_epi16(target, _MM_SHUFFLE(0, 0, 0, 0));
+        target = _mm_shufflelo_epi16(target, _MM_SHUFFLE(0, 0, 0, 0));
+        *(v16 *)(VR[vd]) = vector_op(*(v16 *)VR[vs], target);
+#else
         for (i = 0; i < N; i++)
             shuffle_temporary[i] = VR[vt][(i & 0xC) + (e & 0x3)];
-        goto VU_execute;
+        vector_op(&VR[vs][0], &shuffle_temporary[0]);
+        vector_copy(&VR[vd][0], &V_result[0]);
+#endif
+        break;
     case 030:
     case 031:
     case 032:
