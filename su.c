@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.11                                                         *
+* Release:  2015.12.12                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1663,8 +1663,8 @@ mwc2_func SWC2[2 * 8*2] = {
     res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,
 };
 
-#ifndef ARCH_MIN_SSE2
 static ALIGNED i16 shuffle_temporary[N];
+#ifndef ARCH_MIN_SSE2
 static const unsigned char ei[1 << 4][N] = {
     { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none (vector-only operand) */
     { 00, 01, 02, 03, 04, 05, 06, 07 },
@@ -1906,11 +1906,11 @@ PROFILE_MODE void COP2(u32 inst)
     case 022:
     case 023:
 #ifdef ARCH_MIN_SSE2
-        target = _mm_setzero_si128();
-        target = _mm_insert_epi16(target, VR[vt][0 + op - 0x12], 0);
-        target = _mm_insert_epi16(target, VR[vt][2 + op - 0x12], 2);
-        target = _mm_insert_epi16(target, VR[vt][4 + op - 0x12], 4);
-        target = _mm_insert_epi16(target, VR[vt][6 + op - 0x12], 6);
+        shuffle_temporary[0] = VR[vt][0 + op - 0x12];
+        shuffle_temporary[2] = VR[vt][2 + op - 0x12];
+        shuffle_temporary[4] = VR[vt][4 + op - 0x12];
+        shuffle_temporary[6] = VR[vt][6 + op - 0x12];
+        target = *(v16 *)(&shuffle_temporary[0]);
         target = _mm_shufflehi_epi16(target, _MM_SHUFFLE(2, 2, 0, 0));
         target = _mm_shufflelo_epi16(target, _MM_SHUFFLE(2, 2, 0, 0));
         *(v16 *)(VR[vd]) = vector_op(*(v16 *)VR[vs], target);
