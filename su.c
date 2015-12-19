@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.12                                                         *
+* Release:  2015.12.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1864,16 +1864,15 @@ PROFILE_MODE void COP0(u32 inst)
 
 PROFILE_MODE void COP2(u32 inst)
 {
-    p_vector_func vector_op;
     const unsigned int op = (inst >> 21) % (1 << 5); /* inst.R.rs */
     const unsigned int vt = (inst >> 16) % (1 << 5); /* inst.R.rt */
     const unsigned int vs = IW_RD(inst);
     const unsigned int vd = (inst >>  6) % (1 << 5); /* inst.R.sa */
+    const unsigned int func = inst % (1 << 6);
 #ifndef ARCH_MIN_SSE2
     const unsigned int e  = op & 0xF; /* With Intel, LEA offsets beat ANDing. */
 #endif
 
-    vector_op = COP2_C2[inst % 64];
     switch (op) {
 #ifdef ARCH_MIN_SSE2
         v16 target;
@@ -1897,9 +1896,9 @@ PROFILE_MODE void COP2(u32 inst)
     case 020:
     case 021:
 #ifdef ARCH_MIN_SSE2
-        *(v16 *)(VR[vd]) = vector_op(*(v16 *)VR[vs], *(v16 *)VR[vt]);
+        *(v16 *)(VR[vd]) = COP2_C2[func](*(v16 *)VR[vs], *(v16 *)VR[vt]);
 #else
-        vector_op(&VR[vs][0], &VR[vt][0]);
+        COP2_C2[func](&VR[vs][0], &VR[vt][0]);
         vector_copy(&VR[vd][0], &V_result[0]);
 #endif
         break;
@@ -1913,11 +1912,11 @@ PROFILE_MODE void COP2(u32 inst)
         target = *(v16 *)(&shuffle_temporary[0]);
         target = _mm_shufflehi_epi16(target, _MM_SHUFFLE(2, 2, 0, 0));
         target = _mm_shufflelo_epi16(target, _MM_SHUFFLE(2, 2, 0, 0));
-        *(v16 *)(VR[vd]) = vector_op(*(v16 *)VR[vs], target);
+        *(v16 *)(VR[vd]) = COP2_C2[func](*(v16 *)VR[vs], target);
 #else
         for (i = 0; i < N; i++)
             shuffle_temporary[i] = VR[vt][(i & 0xE) + (e & 0x1)];
-        vector_op(&VR[vs][0], &shuffle_temporary[0]);
+        COP2_C2[func](&VR[vs][0], &shuffle_temporary[0]);
         vector_copy(&VR[vd][0], &V_result[0]);
 #endif
         break;
@@ -1931,11 +1930,11 @@ PROFILE_MODE void COP2(u32 inst)
         target = _mm_insert_epi16(target, VR[vt][4 + op - 0x14], 4);
         target = _mm_shufflehi_epi16(target, _MM_SHUFFLE(0, 0, 0, 0));
         target = _mm_shufflelo_epi16(target, _MM_SHUFFLE(0, 0, 0, 0));
-        *(v16 *)(VR[vd]) = vector_op(*(v16 *)VR[vs], target);
+        *(v16 *)(VR[vd]) = COP2_C2[func](*(v16 *)VR[vs], target);
 #else
         for (i = 0; i < N; i++)
             shuffle_temporary[i] = VR[vt][(i & 0xC) + (e & 0x3)];
-        vector_op(&VR[vs][0], &shuffle_temporary[0]);
+        COP2_C2[func](&VR[vs][0], &shuffle_temporary[0]);
         vector_copy(&VR[vd][0], &V_result[0]);
 #endif
         break;
@@ -1948,14 +1947,14 @@ PROFILE_MODE void COP2(u32 inst)
     case 036:
     case 037:
 #ifdef ARCH_MIN_SSE2
-        *(v16 *)(VR[vd]) = vector_op(
+        *(v16 *)(VR[vd]) = COP2_C2[func](
             *(v16 *)VR[vs],
             _mm_set1_epi16(VR[vt][op - 0x18])
         );
 #else
         for (i = 0; i < N; i++)
             shuffle_temporary[i] = VR[vt][e % N];
-        vector_op(&VR[vs][0], &shuffle_temporary[0]);
+        COP2_C2[func](&VR[vs][0], &shuffle_temporary[0]);
         vector_copy(&VR[vd][0], &V_result[0]);
 #endif
         break;
