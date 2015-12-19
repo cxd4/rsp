@@ -1877,7 +1877,6 @@ PROFILE_MODE void COP2(u32 inst)
 #ifdef ARCH_MIN_SSE2
         v16 target;
 #else
-        ALIGNED i16 source[N], target[N];
         register unsigned int i;
 #endif
 
