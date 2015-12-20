@@ -149,6 +149,23 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
 #ifdef ARCH_MIN_SSE2
     _mm_empty();
 #endif
+
+    if (*CR[0x4] & SP_STATUS_BROKE) /* normal exit, from executing BREAK */
+        return (cycles);
+    else if (GET_RCP_REG(MI_INTR_REG) & 1) /* interrupt set by MTC0 to break */
+        GET_RSP_INFO(CheckInterrupts)();
+    else if (*CR[0x7] != 0x00000000) /* semaphore lock fixes */
+        {}
+#ifdef WAIT_FOR_CPU_HOST
+    else
+        MF_SP_STATUS_TIMEOUT = 16; /* From now on, wait 16 times, not 32767. */
+#else
+    else { /* ??? unknown, possibly external intervention from CPU memory map */
+        message("SP_SET_HALT");
+        return (cycles);
+    }
+#endif
+    *CR[0x4] &= ~SP_STATUS_HALT; /* CPU restarts with the correct SIGs. */
     return (cycles);
 }
 

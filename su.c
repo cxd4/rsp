@@ -2107,22 +2107,5 @@ set_branch_delay:
     }
 RSP_halted_CPU_exit_point:
     GET_RCP_REG(SP_PC_REG) = 0x04001000 | FIT_IMEM(PC);
-
-    if (*CR[0x4] & SP_STATUS_BROKE) /* normal exit, from executing BREAK */
-        return;
-    else if (GET_RCP_REG(MI_INTR_REG) & 1) /* interrupt set by MTC0 to break */
-        GET_RSP_INFO(CheckInterrupts)();
-    else if (*CR[0x7] != 0x00000000) /* semaphore lock fixes */
-        {}
-#ifdef WAIT_FOR_CPU_HOST
-    else
-        MF_SP_STATUS_TIMEOUT = 16; /* From now on, wait 16 times, not 32767. */
-#else
-    else { /* ??? unknown, possibly external intervention from CPU memory map */
-        message("SP_SET_HALT");
-        return;
-    }
-#endif
-    *CR[0x4] &= ~SP_STATUS_HALT; /* CPU restarts with the correct SIGs. */
     return;
 }
