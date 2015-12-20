@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.30                                                         *
+* Release:  2015.12.19                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -59,6 +59,7 @@ EXPORT void CALL DllConfig(p_void hParent)
 EXPORT u32 CALL DoRspCycles(u32 cycles)
 {
     OSTask_type task_type;
+    register unsigned int i;
 
     if (GET_RCP_REG(SP_STATUS_REG) & 0x00000003)
     {
@@ -138,6 +139,11 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
         GET_RSP_INFO(ShowCFB)(); /* forced FB refresh in case gfx plugin skip */
         break;
     }
+
+#ifdef WAIT_FOR_CPU_HOST
+    for (i = 0; i < 32; i++)
+        MFC0_count[i] = 0;
+#endif
     run_task();
 
 /*

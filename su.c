@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.18                                                         *
+* Release:  2015.12.19                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1965,14 +1965,8 @@ PROFILE_MODE void COP2(u32 inst)
 NOINLINE void run_task(void)
 {
     register u32 PC;
-    register unsigned int i;
 
-#ifdef WAIT_FOR_CPU_HOST
-    for (i = 0; i < 32; i++)
-        MFC0_count[i] = 0;
-#endif
     PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));
-
     for (;;) {
         inst = *(pi32)(IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
