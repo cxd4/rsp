@@ -97,10 +97,7 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
             GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
             GET_RSP_INFO(CheckInterrupts)();
         }
-        if (GET_RCP_REG(DPC_STATUS_REG) & 0x00000002) {
-            message("DPC_CLR_FREEZE");
-            GET_RCP_REG(DPC_STATUS_REG) &= ~0x00000002;
-        } /* DPC_STATUS_FREEZE */
+        GET_RCP_REG(DPC_STATUS_REG) &= ~0x00000002ul; /* DPC_STATUS_FREEZE */
         return 0;
 #endif
 #ifdef EXTERN_COMMAND_LIST_ABI
