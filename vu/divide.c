@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Divides         *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.12                                                         *
+* Release:  2016.03.05                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1114,9 +1114,9 @@ NOINLINE static void do_div(i32 data, int sqrt, int precision)
     shift >>= (sqrt == SP_DIV_SQRT_YES);
     DivOut = (0x40000000UL | ((u32)div_ROM[addr] << 14)) >> shift;
     if (DivIn == 0) /* corner case:  overflow via division by zero */
-        DivOut = 0x7FFFFFFFl;
+        DivOut = +0x7FFFFFFFl;
     else if (DivIn == -32768) /* corner case:  signed underflow barrier */
-        DivOut = 0xFFFF0000l;
+        DivOut = -0x00010000l;
     else
         DivOut ^= (DivIn < 0) ? ~0 : 0;
     return;
