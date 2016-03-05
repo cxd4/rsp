@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.19                                                         *
+* Release:  2016.03.05                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -207,6 +207,7 @@ MT_CMD_CLOCK       ,MT_READ_ONLY       ,MT_READ_ONLY       ,MT_READ_ONLY
 
 void SP_DMA_READ(void)
 {
+    unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
     register unsigned int length;
     register unsigned int count;
     register unsigned int skip;
@@ -221,9 +222,9 @@ void SP_DMA_READ(void)
     ++count;
     skip += length;
     do {
-        unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
-        register unsigned int i = 0;
+        register unsigned int i;
 
+        i = 0;
         --count;
         do {
             offC = (count*length + *CR[0x0] + i) & 0x00001FF8ul;
@@ -235,6 +236,9 @@ void SP_DMA_READ(void)
             i += 0x008;
         } while (i < length);
     } while (count);
+
+    if ((*CR[0x0] & 0x1000) ^ (offC & 0x1000))
+        message("DMA over the DMEM-to-IMEM gap.");
     GET_RCP_REG(SP_DMA_BUSY_REG)  =  0x00000000;
     GET_RCP_REG(SP_STATUS_REG)   &= ~SP_STATUS_DMA_BUSY;
     return;
@@ -267,6 +271,9 @@ void SP_DMA_WRITE(void)
             i += 0x000008;
         } while (i < length);
     } while (count);
+
+    if ((*CR[0x0] & 0x1000) ^ (offC & 0x1000))
+        message("DMA over the DMEM-to-IMEM gap.");
     GET_RCP_REG(SP_DMA_BUSY_REG)  =  0x00000000;
     GET_RCP_REG(SP_STATUS_REG)   &= ~SP_STATUS_DMA_BUSY;
     return;

@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.19                                                         *
+* Release:  2016.03.05                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -188,13 +188,10 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
         *CycleCount = 0;
     update_conf(CFG_FILE);
 
-    if (Rsp_Info.DMEM == Rsp_Info.IMEM) /* usually dummy RSP data for testing */
-        return; /* DMA is not executed just because plugin initiates. */
-    while (Rsp_Info.IMEM != Rsp_Info.DMEM + 4096)
-        message("Virtual host map noncontiguity.");
-
     RSP_INFO_NAME = Rsp_Info;
     DRAM = GET_RSP_INFO(RDRAM);
+    if (Rsp_Info.DMEM == Rsp_Info.IMEM) /* usually dummy RSP data for testing */
+        return; /* DMA is not executed just because plugin initiates. */
     DMEM = GET_RSP_INFO(DMEM);
     IMEM = GET_RSP_INFO(IMEM);
 
