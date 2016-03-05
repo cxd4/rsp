@@ -245,6 +245,7 @@ void SP_DMA_READ(void)
 }
 void SP_DMA_WRITE(void)
 {
+    unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
     register unsigned int length;
     register unsigned int count;
     register unsigned int skip;
@@ -260,9 +261,9 @@ void SP_DMA_WRITE(void)
     ++count;
     skip += length;
     do {
-        unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
-        register unsigned int i = 0;
+        register unsigned int i;
 
+        i = 0;
         --count;
         do {
             offC = (count*length + *CR[0x0] + i) & 0x00001FF8ul;
