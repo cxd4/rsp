@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.03.23                                                         *
+* Release:  2016.03.23                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -47,9 +47,11 @@ VECTOR_OPERATION res_V(v16 vs, v16 vt)
     message("C2\nRESERVED"); /* uncertain how to handle reserved, untested */
 #ifdef ARCH_MIN_SSE2
     vs = _mm_setzero_si128();
-    return (vs);
+    return (vt = vs); /* -Wunused-but-set-parameter */
 #else
     vector_wipe(V_result);
+    if (vt == vs)
+        return; /* -Wunused-but-set-parameter */
     return;
 #endif
 }

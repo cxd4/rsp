@@ -1304,12 +1304,13 @@ VECTOR_OPERATION VNOP(v16 vs, v16 vt)
 {
     const int result = (inst_word & 0x000007FF) >>  6;
 
-    vt = vs; /* unused */
 #ifdef ARCH_MIN_SSE2
     vs = *(v16 *)VR[result];
-    return (vs);
+    return (vt = vs); /* -Wunused-but-set-parameter */
 #else
     vector_copy(V_result, VR[result]);
+    if (vt == vs)
+        return; /* -Wunused-but-set-parameter */
     return;
 #endif
 }

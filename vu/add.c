@@ -335,7 +335,6 @@ VECTOR_OPERATION VSAW(v16 vs, v16 vt)
 {
     unsigned int element;
 
-    vt = vs; /* unused */
     element  = 0xF & (inst_word >> 21);
     element ^= 0x8; /* Convert scalar whole elements 8:F to 0:7. */
 
@@ -354,8 +353,10 @@ VECTOR_OPERATION VSAW(v16 vs, v16 vt)
 #endif
     }
 #ifdef ARCH_MIN_SSE2
-    return (vs);
+    return (vt = vs);
 #else
+    if (vt == vs)
+        return; /* -Wunused-but-set-parameter */
     return;
 #endif
 }
