@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.12.03                                                         *
+* Release:  2016.03.23                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -267,15 +267,6 @@ extern pu32 CR[NUMBER_OF_CP0_REGISTERS];
 
 extern void SP_DMA_READ(void);
 extern void SP_DMA_WRITE(void);
-
-/*** shared states between the scalar and vector units ***/
-extern u16 get_VCO(void);
-extern u16 get_VCC(void);
-extern u8 get_VCE(void);
-extern void set_VCO(u16 VCO);
-extern void set_VCC(u16 VCC);
-extern void set_VCE(u8 VCE);
-extern i16 cf_vce[8];
 
 extern u16 rwR_VCE(void);
 extern void rwW_VCE(u16 VCE);

@@ -36,7 +36,7 @@ FLAGS_x86="\
     -mstackrealign \
     -Wall \
     -pedantic \
-    -Wshadow"
+    -Wshadow -Wredundant-decls"
 else
 FLAGS_x86="\
     -O3 \
@@ -46,8 +46,8 @@ FLAGS_x86="\
     -march=native \
     -mstackrealign \
     -Wall \
-    -pedantic \
-    -Wshadow"
+    -pedantic
+    -Wshadow -Wredundant-decls"
 fi
 C_FLAGS=$FLAGS_x86 # default since Intel SIMD was the most tested
 

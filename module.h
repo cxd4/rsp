@@ -75,8 +75,6 @@ NOINLINE extern void update_conf(const char* source);
 NOINLINE extern void export_data_cache(void);
 NOINLINE extern void export_instruction_cache(void);
 
-NOINLINE extern void message(const char* body);
-
 #ifdef SP_EXECUTE_LOG
 static FILE *output_log;
 extern void step_SP_commands(u32 inst);
