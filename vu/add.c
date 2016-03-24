@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Adds            *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.27                                                         *
+* Release:  2016.03.23                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -336,7 +336,7 @@ VECTOR_OPERATION VSAW(v16 vs, v16 vt)
     unsigned int element;
 
     vt = vs; /* unused */
-    element  = 0xF & (inst >> 21);
+    element  = 0xF & (inst_word >> 21);
     element ^= 0x8; /* Convert scalar whole elements 8:F to 0:7. */
 
     if (element > 0x2) {

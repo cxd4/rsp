@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Emulation Layer for Vector Unit Computational Operations       *
 * Authors:  Iconoclast                                                         *
-* Release:  2015.11.30                                                         *
+* Release:  2016.03.23                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -41,7 +41,7 @@
  * We are going to need this for vector operations doing scalar things.
  * The divides and VSAW need bit-wise information from the instruction word.
  */
-extern u32 inst;
+extern u32 inst_word;
 
 /*
  * RSP virtual registers (of vector unit)

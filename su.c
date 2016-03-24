@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.03.05                                                         *
+* Release:  2016.03.23                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -21,7 +21,7 @@
  */
 #include "module.h"
 
-u32 inst;
+u32 inst_word;
 
 u32 SR[32];
 typedef VECTOR_OPERATION(*p_vector_func)(v16, v16);
@@ -1976,13 +1976,13 @@ NOINLINE void run_task(void)
 
     PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));
     for (;;) {
-        inst = *(pi32)(IMEM + FIT_IMEM(PC));
+        inst_word = *(pi32)(IMEM + FIT_IMEM(PC));
 #ifdef EMULATE_STATIC_PC
         PC = (PC + 0x004);
 EX:
 #endif
 #ifdef SP_EXECUTE_LOG
-        step_SP_commands(inst);
+        step_SP_commands(inst_word);
 #endif
 
 #if (0 != 0)
@@ -1990,9 +1990,9 @@ EX:
             goto RSP_halted_CPU_exit_point; /* Only BREAK and COP0 set this. */
         SR[zero] = 0x00000000; /* already handled on per-instruction basis */
 #endif
-        switch (inst >> 26) {
+        switch (inst_word >> 26) {
         case 000: /* SPECIAL */
-            switch (SPECIAL(inst, PC)) {
+            switch (SPECIAL(inst_word, PC)) {
             case -1: /* BREAK */
                 goto RSP_halted_CPU_exit_point;
             case +1: /* JR and JALR */
@@ -2000,90 +2000,90 @@ EX:
             }
             break;
         case 001: /* REGIMM */
-            if (REGIMM(inst, PC) != 0)
+            if (REGIMM(inst_word, PC) != 0)
                 JUMP;
             break;
         case 002:
-            J(inst);
+            J(inst_word);
             JUMP;
         case 003:
-            JAL(inst, PC);
+            JAL(inst_word, PC);
             JUMP;
         case 004:
-            if (BEQ(inst, PC) != 0)
+            if (BEQ(inst_word, PC) != 0)
                 JUMP;
             break;
         case 005:
-            if (BNE(inst, PC) != 0)
+            if (BNE(inst_word, PC) != 0)
                 JUMP;
             break;
         case 006:
-            if (BLEZ(inst, PC) != 0)
+            if (BLEZ(inst_word, PC) != 0)
                 JUMP;
             break;
         case 007:
-            if (BGTZ(inst, PC) != 0)
+            if (BGTZ(inst_word, PC) != 0)
                 JUMP;
             break;
         case 010: /* ADDI:  Traps don't exist on the RCP. */
         case 011:
-            ADDIU(inst);
+            ADDIU(inst_word);
             break;
         case 012:
-            SLTI(inst);
+            SLTI(inst_word);
             break;
         case 013:
-            SLTIU(inst);
+            SLTIU(inst_word);
             break;
         case 014:
-            ANDI(inst);
+            ANDI(inst_word);
             break;
         case 015:
-            ORI(inst);
+            ORI(inst_word);
             break;
         case 016:
-            XORI(inst);
+            XORI(inst_word);
             break;
         case 017:
-            LUI(inst);
+            LUI(inst_word);
             break;
         case 020:
-            COP0(inst);
+            COP0(inst_word);
             if (GET_RCP_REG(SP_STATUS_REG) & SP_STATUS_HALT)
                 goto RSP_halted_CPU_exit_point;
             break;
         case 022:
-            COP2(inst);
+            COP2(inst_word);
             break;
         case 040:
-            LB(inst);
+            LB(inst_word);
             break;
         case 041:
-            LH(inst);
+            LH(inst_word);
             break;
         case 043:
-            LW(inst);
+            LW(inst_word);
             break;
         case 044:
-            LBU(inst);
+            LBU(inst_word);
             break;
         case 045:
-            LHU(inst);
+            LHU(inst_word);
             break;
         case 050:
-            SB(inst);
+            SB(inst_word);
             break;
         case 051:
-            SH(inst);
+            SH(inst_word);
             break;
         case 053:
-            SW(inst);
+            SW(inst_word);
             break;
         case 062: /* LWC2 */
-            MWC2_load(inst);
+            MWC2_load(inst_word);
             break;
         case 072: /* SWC2 */
-            MWC2_store(inst);
+            MWC2_store(inst_word);
             break;
         default:
             res_S();
@@ -2102,7 +2102,7 @@ EX:
 #else
         continue;
 set_branch_delay:
-        inst = *(pi32)(IMEM + FIT_IMEM(PC));
+        inst_word = *(pi32)(IMEM + FIT_IMEM(PC));
         PC = FIT_IMEM(temp_PC);
         goto EX;
 #endif
