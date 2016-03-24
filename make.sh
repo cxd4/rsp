@@ -23,7 +23,7 @@ FLAGS_ANSI="\
     -march=native \
     -mstackrealign \
     -Wall \
-    -pedantic"
+    -pedanticz"
 
 if [ `uname -m` == 'x86_64' ]; then
 FLAGS_x86="\
@@ -35,7 +35,8 @@ FLAGS_x86="\
     -march=native \
     -mstackrealign \
     -Wall \
-    -pedantic"
+    -pedantic \
+    -Wshadow"
 else
 FLAGS_x86="\
     -O3 \
@@ -45,7 +46,8 @@ FLAGS_x86="\
     -march=native \
     -mstackrealign \
     -Wall \
-    -pedantic"
+    -pedantic \
+    -Wshadow"
 fi
 C_FLAGS=$FLAGS_x86 # default since Intel SIMD was the most tested
 

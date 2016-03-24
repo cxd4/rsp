@@ -252,9 +252,9 @@ extern u16 get_VCO(void);
 extern u16 get_VCC(void);
 extern u8 get_VCE(void);
 
-extern void set_VCO(u16 VCO);
-extern void set_VCC(u16 VCC);
-extern void set_VCE(u8 VCE);
+extern void set_VCO(u16 vco);
+extern void set_VCC(u16 vcc);
+extern void set_VCE(u8 vce);
 
 /*
  * shuffling convenience macros for Intel SIMD

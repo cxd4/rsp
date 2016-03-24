@@ -512,13 +512,13 @@ u16 rwR_VCE(void)
     ret_slot = 0x00 | (u16)get_VCE();
     return (ret_slot);
 }
-void rwW_VCE(u16 VCE)
+void rwW_VCE(u16 vce)
 { /* never saw a game try to write VCE using a scalar GPR yet */
     register int i;
 
-    VCE = 0x00 | (VCE & 0xFF);
+    vce = 0x00 | (vce & 0xFF);
     for (i = 0; i < 8; i++)
-        cf_vce[i] = (VCE >> i) & 1;
+        cf_vce[i] = (vce >> i) & 1;
     return;
 }
 
