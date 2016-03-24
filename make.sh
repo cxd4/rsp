@@ -36,7 +36,10 @@ FLAGS_x86="\
     -mstackrealign \
     -Wall \
     -pedantic \
-    -Wshadow -Wredundant-decls"
+    -Wall -Wshadow -Wredundant-decls -Wextra -Wcast-align -Wcast-qual \
+    -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op
+    -Wmissing-include-dirs -Wstrict-overflow=5 -Wundef -Wno-unused \
+    -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option"
 else
 FLAGS_x86="\
     -O3 \
@@ -46,8 +49,11 @@ FLAGS_x86="\
     -march=native \
     -mstackrealign \
     -Wall \
-    -pedantic
-    -Wshadow -Wredundant-decls"
+    -pedantic \
+    -Wall -Wshadow -Wredundant-decls -Wextra -Wcast-align -Wcast-qual \
+    -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op
+    -Wmissing-include-dirs -Wstrict-overflow=5 -Wundef -Wno-unused \
+    -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option"
 fi
 C_FLAGS=$FLAGS_x86 # default since Intel SIMD was the most tested
 
