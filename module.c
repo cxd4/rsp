@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.03.05                                                         *
+* Release:  2016.03.23                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -39,20 +39,25 @@ EXPORT void CALL CloseDLL(void)
 
 EXPORT void CALL DllAbout(p_void hParent)
 {
-    hParent = NULL;
     message(DLL_about);
+    hParent = NULL;
+    if (hParent == NULL)
+        return; /* -Wunused-but-set-parameter */
     return;
 }
 
 EXPORT void CALL DllConfig(p_void hParent)
 {
-    hParent = NULL; /* unused */
     my_system("sp_cfgui");
     update_conf(CFG_FILE);
 
     if (DMEM == IMEM || GET_RCP_REG(SP_PC_REG) % 4096 == 0x00000000)
         return;
     export_SP_memory();
+
+    hParent = NULL;
+    if (hParent == NULL)
+        return; /* -Wunused-but-set-parameter */
     return;
 }
 
