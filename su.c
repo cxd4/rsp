@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.03.23                                                         *
+* Release:  2016.03.26                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -568,8 +568,8 @@ void LBV(unsigned vt, unsigned element, signed offset, unsigned base)
 }
 void LSV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
+    signed int correction;
     register u32 addr;
-    int correction;
     const unsigned int e = element;
 
     if (e & 0x1) {
@@ -577,18 +577,19 @@ void LSV(unsigned vt, unsigned element, signed offset, unsigned base)
         return;
     }
     addr = (SR[base] + 2*offset) & 0x00000FFF;
-    correction = addr % 0x004;
+    correction = (signed)(addr % 0x004);
     if (correction == 0x003) {
         message("LSV\nWeird addr.");
         return;
     }
-    VR_S(vt, e) = *(pi16)(DMEM + addr - HES(0x000)*(correction - 1));
+    correction = (correction - 1) * HES(0x000);
+    VR_S(vt, e) = *(pi16)(DMEM + addr - correction);
     return;
 }
 void LLV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
+    signed int correction;
     register u32 addr;
-    int correction;
     const unsigned int e = element;
 
     if (e & 0x1) {
@@ -719,8 +720,8 @@ void SSV(unsigned vt, unsigned element, signed offset, unsigned base)
 }
 void SLV(unsigned vt, unsigned element, signed offset, unsigned base)
 {
+    signed int correction;
     register u32 addr;
-    int correction;
     const unsigned int e = element;
 
     if ((e & 0x1) || e > 0xC) {
