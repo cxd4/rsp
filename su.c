@@ -386,7 +386,7 @@ PROFILE_MODE void SLTI(u32 inst)
     const unsigned int rs = (inst >> 21) % (1 << 5);
     const unsigned int rt = (inst >> 16) % (1 << 5);
 
-    SR[rt] = ((u32)(SR[rs]) < (s16)SIGNED_IMM16(immediate)) ? 1 : 0;
+    SR[rt] = ((s32)(SR[rs]) < (s32)SIGNED_IMM16(immediate)) ? 1 : 0;
     SR[zero] = 0x00000000;
 }
 PROFILE_MODE void SLTIU(u32 inst)
