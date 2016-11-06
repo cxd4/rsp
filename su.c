@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.03.26                                                         *
+* Release:  2016.11.05                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -386,7 +386,7 @@ PROFILE_MODE void SLTI(u32 inst)
     const unsigned int rs = (inst >> 21) % (1 << 5);
     const unsigned int rt = (inst >> 16) % (1 << 5);
 
-    SR[rt] = ((s32)(SR[rs]) < (s16)(immediate)) ? 1 : 0;
+    SR[rt] = ((u32)(SR[rs]) < (s16)SIGNED_IMM16(immediate)) ? 1 : 0;
     SR[zero] = 0x00000000;
 }
 PROFILE_MODE void SLTIU(u32 inst)
@@ -395,7 +395,7 @@ PROFILE_MODE void SLTIU(u32 inst)
     const unsigned int rs = (inst >> 21) % (1 << 5);
     const unsigned int rt = (inst >> 16) % (1 << 5);
 
-    SR[rt] = ((u32)(SR[rs]) < (u16)(immediate)) ? 1 : 0;
+    SR[rt] = ((u32)(SR[rs]) < (u32)SIGNED_IMM16(immediate)) ? 1 : 0;
     SR[zero] = 0x00000000;
 }
 
