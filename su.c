@@ -156,9 +156,7 @@ static void MT_CMD_END(unsigned int rt)
     if (GET_RCP_REG(DPC_BUFBUSY_REG))
         message("MTC0\nCMD_END"); /* This is just CA-related. */
     GET_RCP_REG(DPC_END_REG) = SR[rt] & 0xFFFFFFF8ul;
-    if (GET_RSP_INFO(ProcessRdpList) == NULL) /* zilmar GFX #1.2 */
-        return;
-    GET_RSP_INFO(ProcessRdpList)();
+    GBI_phase();
     return;
 }
 static void MT_CMD_STATUS(unsigned int rt)

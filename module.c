@@ -187,6 +187,17 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
     return;
 }
 
+p_func GBI_phase;
+void no_LLE(void)
+{
+    static int already_warned;
+
+    if (already_warned)
+        return;
+    message("RSP configured for LLE but not using LLE graphics plugin.");
+    already_warned = TRUE;
+    return;
+}
 EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
 {
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
@@ -222,6 +233,10 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
 #if 1
     GET_RCP_REG(SP_PC_REG) &= 0x00000FFFu; /* hack to fix Mupen64 */
 #endif
+
+    GBI_phase = Rsp_Info.ProcessRdpList;
+    if (GBI_phase == NULL)
+        GBI_phase = no_LLE;
     return;
 }
 
