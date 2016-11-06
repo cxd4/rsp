@@ -234,7 +234,7 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
     GET_RCP_REG(SP_PC_REG) &= 0x00000FFFu; /* hack to fix Mupen64 */
 #endif
 
-    GBI_phase = Rsp_Info.ProcessRdpList;
+    GBI_phase = GET_RSP_INFO(ProcessRdpList);
     if (GBI_phase == NULL)
         GBI_phase = no_LLE;
     return;
