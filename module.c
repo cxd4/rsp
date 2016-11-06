@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.03.23                                                         *
+* Release:  2016.11.05                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -266,6 +266,8 @@ NOINLINE void message(const char* body)
 #else
     fputs(body, stdout);
     putchar('\n');
+    puts("Press ENTER to return.");
+    getchar();
 #endif
     return;
 }
