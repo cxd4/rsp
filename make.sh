@@ -23,7 +23,7 @@ FLAGS_ANSI="\
     -march=native \
     -mstackrealign \
     -Wall \
-    -pedanticz"
+    -pedantic"
 
 if [ `uname -m` == 'x86_64' ]; then
 FLAGS_x86="\
