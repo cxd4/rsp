@@ -2,7 +2,7 @@
 *.s
 *.o
 
-/obj
+obj
 
 *.obj
 *.dll
