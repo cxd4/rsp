@@ -50,7 +50,7 @@ mkdir obj
 cd obj
 mkdir vu
 )
-cd %bin%
+cd /D %bin%
 
 ECHO Compiling C source code...
 %bin%\gcc.exe -S -Os %C_FLAGS% -o %obj%\module.asm      %rsp%\module.c
