@@ -1,8 +1,7 @@
 @ECHO OFF
 TITLE MinGW Compiler Suite Invocation
 
-set version=x86_64-5.1.0-win32-seh-rt_v4-rev0
-set MinGW="C:\Program Files\mingw-w64\%version%\mingw64"
+set MinGW=C:\msys64\mingw64
 set lib=%MinGW%\x86_64-w64-mingw32\lib
 
 REM set rsp=%USERPROFILE%\rsp
