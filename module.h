@@ -87,21 +87,4 @@ extern void step_SP_commands(u32 inst);
 #endif
 extern void export_SP_memory(void);
 
-/*
- * low-level recreations of the C standard library functions for operating
- * systems that provide an inconvenient C run-time ecosystem, like Windows
- */
-NOINLINE extern p_void my_calloc(size_t count, size_t size);
-NOINLINE extern void my_free(p_void ptr);
-NOINLINE extern size_t my_strlen(const char* str);
-NOINLINE extern char* my_strcpy(char* destination, const char* source);
-NOINLINE extern char* my_strcat(char* destination, const char* source);
-NOINLINE extern int my_system(char* command);
-NOINLINE extern FILE* my_fopen(const char * filename, const char* mode);
-NOINLINE extern int my_fclose(FILE* stream);
-NOINLINE extern size_t my_fread(
-    p_void ptr, size_t size, size_t count, FILE* stream);
-NOINLINE extern size_t my_fwrite(
-    p_void ptr, size_t size, size_t count, FILE* stream);
-
 #endif

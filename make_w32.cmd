@@ -73,6 +73,6 @@ ECHO Assembling compiled sources...
 ECHO.
 
 ECHO Linking assembled object files...
-%bin%\ld.exe --shared -e _DllMain@12 -o %obj%\rspdebug.dll -L %lib% %OBJ_LIST% -lkernel32
+%bin%\ld.exe --shared -e _DllMain@12 -o %obj%\rspdebug.dll -L %lib% %OBJ_LIST% -lmsvcrt
 %bin%\strip.exe -o %obj%/rsp.dll %obj%/rspdebug.dll
 PAUSE

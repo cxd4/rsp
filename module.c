@@ -48,7 +48,7 @@ EXPORT void CALL DllAbout(p_void hParent)
 
 EXPORT void CALL DllConfig(p_void hParent)
 {
-    my_system("sp_cfgui");
+    system("sp_cfgui");
     update_conf(CFG_FILE);
 
     if (DMEM == IMEM || GET_RCP_REG(SP_PC_REG) % 4096 == 0x00000000)
@@ -181,7 +181,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO *PluginInfo)
 {
     PluginInfo -> Version = PLUGIN_API_VERSION;
     PluginInfo -> Type = PLUGIN_TYPE_RSP;
-    my_strcpy(PluginInfo -> Name, "Static Interpreter");
+    strcpy(PluginInfo -> Name, "Static Interpreter");
     PluginInfo -> NormalMemory = 0;
     PluginInfo -> MemoryBswaped = USE_CLIENT_ENDIAN;
     return;
@@ -250,9 +250,9 @@ EXPORT void CALL RomClosed(void)
  * Sometimes the end user won't correctly install to the right directory. :(
  * If the config file wasn't installed correctly, politely shut errors up.
  */
-    stream = my_fopen(CFG_FILE, "wb");
-    my_fwrite(conf, 8, 32 / 8, stream);
-    my_fclose(stream);
+    stream = fopen(CFG_FILE, "wb");
+    fwrite(conf, 8, 32 / 8, stream);
+    fclose(stream);
     return;
 }
 
@@ -262,22 +262,22 @@ NOINLINE void message(const char* body)
     char* argv;
     int i, j;
 
-    argv = my_calloc(my_strlen(body) + 64, 1);
-    my_strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
+    argv = calloc(strlen(body) + 64, 1);
+    strcpy(argv, "CMD /Q /D /C \"TITLE RSP Message&&ECHO ");
     i = 0;
-    j = my_strlen(argv);
+    j = strlen(argv);
     while (body[i] != '\0') {
         if (body[i] == '\n') {
-            my_strcat(argv, "&&ECHO ");
+            strcat(argv, "&&ECHO ");
             ++i;
             j += 7;
             continue;
         }
         argv[j++] = body[i++];
     }
-    my_strcat(argv, "&&PAUSE&&EXIT\"");
-    my_system(argv);
-    my_free(argv);
+    strcat(argv, "&&PAUSE&&EXIT\"");
+    system(argv);
+    free(argv);
 #else
     fputs(body, stdout);
     putchar('\n');
@@ -299,13 +299,13 @@ NOINLINE void update_conf(const char* source)
     for (i = 0; i < 32; i++)
         conf[i] = 0x00;
 
-    stream = my_fopen(source, "rb");
+    stream = fopen(source, "rb");
     if (stream == NULL) {
         message("Failed to read config.");
         return;
     }
-    my_fread(conf, 8, 32 / 8, stream);
-    my_fclose(stream);
+    fread(conf, 8, 32 / 8, stream);
+    fclose(stream);
     return;
 }
 
@@ -327,11 +327,11 @@ void step_SP_commands(uint32_t inst)
     sprintf(&offset[0], "%03X", GET_RCP_REG(SP_PC_REG) & 0xFFF);
     sprintf(&code[0], "%08X", inst);
     strcpy(text, offset);
-    my_strcat(text, "\n");
-    my_strcat(text, code);
+    strcat(text, "\n");
+    strcat(text, code);
     message(text); /* PC offset, MIPS hex. */
     if (output_log != NULL)
-        my_fwrite(endian_swap, 4, 1, output_log);
+        fwrite(endian_swap, 4, 1, output_log);
 }
 #endif
 
@@ -342,13 +342,13 @@ NOINLINE void export_data_cache(void)
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
-    DMEM_swapped = my_calloc(4096, 1);
+    DMEM_swapped = calloc(4096, 1);
     for (i = 0; i < 4096; i++)
         DMEM_swapped[i] = DMEM[BES(i)];
-    out = my_fopen("rcpcache.dhex", "wb");
-    my_fwrite(DMEM_swapped, 16, 4096 / 16, out);
-    my_fclose(out);
-    my_free(DMEM_swapped);
+    out = fopen("rcpcache.dhex", "wb");
+    fwrite(DMEM_swapped, 16, 4096 / 16, out);
+    fclose(out);
+    free(DMEM_swapped);
     return;
 }
 NOINLINE void export_instruction_cache(void)
@@ -358,13 +358,13 @@ NOINLINE void export_instruction_cache(void)
     register int i;
  /* const int little_endian = GET_RSP_INFO(MemoryBswaped); */
 
-    IMEM_swapped = my_calloc(4096, 1);
+    IMEM_swapped = calloc(4096, 1);
     for (i = 0; i < 4096; i++)
         IMEM_swapped[i] = IMEM[BES(i)];
-    out = my_fopen("rcpcache.ihex", "wb");
-    my_fwrite(IMEM_swapped, 16, 4096 / 16, out);
-    my_fclose(out);
-    my_free(IMEM_swapped);
+    out = fopen("rcpcache.ihex", "wb");
+    fwrite(IMEM_swapped, 16, 4096 / 16, out);
+    fclose(out);
+    free(IMEM_swapped);
     return;
 }
 void export_SP_memory(void)
@@ -399,163 +399,3 @@ case 0: /* DLL_PROCESS_DETACH */
     return 1; /* TRUE */
 }
 #endif
-
-/*
- * low-level recreations of the C standard library functions for operating
- * systems that define a C run-time or dependency on top of fixed OS calls
- *
- * Currently, this only addresses Microsoft Windows.
- *
- * None of these are meant to out-perform the original functions, by the way
- * (especially with better intrinsic compiler support for stuff like memcpy),
- * just to cut down on I-cache use for performance-irrelevant code sections
- * and to avoid std. lib run-time dependencies on certain operating systems.
- */
-
-NOINLINE p_void my_calloc(size_t count, size_t size)
-{
-#ifdef WIN32
-    return GlobalAlloc(GPTR, size * count);
-#else
-    return calloc(count, size);
-#endif
-}
-
-NOINLINE void my_free(p_void ptr)
-{
-#ifdef WIN32
-    while (GlobalFree(ptr) != NULL)
-        message("GlobalFree() failure");
-#else
-    free(ptr);
-#endif
-    return;
-}
-
-NOINLINE size_t my_strlen(const char* str)
-{
-    size_t ret_slot;
-
-    for (ret_slot = 0; *str != '\0'; ret_slot++, str++)
-        ;
-    return (ret_slot);
-}
-
-NOINLINE char* my_strcpy(char* destination, const char* source)
-{
-    register size_t i;
-    const size_t length = my_strlen(source) + 1; /* including null terminator */
-
-    for (i = 0; i < length; i++)
-        destination[i] = source[i];
-    return (destination);
-}
-
-NOINLINE char* my_strcat(char* destination, const char* source)
-{
-    const size_t length = my_strlen(destination);
-
-    my_strcpy(destination + length, source);
-    return (destination);
-}
-
-NOINLINE int my_system(char* command)
-{
-    int ret_slot;
-#ifdef WIN32
-    static STARTUPINFOA info;
-    static PROCESS_INFORMATION info_process;
-
-    info.cb = sizeof(info);
-    info.dwFillAttribute =
-        FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-    info.dwFlags = STARTF_USEFILLATTRIBUTE | STARTF_USECOUNTCHARS;
-
-    info.dwXCountChars = 80;
-    info.dwYCountChars = 20;
-
-    ret_slot = CreateProcessA(
-        NULL,
-        command,
-        NULL,
-        NULL,
-        FALSE,
-        0x00000000,
-        NULL,
-        NULL,
-        &info,
-        &info_process
-    );
-
-    WaitForSingleObject(info_process.hProcess, INFINITE);
-    CloseHandle(info_process.hProcess);
-    CloseHandle(info_process.hThread);
-#else
-    ret_slot = system(command);
-#endif
-    return (ret_slot);
-}
-
-NOINLINE FILE* my_fopen(const char * filename, const char* mode)
-{
-#ifdef WIN32
-#if 0
-    if (mode[1] != 'b')
-        return NULL; /* non-binary yet to be supported? */
-#endif
-    return (FILE *)(HANDLE)CreateFileA(
-        filename,
-        (mode[0] == 'r') ? GENERIC_READ : GENERIC_WRITE,
-        (mode[0] == 'r') ? FILE_SHARE_READ : FILE_SHARE_WRITE,
-        NULL,
-        (mode[0] == 'r') ? OPEN_EXISTING : CREATE_ALWAYS,
-#if 0
-        FILE_FLAG_WRITE_THROUGH | FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING,
-#else
-        (mode[0] == 'r') ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_WRITE_THROUGH,
-#endif
-        NULL
-    );
-#else
-    return fopen(filename, mode);
-#endif
-}
-
-NOINLINE int my_fclose(FILE* stream)
-{
-    int ret_slot;
-#ifdef WIN32
-    ret_slot = !CloseHandle((HANDLE)stream);
-#else
-    ret_slot = fclose(stream);
-#endif
-    return (ret_slot);
-}
-
-NOINLINE size_t my_fread(p_void ptr, size_t size, size_t count, FILE* stream)
-{
-#ifdef WIN32
-    DWORD ret_slot;
-
-    ReadFile((HANDLE)stream, ptr, size * count, &ret_slot, NULL);
-#else
-    size_t ret_slot;
-
-    ret_slot = fread(ptr, size, count, stream);
-#endif
-    return (size_t)(ret_slot);
-}
-
-NOINLINE size_t my_fwrite(p_void ptr, size_t size, size_t count, FILE* stream)
-{
-#ifdef WIN32
-    DWORD ret_slot;
-
-    WriteFile((HANDLE)stream, ptr, size * count, &ret_slot, NULL);
-#else
-    size_t ret_slot;
-
-    ret_slot = fwrite(ptr, size, count, stream);
-#endif
-    return (size_t)(ret_slot);
-}
