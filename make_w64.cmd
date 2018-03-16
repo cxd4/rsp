@@ -9,12 +9,13 @@ REM else, be sure to adjust the path below, or execute "make.sh" in a Git shell.
 REM The following line is the only one you should ever need to change.
 set mingw64=C:\msys64\mingw64
 
+REM The following two variables are irrelevant, unless you set a 32-bit target.
 set mingw32=%mingw64%\..\mingw32
-REM set lib=%mingw32%\i686-w64-mingw32
+set lib=%mingw32%\i686-w64-mingw32\lib
 
-set lib=%mingw64%\x86_64-w64-mingw32\lib
+set lib64=%mingw64%\x86_64-w64-mingw32\lib
 set bin=%mingw64%\bin
-set inc=%lib%\..\include
+set inc=%lib64%\..\include
 
 REM set rsp=%USERPROFILE%\rsp
 set rsp=%CD%
@@ -74,6 +75,6 @@ ECHO Assembling compiled sources...
 ECHO.
 
 ECHO Linking assembled object files...
-%bin%\ld.exe --shared -e DllMain -o %obj%\rspdebug.dll -L%lib% %OBJ_LIST% -lkernel32
+%bin%\ld.exe --shared -e DllMain -o %obj%\rspdebug.dll -L%lib64% %OBJ_LIST% -lkernel32
 %bin%\strip.exe -o %obj%/rsp.dll %obj%/rspdebug.dll
 PAUSE
