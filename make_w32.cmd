@@ -62,6 +62,6 @@ ECHO Assembling compiled sources...
 ECHO.
 
 ECHO Linking assembled object files...
-%MinGW%\bin\ld.exe --shared -e _DllMain@12 -o %obj%\rspdebug.dll %OBJ_LIST% %MinGW%\lib\libkernel32.a
+%MinGW%\bin\ld.exe --shared -e _DllMain@12 -o %obj%\rspdebug.dll -L %MinGW%\lib %OBJ_LIST% -lkernel32
 %MinGW%\bin\strip.exe -o %obj%/rsp.dll %obj%/rspdebug.dll
 PAUSE

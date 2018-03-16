@@ -3,6 +3,8 @@ TITLE MinGW Compiler Suite Invocation
 
 set version=x86_64-5.1.0-win32-seh-rt_v4-rev0
 set MinGW="C:\Program Files\mingw-w64\%version%\mingw64"
+set lib=%MinGW%\x86_64-w64-mingw32\lib
+
 REM set rsp=%USERPROFILE%\rsp
 set rsp=%CD%
 set obj=%rsp%\obj
@@ -15,8 +17,7 @@ set OBJ_LIST=^
 %obj%\vu\add.o ^
 %obj%\vu\select.o ^
 %obj%\vu\logical.o ^
-%obj%\vu\divide.o ^
-%MinGW%\x86_64-w64-mingw32\lib\libkernel32.a
+%obj%\vu\divide.o
 
 set FLAGS_ANSI=-Wall^
  -DPLUGIN_API_VERSION=0x0101^
@@ -62,6 +63,6 @@ ECHO Assembling compiled sources...
 ECHO.
 
 ECHO Linking assembled object files...
-%MinGW%\bin\ld.exe --shared -e DllMain -o %obj%\rspdebug.dll %OBJ_LIST%
+%MinGW%\bin\ld.exe --shared -e DllMain -o %obj%\rspdebug.dll -L%lib% %OBJ_LIST% -lkernel32
 %MinGW%\bin\strip.exe -o %obj%/rsp.dll %obj%/rspdebug.dll
 PAUSE
