@@ -412,26 +412,25 @@ void export_SP_memory(void)
 
 /*
  * Microsoft linker defaults to an entry point of `_DllMainCRTStartup',
- * which attaches several CRT dependencies.  To eliminate CRT dependencies,
- * we direct the linker to cursor the entry point to the lower-level
- * `DllMain' symbol or, alternatively, link with /NOENTRY for no entry point.
+ * which attaches several CRT dependencies.  To eliminate linkage of unused
+ * startup CRT code, we direct the linker to use DllMain as the entry point.
+ *
+ * The same approach is taken with MinGW to get those weird MinGW-specific
+ * messages and unused initializer functions out of the plugin binary.
  */
-#ifdef WIN32
-BOOL WINAPI DllMain(
-    HINSTANCE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+#ifdef _WIN32
+BOOL WINAPI
+DllMain(HINSTANCE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
     hModule = lpReserved = NULL; /* unused */
-    switch (ul_reason_for_call)
-    {
-case 1: /* DLL_PROCESS_ATTACH */
+    switch (ul_reason_for_call) {
+    case 1:  /* DLL_PROCESS_ATTACH */
+    case 2:  /* DLL_THREAD_ATTACH */
+    case 3:  /* DLL_THREAD_DETACH */
+    case 0:  /* DLL_PROCESS_DETACH */
         break;
-case 2: /* DLL_THREAD_ATTACH */
-        break;
-case 3: /* DLL_THREAD_DETACH */
-        break;
-case 0: /* DLL_PROCESS_DETACH */
-        break;
+    default:
     }
-    return 1; /* TRUE */
+    return TRUE;
 }
 #endif
