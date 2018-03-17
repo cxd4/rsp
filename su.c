@@ -102,36 +102,41 @@ static void MT_SP_STATUS(unsigned int rt)
     pu32 SP_STATUS_REG;
 
     if (SR[rt] & 0xFE000040)
-        message("MTC0\nSP_STATUS");
-    MI_INTR_REG = GET_RSP_INFO(MI_INTR_REG);
+        message("MTC0\nSP_STATUS"); /* bits we don't know what to do with */
     SP_STATUS_REG = GET_RSP_INFO(SP_STATUS_REG);
 
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000001) <<  0);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000002) <<  0);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000004) <<  1);
-    *MI_INTR_REG &= ~((SR[rt] & 0x00000008) >> 3); /* SP_CLR_INTR */
-    *MI_INTR_REG |=  ((SR[rt] & 0x00000010) >> 4); /* SP_SET_INTR */
-    *SP_STATUS_REG |= (SR[rt] & 0x00000010) >> 4; /* int set halt */
+ /* DMA_BUSY, DMA_FULL, IO_FULL:  No feature exists to clear these. */
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000020) <<  5);
- /* *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5); */
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000080) <<  6);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000100) <<  6);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000200) <<  7);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000400) <<  7); /* yield request? */
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00000800) <<  8);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00001000) <<  8); /* yielded? */
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00002000) <<  9);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00004000) <<  9); /* task done? */
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00008000) << 10);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00010000) << 10);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00020000) << 11);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00040000) << 11);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00080000) << 12);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00100000) << 12);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00200000) << 13);
-    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00400000) << 13);
     *SP_STATUS_REG &= ~(!!(SR[rt] & 0x00800000) << 14);
+
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000002) <<  0);
+ /* No feature exists to set BROKE:  (!!1 << 1) */
+ /* DMA_BUSY, DMA_FULL, IO_FULL:  No feature exists to set these. */
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000040) <<  5);
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000100) <<  6);
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00000400) <<  7); /* yield request? */
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00001000) <<  8); /* yielded? */
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00004000) <<  9); /* task done? */
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00010000) << 10);
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00040000) << 11);
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00100000) << 12);
+    *SP_STATUS_REG |=  (!!(SR[rt] & 0x00400000) << 13);
     *SP_STATUS_REG |=  (!!(SR[rt] & 0x01000000) << 14);
+
+    MI_INTR_REG = GET_RSP_INFO(MI_INTR_REG);
+    *MI_INTR_REG   &= ~((SR[rt] & 0x00000008) >> 3); /* SP_CLR_INTR */
+    *MI_INTR_REG   |=  ((SR[rt] & 0x00000010) >> 4); /* SP_SET_INTR */
+    *SP_STATUS_REG |=   (SR[rt] & 0x00000010) >> 4; /* int set halt */
     return;
 }
 static void MT_SP_RESERVED(unsigned int rt)
