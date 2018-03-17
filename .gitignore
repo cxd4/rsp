@@ -1,7 +1,8 @@
 *.asm
 *.s
-*.o
 
+*.o
+*.so
 obj
 
 *.obj
