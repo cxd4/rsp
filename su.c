@@ -837,30 +837,12 @@ void SDV(unsigned vt, unsigned element, signed offset, unsigned base)
     return;
 }
 
-static char transfer_debug[32] = "?WC2    $v00[0x0], 0x000($00)";
-static const char digits[16] = {
-    '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-};
-
-NOINLINE void res_lsw(
-    unsigned vt,
-    unsigned element,
-    signed offset,
-    unsigned base)
+NOINLINE void
+res_lsw(unsigned vt, unsigned element, signed offset, unsigned base)
 {
-    transfer_debug[10] = '0' + (unsigned char)vt/10;
-    transfer_debug[11] = '0' + (unsigned char)vt%10;
-
-    transfer_debug[15] = digits[element & 0xF];
-
-    transfer_debug[21] = digits[(offset & 0xFFF) >>  8];
-    transfer_debug[22] = digits[(offset & 0x0FF) >>  4];
-    transfer_debug[23] = digits[(offset & 0x00F) >>  0];
-
-    transfer_debug[26] = '0' + (unsigned char)base/10;
-    transfer_debug[27] = '0' + (unsigned char)base%10;
-
-    message(transfer_debug);
+    message("Reserved vector unit transfer operation.");
+    if (vt != element + base || offset != 0) /* unused parameters */
+        return;
     return;
 }
 
