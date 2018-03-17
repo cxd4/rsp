@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Basic MIPS R4000 Instruction Set for Scalar Unit Operations        *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.11.05                                                         *
+* Release:  2018.03.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -34,10 +34,10 @@
 
 /*
  * Currently, the plugin system this module is written for doesn't notify us
- * of how much RDRAM is installed to the system, so we have to presume 8 MiB.
+ * of how much RDRAM is installed to the system, so we'll use signal handlers
+ * to catch memory segment access faults in the trial search to find it out.
  */
-#define MAX_DRAM_ADDR           0x007FFFFFul
-#define MAX_DRAM_DMA_ADDR       (MAX_DRAM_ADDR & ~7)
+extern unsigned long su_max_address;
 
 /*
  * Interact with memory using server-side byte order (MIPS big-endian) or

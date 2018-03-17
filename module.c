@@ -24,8 +24,21 @@
 #include "module.h"
 #include "su.h"
 
-RSP_INFO RSP_INFO_NAME;
+#include <signal.h>
+#include <setjmp.h>
 
+static jmp_buf CPU_state;
+static void seg_av_handler(int signal_code)
+{
+    longjmp(CPU_state, signal_code);
+}
+static void ISA_op_illegal(int signal_code)
+{
+    message("Plugin built for SIMD extensions this CPU does not support!");
+    raise(signal_code); /* e.g., rsp.dll built with -mssse3; the CPU is SSE2. */
+}
+
+RSP_INFO RSP_INFO_NAME;
 static const char DLL_about[] =
     "RSP Interpreter by Iconoclast\n"\
     "Thanks for test RDP:  Jabo, ziggy, angrylion\n"\
@@ -200,6 +213,8 @@ void no_LLE(void)
 }
 EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
 {
+    int recovered_from_exception;
+
     if (CycleCount != NULL) /* cycle-accuracy not doable with today's hosts */
         *CycleCount = 0;
     update_conf(CFG_FILE);
@@ -237,6 +252,26 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
     GBI_phase = GET_RSP_INFO(ProcessRdpList);
     if (GBI_phase == NULL)
         GBI_phase = no_LLE;
+
+    signal(SIGILL, ISA_op_illegal);
+    signal(SIGSEGV, seg_av_handler);
+    for (SR[ra] = 0; SR[ra] < 0x80000000ul; SR[ra] += 0x200000) {
+        recovered_from_exception = setjmp(CPU_state);
+        if (recovered_from_exception)
+            break;
+        SR[at] += DRAM[SR[ra]];
+    }
+    for (SR[at] = 0; SR[at] < 31; SR[at]++) {
+        su_max_address = (su_max_address & ~1) >> 1;
+        if (su_max_address == 0)
+            break;
+    }
+
+    su_max_address = (1 << SR[at]) - 1;
+    if (su_max_address < 0x1FFFFFul)
+        su_max_address = 0x1FFFFFul; /* 2 MiB */
+    if (su_max_address > 0xFFFFFFul)
+        su_max_address = 0xFFFFFFul; /* 16 MiB */
     return;
 }
 

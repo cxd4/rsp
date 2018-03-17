@@ -21,6 +21,9 @@
  */
 #include "module.h"
 
+/* memcpy() and memset() in SP DMA */
+#include <string.h>
+
 u32 inst_word;
 
 u32 SR[32];
@@ -29,6 +32,7 @@ typedef VECTOR_OPERATION(*p_vector_func)(v16, v16);
 pu8 DRAM;
 pu8 DMEM;
 pu8 IMEM;
+unsigned long su_max_address = 0x00FFFFFFul;
 
 NOINLINE void res_S(void)
 {
@@ -225,11 +229,12 @@ void SP_DMA_READ(void)
         do {
             offC = (count*length + *CR[0x0] + i) & 0x00001FF8ul;
             offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8ul;
-            *(pi64)(DMEM + offC) =
-                *(pi64)(DRAM + offD)
-              & (offD & ~MAX_DRAM_DMA_ADDR ? 0 : ~0) /* 0 if (addr > limit) */
-            ;
             i += 0x008;
+            if (offD > su_max_address) {
+                memset(DMEM + offC, 0x00, 8);
+                continue;
+            }
+            memcpy(DMEM + offC, DRAM + offD, 8);
         } while (i < length);
     } while (count);
 
@@ -264,8 +269,10 @@ void SP_DMA_WRITE(void)
         do {
             offC = (count*length + *CR[0x0] + i) & 0x00001FF8ul;
             offD = (count*skip + *CR[0x1] + i) & 0x00FFFFF8ul;
-            *(pi64)(DRAM + offD) = *(pi64)(DMEM + offC);
             i += 0x000008;
+            if (offD > su_max_address)
+                continue;
+            memcpy(DRAM + offD, DMEM + offC, 8);
         } while (i < length);
     } while (count);
 
