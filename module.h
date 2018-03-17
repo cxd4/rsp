@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.11.05                                                         *
+* Release:  2018.03.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -26,7 +26,9 @@ typedef enum {
     M_NJPEGTASK = 4,
     M_NULTASK   = 5,
     M_HVQTASK   = 6,
-    M_HVQMTASK  = 7
+    M_HVQMTASK  = 7,
+
+    NUM_KNOWN_TASK_TYPES
 } OSTask_type;
 
 #define CFG_FILE    "rsp_conf.bin"

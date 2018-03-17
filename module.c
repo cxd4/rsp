@@ -76,27 +76,28 @@ EXPORT void CALL DllConfig(p_void hParent)
 
 EXPORT u32 CALL DoRspCycles(u32 cycles)
 {
+    static char task_debug[] = "unknown task type:  0x????????";
+    char* task_debug_type;
     OSTask_type task_type;
     register unsigned int i;
 
-    if (GET_RCP_REG(SP_STATUS_REG) & 0x00000003)
-    {
+    if (GET_RCP_REG(SP_STATUS_REG) & 0x00000003) {
         message("SP_STATUS_HALT");
         return 0x00000000;
     }
+    task_debug_type = &task_debug[strlen("unknown task type:  0x")];
 
-    task_type = 0x00000000
 #ifdef USE_CLIENT_ENDIAN
-      | *((pi32)(DMEM + 0x000FC0U))
+    memcpy(&task_type, DMEM + 0xFC0, 4);
 #else
-      | (u32)DMEM[0xFC0] << 24
-      | (u32)DMEM[0xFC1] << 16
-      | (u32)DMEM[0xFC2] <<  8
-      | (u32)DMEM[0xFC3] <<  0
-#endif
+    task_type = 0x00000000
+      | (u32)(DMEM[0xFC0 ^ 0] & 0xFFu) << 24
+      | (u32)(DMEM[0xFC1 ^ 0] & 0xFFu) << 16
+      | (u32)(DMEM[0xFC2 ^ 0] & 0xFFu) <<  8
+      | (u32)(DMEM[0xFC3 ^ 0] & 0xFFu) <<  0
     ;
+#endif
     switch (task_type) {
-#ifdef EXTERN_COMMAND_LIST_GBI
     case M_GFXTASK:
         if (CFG_HLE_GFX == 0)
             break;
@@ -117,8 +118,6 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
         }
         GET_RCP_REG(DPC_STATUS_REG) &= ~0x00000002ul; /* DPC_STATUS_FREEZE */
         return 0;
-#endif
-#ifdef EXTERN_COMMAND_LIST_ABI
     case M_AUDTASK:
         if (CFG_HLE_AUD == 0)
             break;
@@ -136,7 +135,6 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
             GET_RSP_INFO(CheckInterrupts)();
         }
         return 0;
-#endif
     case M_VIDTASK:
         message("M_VIDTASK");
         break;
@@ -153,6 +151,9 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
             break;
         GET_RSP_INFO(ShowCFB)(); /* forced FB refresh in case gfx plugin skip */
         break;
+    default:
+        sprintf(task_debug_type, "%08lX", (unsigned long)task_type);
+        message(task_debug);
     }
 
 #ifdef WAIT_FOR_CPU_HOST

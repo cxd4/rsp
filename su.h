@@ -22,8 +22,6 @@
 #include "my_types.h"
 #include "rsp.h"
 
-#define EXTERN_COMMAND_LIST_GBI
-#define EXTERN_COMMAND_LIST_ABI
 #define SEMAPHORE_LOCK_CORRECTIONS
 #define WAIT_FOR_CPU_HOST
 
@@ -79,7 +77,9 @@ extern unsigned long su_max_address;
 
 typedef enum {
     zero = 0,
+
     at =  1,
+
 #ifdef TRUE_MIPS_AND_NOT_JUST_THE_RSP_SUBSET
     v0 =  2,
     v1 =  3,
@@ -117,7 +117,8 @@ typedef enum {
     sp = 29,
     fp = 30, /* new, official MIPS name for it:  "frame pointer" */
     ra = 31,
-    S8 = fp
+
+    S8 = fp /* older name for GPR $fp as of the R4000 ISA */
 } GPR_specifier;
 
 extern RSP_INFO RSP_INFO_NAME;
@@ -133,7 +134,7 @@ extern u8 conf[32];
  * based on the MIPS instruction set architecture but without most of the
  * original register names (for example, no kernel-reserved registers)
  */
-extern u32 SR[32];
+extern u32 SR[];
 
 #define FIT_IMEM(PC)    ((PC) & 0xFFFu & 0xFFCu)
 
