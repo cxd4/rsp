@@ -31,18 +31,16 @@ set OBJ_LIST=^
 %obj%\vu\logical.o ^
 %obj%\vu\divide.o
 
-set FLAGS_ANSI=-Wall^
+set FLAGS_ANSI=-Wall -pedantic^
  -DPLUGIN_API_VERSION=0x0101^
- -march=native^
  -mstackrealign^
- -pedantic
-set FLAGS_x86=-Wall^
- -masm=intel^
+ -march=native
+set FLAGS_x86=-Wall -pedantic^
  -DPLUGIN_API_VERSION=0x0101^
  -DARCH_MIN_SSE2^
- -march=native^
+ -masm=intel^
  -mstackrealign^
- -pedantic
+ -march=native
 set C_FLAGS=%FLAGS_x86%
 
 if not exist obj (
@@ -61,7 +59,7 @@ gcc -S -O3 %C_FLAGS% -o %obj%\vu\multiply.asm %rsp%\vu\multiply.c
 gcc -S -O3 %C_FLAGS% -o %obj%\vu\add.asm      %rsp%\vu\add.c
 gcc -S -O3 %C_FLAGS% -o %obj%\vu\select.asm   %rsp%\vu\select.c
 gcc -S -O3 %C_FLAGS% -o %obj%\vu\logical.asm  %rsp%\vu\logical.c
-gcc -S -O3 %C_FLAGS% -o %obj%\vu\divide.asm   %rsp%\vu\divide.c
+gcc -S -O2 %C_FLAGS% -o %obj%\vu\divide.asm   %rsp%\vu\divide.c
 @ECHO OFF
 ECHO.
 

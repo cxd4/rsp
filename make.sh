@@ -14,18 +14,10 @@ OBJ_LIST="\
     $obj/vu/logical.o \
     $obj/vu/divide.o"
 
-FLAGS_ANSI="\
-    -O3 \
-    -fPIC \
-    -DPLUGIN_API_VERSION=0x0101 \
-    -march=native \
-    -mstackrealign \
-    -Wall \
-    -pedantic"
+FLAGS_ANSI="-fPIC -DPLUGIN_API_VERSION=0x0101 -mstackrealign -Wall -pedantic"
 
 if [ `uname -m` == 'x86_64' ]; then
 FLAGS_x86="\
-    -O3 \
     -masm=intel \
     -fPIC \
     -DPLUGIN_API_VERSION=0x0101 \
@@ -40,7 +32,6 @@ FLAGS_x86="\
     -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option"
 else
 FLAGS_x86="\
-    -O3 \
     -masm=intel \
     -DPLUGIN_API_VERSION=0x0101 \
     -DARCH_MIN_SSE2 \
@@ -56,14 +47,14 @@ fi
 C_FLAGS=$FLAGS_x86 # default since Intel SIMD was the most tested
 
 echo Compiling C source code...
-cc -S $C_FLAGS -o $obj/module.s  $src/module.c
-cc -S $C_FLAGS -o $obj/su.s      $src/su.c
-cc -S $C_FLAGS -o $obj/vu/vu.s       $src/vu/vu.c
-cc -S $C_FLAGS -o $obj/vu/multiply.s $src/vu/multiply.c
-cc -S $C_FLAGS -o $obj/vu/add.s      $src/vu/add.c
-cc -S $C_FLAGS -o $obj/vu/select.s   $src/vu/select.c
-cc -S $C_FLAGS -o $obj/vu/logical.s  $src/vu/logical.c
-cc -S $C_FLAGS -o $obj/vu/divide.s   $src/vu/divide.c
+cc -S -Os $C_FLAGS -o $obj/module.s  $src/module.c
+cc -S -O3 $C_FLAGS -o $obj/su.s      $src/su.c
+cc -S -O3 $C_FLAGS -o $obj/vu/vu.s       $src/vu/vu.c
+cc -S -O3 $C_FLAGS -o $obj/vu/multiply.s $src/vu/multiply.c
+cc -S -O3 $C_FLAGS -o $obj/vu/add.s      $src/vu/add.c
+cc -S -O3 $C_FLAGS -o $obj/vu/select.s   $src/vu/select.c
+cc -S -O3 $C_FLAGS -o $obj/vu/logical.s  $src/vu/logical.c
+cc -S -O2 $C_FLAGS -o $obj/vu/divide.s   $src/vu/divide.c
 
 echo Assembling compiled sources...
 as --statistics -o $obj/module.o $obj/module.s
