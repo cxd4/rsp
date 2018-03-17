@@ -1,8 +1,6 @@
 mkdir -p obj
 mkdir -p obj/vu
 
-# The below path configuration will only work if you have this `make.sh` script
-# installed to the parent directory just outside the RSP source when you run it.
 src="." # or an absolute path, like "/home/user/rsp"
 obj="$src/obj"
 
