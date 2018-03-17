@@ -157,7 +157,7 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
     }
 
 #ifdef WAIT_FOR_CPU_HOST
-    for (i = 0; i < 32; i++)
+    for (i = 0; i < NUMBER_OF_SCALAR_REGISTERS; i++)
         MFC0_count[i] = 0;
 #endif
     run_task();
@@ -235,7 +235,7 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
     CR[0x5] = &GET_RCP_REG(SP_DMA_FULL_REG);
     CR[0x6] = &GET_RCP_REG(SP_DMA_BUSY_REG);
     CR[0x7] = &GET_RCP_REG(SP_SEMAPHORE_REG);
-    GET_RCP_REG(SP_PC_REG) = 0x04001000;
+    *(RSP_INFO_NAME.SP_PC_REG) = 0x04001000;
     CR[0x8] = &GET_RCP_REG(DPC_START_REG);
     CR[0x9] = &GET_RCP_REG(DPC_END_REG);
     CR[0xA] = &GET_RCP_REG(DPC_CURRENT_REG);

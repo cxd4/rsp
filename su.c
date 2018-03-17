@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.11.05                                                         *
+* Release:  2018.03.17                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -26,7 +26,7 @@
 
 u32 inst_word;
 
-u32 SR[32];
+u32 SR[NUMBER_OF_SCALAR_REGISTERS];
 typedef VECTOR_OPERATION(*p_vector_func)(v16, v16);
 
 pu8 DRAM;
@@ -1659,7 +1659,7 @@ void STV(unsigned vt, unsigned element, signed offset, unsigned base)
 
 int temp_PC;
 #ifdef WAIT_FOR_CPU_HOST
-short MFC0_count[32];
+short MFC0_count[NUMBER_OF_SCALAR_REGISTERS];
 #endif
 
 mwc2_func LWC2[2 * 8*2] = {

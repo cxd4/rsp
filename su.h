@@ -118,6 +118,7 @@ typedef enum {
     fp = 30, /* new, official MIPS name for it:  "frame pointer" */
     ra = 31,
 
+    NUMBER_OF_SCALAR_REGISTERS,
     S8 = fp /* older name for GPR $fp as of the R4000 ISA */
 } GPR_specifier;
 
@@ -126,7 +127,7 @@ extern pu8 DRAM;
 extern pu8 DMEM;
 extern pu8 IMEM;
 
-extern u8 conf[32];
+extern u8 conf[];
 
 /*
  * general-purpose scalar registers
@@ -156,7 +157,7 @@ int stage;
 
 extern int temp_PC;
 #ifdef WAIT_FOR_CPU_HOST
-extern short MFC0_count[32];
+extern short MFC0_count[];
 /* Keep one C0 MF status read count for each scalar register. */
 #endif
 
@@ -267,8 +268,28 @@ extern void set_PC(unsigned int address);
 #define SP_STATUS_SIG6          (0x00000001ul << 13)
 #define SP_STATUS_SIG7          (0x00000001ul << 14)
 
-#define NUMBER_OF_CP0_REGISTERS         16
-extern pu32 CR[NUMBER_OF_CP0_REGISTERS];
+enum {
+    RCP_SP_MEM_ADDR_REG,
+    RCP_SP_DRAM_ADDR_REG,
+    RCP_SP_RD_LEN_REG,
+    RCP_SP_WR_LEN_REG,
+    RCP_SP_STATUS_REG,
+    RCP_SP_DMA_FULL_REG,
+    RCP_SP_DMA_BUSY_REG,
+    RCP_SP_SEMAPHORE_REG,
+
+    RCP_DPC_START_REG,
+    RCP_DPC_END_REG,
+    RCP_DPC_CURRENT_REG,
+    RCP_DPC_STATUS_REG,
+    RCP_DPC_CLOCK_REG,
+    RCP_DPC_BUFBUSY_REG,
+    RCP_DPC_PIPEBUSY_REG,
+    RCP_DPC_TMEM_REG,
+
+    NUMBER_OF_CP0_REGISTERS
+} CPR_specifier;
+extern pu32 CR[];
 
 extern void SP_DMA_READ(void);
 extern void SP_DMA_WRITE(void);
