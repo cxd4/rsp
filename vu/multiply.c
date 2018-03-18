@@ -381,7 +381,7 @@ VECTOR_OPERATION VMACF(v16 vs, v16 vt)
     v16 acc_hi, acc_md, acc_lo;
     v16 prod_hi, prod_lo;
     v16 overflow, overflow_new;
-    v16 prod_neg, old_acc_md;
+    v16 prod_neg, carry;
 
     prod_hi = _mm_mulhi_epi16(vs, vt);
     prod_lo = _mm_mullo_epi16(vs, vt);
@@ -403,11 +403,11 @@ VECTOR_OPERATION VMACF(v16 vs, v16 vt)
 
     acc_md = _mm_add_epi16(acc_md, prod_hi);
     overflow_new = _mm_cmplt_epu16(acc_md, prod_hi);
-    old_acc_md = acc_md;
     acc_md = _mm_sub_epi16(acc_md, overflow); /* m - (overflow = ~0) == m + 1 */
-    overflow = _mm_cmplt_epu16(acc_md, old_acc_md);
+    carry = _mm_cmpeq_epi16(acc_md, _mm_setzero_si128());
+    carry = _mm_and_si128(carry, overflow); /* ~0 - (-1) == 0 && (-1) != 0 */
     *(v16 *)VACC_M = acc_md;
-    overflow = _mm_or_si128(overflow, overflow_new);
+    overflow = _mm_or_si128(carry, overflow_new);
 
     acc_hi = _mm_sub_epi16(acc_hi, overflow);
     acc_hi = _mm_sub_epi16(acc_hi, prod_neg);
@@ -448,7 +448,7 @@ VECTOR_OPERATION VMACU(v16 vs, v16 vt)
     v16 acc_hi, acc_md, acc_lo;
     v16 prod_hi, prod_lo;
     v16 overflow, overflow_new;
-    v16 prod_neg, old_acc_md;
+    v16 prod_neg, carry;
 
     prod_hi = _mm_mulhi_epi16(vs, vt);
     prod_lo = _mm_mullo_epi16(vs, vt);
@@ -470,11 +470,11 @@ VECTOR_OPERATION VMACU(v16 vs, v16 vt)
 
     acc_md = _mm_add_epi16(acc_md, prod_hi);
     overflow_new = _mm_cmplt_epu16(acc_md, prod_hi);
-    old_acc_md = acc_md;
     acc_md = _mm_sub_epi16(acc_md, overflow); /* m - (overflow = ~0) == m + 1 */
-    overflow = _mm_cmplt_epu16(acc_md, old_acc_md);
+    carry = _mm_cmpeq_epi16(acc_md, _mm_setzero_si128());
+    carry = _mm_and_si128(carry, overflow); /* ~0 - (-1) == 0 && (-1) != 0 */
     *(v16 *)VACC_M = acc_md;
-    overflow = _mm_or_si128(overflow, overflow_new);
+    overflow = _mm_or_si128(carry, overflow_new);
 
     acc_hi = _mm_sub_epi16(acc_hi, overflow);
     acc_hi = _mm_sub_epi16(acc_hi, prod_neg);
