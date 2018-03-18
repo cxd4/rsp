@@ -57,9 +57,9 @@ cc -S -O3 $C_FLAGS -o $obj/vu/logical.s  $src/vu/logical.c
 cc -S -O2 $C_FLAGS -o $obj/vu/divide.s   $src/vu/divide.c
 
 echo Assembling compiled sources...
-as --statistics -o $obj/module.o $obj/module.s
-as --statistics -o $obj/su.o     $obj/su.s
-as --statistics -o $obj/vu/vu.o  $obj/vu/vu.s
+as -o $obj/module.o $obj/module.s
+as -o $obj/su.o     $obj/su.s
+as -o $obj/vu/vu.o  $obj/vu/vu.s
 as -o $obj/vu/multiply.o $obj/vu/multiply.s
 as -o $obj/vu/add.o      $obj/vu/add.s
 as -o $obj/vu/select.o   $obj/vu/select.s
