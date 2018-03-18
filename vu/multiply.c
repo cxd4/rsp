@@ -508,7 +508,7 @@ VECTOR_OPERATION VMACU(v16 vs, v16 vt)
         VACC_H[i] -= (product[i].SW < 0);
     for (i = 0; i < N; i++)
         VACC_H[i] += addend[i].UW >> 16;
-    UNSIGNED_CLAMP(VD);
+    UNSIGNED_CLAMP(V_result);
 #endif
 }
 
