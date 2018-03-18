@@ -28,7 +28,7 @@ FLAGS_x86="\
     -pedantic \
     -Wall -Wshadow -Wredundant-decls -Wextra -Wcast-align -Wcast-qual \
     -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op
-    -Wmissing-include-dirs -Wstrict-overflow=5 -Wundef -Wno-unused \
+    -Wmissing-include-dirs -Wstrict-overflow=1 -Wundef -Wno-unused \
     -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option"
 else
 FLAGS_x86="\
@@ -41,7 +41,7 @@ FLAGS_x86="\
     -pedantic \
     -Wall -Wshadow -Wredundant-decls -Wextra -Wcast-align -Wcast-qual \
     -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op
-    -Wmissing-include-dirs -Wstrict-overflow=5 -Wundef -Wno-unused \
+    -Wmissing-include-dirs -Wstrict-overflow=1 -Wundef -Wno-unused \
     -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option"
 fi
 C_FLAGS=$FLAGS_x86 # default since Intel SIMD was the most tested
