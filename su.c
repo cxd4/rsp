@@ -1822,7 +1822,7 @@ PROFILE_MODE void MWC2_load(u32 inst)
     offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
     offset >>= 5 + 4;
 #else
-    offset = (inst & 64) ? -(s16)(~inst%64 + 1) : inst % 64;
+    offset = (inst & 64) ? -(s16)(~inst%64 + 1) : (s16)(inst % 64);
 #endif
     LWC2[IW_RD(inst)](vt, element, offset, base);
 }
@@ -1838,7 +1838,7 @@ PROFILE_MODE void MWC2_store(u32 inst)
     offset <<= 5 + 4; /* safe on x86, skips 5-bit rd, 4-bit element */
     offset >>= 5 + 4;
 #else
-    offset = (inst & 64) ? -(s16)(~inst%64 + 1) : inst % 64;
+    offset = (inst & 64) ? -(s16)(~inst%64 + 1) : (s16)(inst % 64);
 #endif
     SWC2[IW_RD(inst)](vt, element, offset, base);
 }
