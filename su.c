@@ -32,7 +32,7 @@ typedef VECTOR_OPERATION(*p_vector_func)(v16, v16);
 pu8 DRAM;
 pu8 DMEM;
 pu8 IMEM;
-unsigned long su_max_address = 0x00FFFFFFul;
+unsigned long su_max_address = 0x007FFFFFul;
 
 NOINLINE void res_S(void)
 {
