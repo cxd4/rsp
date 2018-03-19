@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.11.05                                                         *
+* Release:  2018.03.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -430,6 +430,7 @@ DllMain(HINSTANCE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
     case 0:  /* DLL_PROCESS_DETACH */
         break;
     default:
+        message("Unknown reason for call.");
     }
     return TRUE;
 }
