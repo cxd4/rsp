@@ -17,12 +17,16 @@
 
 #ifdef ARCH_MIN_SSE2
 
-#define _mm_cmple_epu16(dst, src) \
-    _mm_cmpeq_epi16(_mm_subs_epu16(dst, src), _mm_setzero_si128())
-#define _mm_cmpgt_epu16(dst, src) \
-    _mm_andnot_si128(_mm_cmpeq_epi16(dst, src), _mm_cmple_epu16(src, dst))
-#define _mm_cmplt_epu16(dst, src) \
-    _mm_cmpgt_epu16(src, dst)
+#define _mm_allones_si128()     \
+    _mm_cmpeq_epi16(_mm_setzero_si128(), _mm_setzero_si128())
+#define _mm_setmin_epi16()      \
+    _mm_slli_epi16(_mm_allones_si128(), 15)
+
+#define _mm_cmplt_epu16(dst, src)               \
+    _mm_cmplt_epi16(                            \
+        _mm_xor_si128(dst, _mm_setmin_epi16()), \
+        _mm_xor_si128(src, _mm_setmin_epi16())  \
+    )
 
 #else
 
