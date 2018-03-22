@@ -266,8 +266,8 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, pu32 CycleCount)
         SR[at] += DRAM[SR[ra]];
     }
     for (SR[at] = 0; SR[at] < 31; SR[at]++) {
-        su_max_address = (su_max_address & ~1) >> 1;
-        if (su_max_address == 0)
+        SR[ra] = (SR[ra] & ~1) >> 1;
+        if (SR[ra] == 0)
             break;
     }
     su_max_address = (1 << SR[at]) - 1;
