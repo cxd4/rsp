@@ -226,59 +226,38 @@ INLINE static void do_ch(pi16 VD, pi16 VS, pi16 VT)
     ALIGNED i16 VC[N];
     ALIGNED i16 eq[N], ge[N], le[N];
     ALIGNED i16 sn[N];
-#ifndef _DEBUG
-    i16 diff[N];
-#endif
+
     i16 cch[N]; /* corner case hack:  -(-32768) with undefined sign */
-    register unsigned int i;
+    register int i;
 
     for (i = 0; i < N; i++)
         cch[i] = (VT[i] == -32768) ? ~0 : 0; /* -(-32768) might not be >= 0. */
-    vector_copy(VC, VT);
+
     for (i = 0; i < N; i++)
+    {
         sn[i] = VS[i] ^ VT[i];
-    for (i = 0; i < N; i++)
-        sn[i] = (sn[i] < 0) ? ~0 :  0; /* signed SRA (sn), 15 */
-    for (i = 0; i < N; i++)
-        VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
-    for (i = 0; i < N; i++)
-        cf_vce[i]  = (VS[i] == VC[i]); /* 2's complement:  VC = -VT - 1 = ~VT */
-    for (i = 0; i < N; i++)
-        cf_vce[i] &= sn[i];
-    for (i = 0; i < N; i++)
-        VC[i] -= sn[i] & cch[i]; /* converts ~(VT) into -(VT) if (sign) */
-    for (i = 0; i < N; i++)
-        eq[i]  = (VS[i] == VC[i]) & ~cch[i]; /* (VS == +32768) is never true. */
-    for (i = 0; i < N; i++)
-        eq[i] |= cf_vce[i];
+        sn[i] = (sn[i] < 0) ? 1 : 0; /* signed SRA (sn), 15 */
 
-#ifdef _DEBUG
-    for (i = 0; i < N; i++)
-        le[i] = sn[i] ? (VS[i] <= VC[i]) : (VC[i] < 0);
-    for (i = 0; i < N; i++)
-        ge[i] = sn[i] ? (VC[i] > 0x0000) : (VS[i] >= VC[i]);
-#elif (0)
-    for (i = 0; i < N; i++)
-        le[i] = sn[i] ? (VT[i] <= -VS[i]) : (VT[i] <= ~0x0000);
-    for (i = 0; i < N; i++)
-        ge[i] = sn[i] ? (~0x0000 >= VT[i]) : (VS[i] >= VT[i]);
-#else
-    for (i = 0; i < N; i++)
-        diff[i] = sn[i] | VS[i];
-    for (i = 0; i < N; i++)
-        ge[i] = (diff[i] >= VT[i]);
+        if (sn[i])
+        {
+            ge[i] = (VT[i] < 0x0000);
+            le[i] = (VS[i] <= -VT[i]);
+            cf_vce[i] = (VS[i] == ~VT[i]); /* 2's complement:  VC = -VT - 1 = ~VT */
 
-    for (i = 0; i < N; i++)
-        sn[i] = (u16)(sn[i]) >> 15; /* ~0 to 1, 0 to 0 */
+            eq[i] = (VS[i] == ~VT[i]); /* hack?: according to docs this should be VS == -VT, but that doesn't match the test case result */
+            VC[i] = le[i] ? -VT[i] : VS[i];
+        }
+        else
+        {
+            ge[i] = (VS[i] >= VT[i]);
+            le[i] = (VT[i] < 0x0000);
+            cf_vce[i] = 0;
 
-    for (i = 0; i < N; i++)
-        diff[i] = VC[i] - VS[i];
-    for (i = 0; i < N; i++)
-        diff[i] = (diff[i] >= 0);
-    for (i = 0; i < N; i++)
-        le[i] = (VT[i] < 0);
-    merge(le, sn, diff, le);
-#endif
+            eq[i] = (VS[i] == VT[i]);
+            VC[i] = ge[i] ? VT[i] : VS[i];
+        }
+        cf_ne[i] = ~eq[i] & 1;
+    }
 
     merge(cf_comp, sn, le, ge);
     merge(VACC_L, cf_comp, VC, VS);
@@ -286,8 +265,7 @@ INLINE static void do_ch(pi16 VD, pi16 VS, pi16 VT)
 
     vector_copy(cf_clip, ge);
     vector_copy(cf_comp, le);
-    for (i = 0; i < N; i++)
-        cf_ne[i] = eq[i] ^ 1;
+
     vector_copy(cf_co, sn);
     return;
 }
