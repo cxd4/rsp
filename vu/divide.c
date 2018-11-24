@@ -1156,7 +1156,7 @@ VECTOR_OPERATION VRCPL(v16 vs, v16 vt)
     const unsigned int element = (inst_word >> 21) & 0x7;
 
     DivIn &= DPH;
-    DivIn |= (u16)VR[target][element];
+    DivIn |= VR[target][element];
     do_div(DivIn, SP_DIV_SQRT_NO, DPH);
 #ifdef ARCH_MIN_SSE2
     *(v16 *)VACC_L = vt;
@@ -1256,7 +1256,7 @@ VECTOR_OPERATION VRSQL(v16 vs, v16 vt)
     const unsigned int element = (inst_word >> 21) & 0x7;
 
     DivIn &= DPH;
-    DivIn |= (u16)VR[target][element];
+    DivIn |= VR[target][element];
     do_div(DivIn, SP_DIV_SQRT_YES, DPH);
 #ifdef ARCH_MIN_SSE2
     *(v16 *)VACC_L = vt;
