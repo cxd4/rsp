@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Divides         *
 * Authors:  Iconoclast                                                         *
-* Release:  2016.03.23                                                         *
+* Release:  2018.11.25                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1155,8 +1155,10 @@ VECTOR_OPERATION VRCPL(v16 vs, v16 vt)
     const int target = (inst_word >> 16) & 31;
     const unsigned int element = (inst_word >> 21) & 0x7;
 
-    DivIn &= DPH;
-    DivIn |= VR[target][element];
+    if (DPH == SP_DIV_PRECISION_SINGLE)
+        DivIn  = (s32)(s16)(VR[target][element]);
+    else
+        DivIn |= (s32)(u16)(VR[target][element] & 0xFFFFu);
     do_div(DivIn, SP_DIV_SQRT_NO, DPH);
 #ifdef ARCH_MIN_SSE2
     *(v16 *)VACC_L = vt;
@@ -1255,8 +1257,10 @@ VECTOR_OPERATION VRSQL(v16 vs, v16 vt)
     const int target = (inst_word >> 16) & 31;
     const unsigned int element = (inst_word >> 21) & 0x7;
 
-    DivIn &= DPH;
-    DivIn |= VR[target][element];
+    if (DPH == SP_DIV_PRECISION_SINGLE)
+        DivIn  = (s32)(s16)(VR[target][element]);
+    else
+        DivIn |= (s32)(u16)(VR[target][element] & 0xFFFFu);
     do_div(DivIn, SP_DIV_SQRT_YES, DPH);
 #ifdef ARCH_MIN_SSE2
     *(v16 *)VACC_L = vt;
