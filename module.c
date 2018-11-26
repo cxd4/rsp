@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  Module Subsystem Interface to SP Interpreter Core                  *
 * Authors:  Iconoclast                                                         *
-* Release:  2018.03.21                                                         *
+* Release:  2018.11.26                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -152,6 +152,8 @@ EXPORT u32 CALL DoRspCycles(u32 cycles)
         GET_RSP_INFO(ShowCFB)(); /* forced FB refresh in case gfx plugin skip */
         break;
     default:
+        if (task_type == 0x00000000)
+            break; /* generic or invoked without CPU filling in OSTask struct */
         if (task_type == 0x8BC43B5D)
             break; /* CIC boot code sent to the RSP */
         sprintf(task_debug_type, "%08lX", (unsigned long)task_type);
