@@ -18,6 +18,15 @@
 static s32 DivIn = 0; /* buffered numerator of division read from vector file */
 static s32 DivOut = 0; /* global division result set by VRCP/VRCPL/VRSQ/VRSQL */
 
+enum {
+    SP_DIV_SQRT_NO,
+    SP_DIV_SQRT_YES
+};
+enum {
+    SP_DIV_PRECISION_SINGLE = 0,
+    SP_DIV_PRECISION_DOUBLE = ~0
+};
+
 /*
  * Boolean flag:  Double-precision high was the last vector divide op?
  *
@@ -28,7 +37,7 @@ static s32 DivOut = 0; /* global division result set by VRCP/VRCPL/VRSQ/VRSQL */
  * else if (lastDivideOp == VMOV, VNOP)
  *     DPH = DPH; // no change--divide-group ops but not real divides
  */
-static int DPH = 0;
+static int DPH = SP_DIV_PRECISION_SINGLE;
 
 /*
  * 11-bit vector divide result look-up table
@@ -1059,16 +1068,6 @@ static const u16 div_ROM[1 << 10] = {
     0x6ABFu,
     0x0040u,
     0x6A64u,
-};
-
-enum {
-    SP_DIV_SQRT_NO,
-    SP_DIV_SQRT_YES
-};
-enum {
-    SP_DIV_PRECISION_SINGLE = 0,
-    SP_DIV_PRECISION_DOUBLE = ~0
-/*, SP_DIV_PRECISION_CURRENT */
 };
 
 NOINLINE static void do_div(i32 data, int sqrt, int precision)
