@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Vector Unit Computational Divides         *
 * Authors:  Iconoclast                                                         *
-* Release:  2018.11.27                                                         *
+* Release:  2018.12.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -17,9 +17,6 @@
 
 static s32 DivIn = 0; /* buffered numerator of division read from vector file */
 static s32 DivOut = 0; /* global division result set by VRCP/VRCPL/VRSQ/VRSQL */
-#if (0 != 0)
-static s32 MovIn; /* We do not emulate this register (obsolete, for VMOV). */
-#endif
 
 /*
  * Boolean flag:  Double-precision high was the last vector divide op?
@@ -1204,16 +1201,20 @@ VECTOR_OPERATION VRCPH(v16 vs, v16 vt)
 
 VECTOR_OPERATION VMOV(v16 vs, v16 vt)
 {
+    i32 MovIn;
     const int result = (inst_word & 0x000007FF) >>  6;
     const int source = (inst_word & 0x0000FFFF) >> 11;
-    const unsigned int element = (inst_word >> 21) & 0x7;
 
 #ifdef ARCH_MIN_SSE2
     *(v16 *)VACC_L = vt;
+    MovIn = VACC_L[source & 07]; /* _mm_extract_epi16(vt, source & 0x07); */
 #else
+    MovIn = vt[source & 07];
     vector_copy(VACC_L, vt);
 #endif
-    VR[result][source & 07] = VACC_L[element];
+
+    VR[result][source & 07] = (i16)(MovIn & 0x0000FFFF);
+
 #ifdef ARCH_MIN_SSE2
     vs = *(v16 *)VR[result];
     return (vs);
