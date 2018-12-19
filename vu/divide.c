@@ -1074,10 +1074,11 @@ enum {
 NOINLINE static void do_div(i32 data, int sqrt, int precision)
 {
     i32 addr;
-    int fetch;
     int shift;
 
 #if ((~0 >> 1 == -1) && (0))
+    int fetch;
+
     data ^= (s32)(((s64)data + 32768) >> 63); /* DP only:  (data < -32768) */
     fetch = (s32)(((s32)data +     0) >> 31);
     data ^= fetch;

@@ -1,7 +1,7 @@
 /******************************************************************************\
 * Project:  MSP Simulation Layer for Scalar Unit Operations                    *
 * Authors:  Iconoclast                                                         *
-* Release:  2018.03.17                                                         *
+* Release:  2018.12.18                                                         *
 * License:  CC0 Public Domain Dedication                                       *
 *                                                                              *
 * To the extent possible under law, the author(s) have dedicated all copyright *
@@ -1662,27 +1662,6 @@ mwc2_func SWC2[2 * 8*2] = {
     res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,res_lsw,
 };
 
-static ALIGNED i16 shuffle_temporary[N];
-#ifndef ARCH_MIN_SSE2
-static const unsigned char ei[1 << 4][N] = {
-    { 00, 01, 02, 03, 04, 05, 06, 07 }, /* none (vector-only operand) */
-    { 00, 01, 02, 03, 04, 05, 06, 07 },
-    { 00, 00, 02, 02, 04, 04, 06, 06 }, /* 0Q */
-    { 01, 01, 03, 03, 05, 05, 07, 07 }, /* 1Q */
-    { 00, 00, 00, 00, 04, 04, 04, 04 }, /* 0H */
-    { 01, 01, 01, 01, 05, 05, 05, 05 }, /* 1H */
-    { 02, 02, 02, 02, 06, 06, 06, 06 }, /* 2H */
-    { 03, 03, 03, 03, 07, 07, 07, 07 }, /* 3H */
-    { 00, 00, 00, 00, 00, 00, 00, 00 }, /* 0W */
-    { 01, 01, 01, 01, 01, 01, 01, 01 }, /* 1W */
-    { 02, 02, 02, 02, 02, 02, 02, 02 }, /* 2W */
-    { 03, 03, 03, 03, 03, 03, 03, 03 }, /* 3W */
-    { 04, 04, 04, 04, 04, 04, 04, 04 }, /* 4W */
-    { 05, 05, 05, 05, 05, 05, 05, 05 }, /* 5W */
-    { 06, 06, 06, 06, 06, 06, 06, 06 }, /* 6W */
-    { 07, 07, 07, 07, 07, 07, 07, 07 }, /* 7W */
-};
-#endif
 
 PROFILE_MODE int SPECIAL(u32 inst, u32 PC)
 {
@@ -1873,6 +1852,7 @@ PROFILE_MODE void COP2(u32 inst)
 #endif
 
     switch (op) {
+        static ALIGNED i16 shuffle_temporary[N];
 #ifdef ARCH_MIN_SSE2
         v16 target;
 #else
