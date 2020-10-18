@@ -8,6 +8,7 @@ REM to execute the Unix shell script "make.sh" from Windows 10+ or Git Bash.
 
 REM The following line is the only one you should ever need to change.
 set MinGW=C:\MinGW
+REM set MinGW=C:\msys64\mingw32
 
 set lib=%MinGW%\lib
 set bin=%MinGW%\bin
@@ -71,6 +72,6 @@ as -o "%obj%\vu\divide.o"         "%obj%\vu\divide.asm"
 ECHO.
 
 ECHO Linking assembled object files...
-ld --shared -e _DllMain@12 -o "%obj%\rspdebug.dll" -L %lib% %OBJ_LIST% -lmsvcrt
+gcc --shared -e _DllMain@12 -o "%obj%\rspdebug.dll" -L %lib% %OBJ_LIST% -lmsvcrt
 strip -o "%obj%\rsp.dll" "%obj%\rspdebug.dll" --strip-all
 PAUSE
