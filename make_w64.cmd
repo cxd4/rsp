@@ -75,6 +75,6 @@ as -o "%obj%\vu\divide.o"         "%obj%\vu\divide.asm"
 ECHO.
 
 ECHO Linking assembled object files...
-ld --shared -e DllMain -o "%obj%\rspdebug.dll" -L%lib64% %OBJ_LIST% -lmsvcrt
+gcc --shared -e DllMain -o "%obj%\rspdebug.dll" -L%lib64% %OBJ_LIST% -lmsvcrt
 strip -o "%obj%\rsp.dll" "%obj%\rspdebug.dll" --strip-all
 PAUSE

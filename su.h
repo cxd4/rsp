@@ -268,7 +268,7 @@ extern void set_PC(unsigned int address);
 #define SP_STATUS_SIG6          (0x00000001ul << 13)
 #define SP_STATUS_SIG7          (0x00000001ul << 14)
 
-enum {
+typedef enum {
     RCP_SP_MEM_ADDR_REG,
     RCP_SP_DRAM_ADDR_REG,
     RCP_SP_RD_LEN_REG,
