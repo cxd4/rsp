@@ -16,7 +16,7 @@ OBJ_LIST="\
 
 FLAGS_ANSI="-fPIC -DPLUGIN_API_VERSION=0x0101 -mstackrealign -Wall -pedantic"
 
-if [ $(uname -m) == 'x86_64' ]; then
+if [ $(uname -m) = 'x86_64' ]; then
 FLAGS_x86="\
     -masm=intel \
     -fPIC \
