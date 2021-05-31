@@ -20,6 +20,7 @@ if [ $(uname -m) = 'x86_64' ]; then
 FLAGS_x86="\
     -masm=intel \
     -fPIC \
+    -DNDEBUG \
     -DPLUGIN_API_VERSION=0x0101 \
     -DARCH_MIN_SSE2 \
     -march=native \
@@ -33,6 +34,7 @@ FLAGS_x86="\
 else
 FLAGS_x86="\
     -masm=intel \
+    -DNDEBUG \
     -DPLUGIN_API_VERSION=0x0101 \
     -DARCH_MIN_SSE2 \
     -march=native \

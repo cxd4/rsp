@@ -402,10 +402,12 @@ NOINLINE void message(const char* body)
     system(argv);
     free(argv);
 #else
-    fputs(body, stdout);
-    putchar('\n');
+    fputs(body, stderr);
+    fputc('\n', stderr);
+#ifndef NDEBUG
     puts("Press ENTER to return.");
     getchar();
+#endif
 #endif
     return;
 }
